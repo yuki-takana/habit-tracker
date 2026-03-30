@@ -1,10 +1,29 @@
-// app/api/agents/gym/route.ts
 import { runGymArchitect } from "@/lib/agents/gym/architect";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { hasReachedBlueprintLimit } from '@/lib/subscription';
 
 export async function POST(req: NextRequest) {
-  const { userId, userGoal, weight, height, experience } = await req.json();
-  const result = await runGymArchitect(userId, userGoal, { weight, height, experience });
-  return NextResponse.json(result);
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return NextResponse.json({ success: false, message: "Unauthorized: Please log in." }, { status: 401 });
+  }
+
+  try {
+      const payload = await req.json();
+      const { userGoal, context } = payload;
+      
+      if (!context || !userGoal) {
+         return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
+      }
+    
+      const result = await runGymArchitect(session.user.id, userGoal, context);
+      return NextResponse.json(result);
+      
+  } catch (error) {
+      console.error("Gym API Error:", error);
+      return NextResponse.json({ success: false, message: "Internal server error." }, { status: 500 });
+  }
 }

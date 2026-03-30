@@ -1,24 +1,85 @@
-// Define how much XP is needed for each level
-// Formula: 100 * (level ^ 1.5) creates a nice difficulty curve
-export const getXpForLevel = (level: number) => Math.floor(100 * Math.pow(level, 1.5));
+// Absolute XP Level System (Rule 06)
+export const LEVEL_THRESHOLDS = [
+  { level: 1, xp: 0 },
+  { level: 2, xp: 150 },
+  { level: 3, xp: 400 },
+  { level: 4, xp: 800 },
+  { level: 5, xp: 1400 },
+  { level: 6, xp: 2200 },
+  { level: 7, xp: 3400 },
+  { level: 8, xp: 5000 },
+  { level: 9, xp: 7200 },
+  { level: 10, xp: 10000 },
+];
 
-export async function addXpToUser(prisma: any, userId: string, xpToAdd: number) {
+export function getLevelForXp(xp: number): number {
+  let matchedLevel = 1;
+  for (const threshold of LEVEL_THRESHOLDS) {
+    if (xp >= threshold.xp) {
+      matchedLevel = threshold.level;
+    } else {
+      break;
+    }
+  }
+  return matchedLevel;
+}
+
+// Rule 04: Base XP calculation per todo
+export function calculateTodoXP(params: {
+  isAIGenerated: boolean;
+  isEarly: boolean; // >= 2 hours before deadline
+  isFirstOfDay: boolean;
+  userLevel: number;
+}): number {
+  let xp = params.isAIGenerated ? 12 : 10;
+  if (params.isEarly) xp += 5;
+  if (params.isFirstOfDay) xp += 5;
+
+  // Level multipliers for EARNED xp
+  if (params.userLevel >= 10) {
+    xp *= 1.25;
+  } else if (params.userLevel >= 8) {
+    xp *= 1.1;
+  }
+
+  return Math.floor(xp);
+}
+
+// Rule 03: Floor rule and Level protection
+export async function addXpToUser(prisma: any, userId: string, xpDelta: number) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { xp: true, level: true, name: true }
+    select: { xp: true, level: true, streakShields: true }
   });
 
   if (!user) return null;
 
-  let newXp = user.xp + xpToAdd;
+  // Floor rule: XP can never go below 0
+  let newXp = Math.max(0, user.xp + xpDelta);
+  
+  // Levels never regress
   let newLevel = user.level;
-  let leveledUp = false;
+  const calcLevel = getLevelForXp(newXp);
+  
+  if (calcLevel > newLevel) {
+    newLevel = calcLevel;
+  }
 
-  // Check if they leveled up (could be multiple levels if xpToAdd is huge)
-  while (newXp >= getXpForLevel(newLevel)) {
-    newXp -= getXpForLevel(newLevel);
-    newLevel++;
-    leveledUp = true;
+  let leveledUp = newLevel > user.level;
+  let extraUpdates: any = {};
+
+  // Rule 08: Earning shields at level 3, 5, 9
+  // Max 3 shields held at any time.
+  if (leveledUp) {
+    let earnedShields = 0;
+    for (let l = user.level + 1; l <= newLevel; l++) {
+      if ([3, 5, 9].includes(l)) {
+        earnedShields++;
+      }
+    }
+    if (earnedShields > 0) {
+      extraUpdates.streakShields = Math.min(3, user.streakShields + earnedShields);
+    }
   }
 
   const updatedUser = await prisma.user.update({
@@ -26,13 +87,14 @@ export async function addXpToUser(prisma: any, userId: string, xpToAdd: number) 
     data: {
       xp: newXp,
       level: newLevel,
+      ...extraUpdates
     }
   });
 
   return {
     updatedUser,
     leveledUp,
-    xpGained: xpToAdd,
+    xpDelta,
     currentLevel: newLevel
   };
 }

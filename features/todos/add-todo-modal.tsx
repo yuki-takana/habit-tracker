@@ -53,7 +53,7 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
         body: JSON.stringify({
           task: title,
           category,
-          reminderTime: reminderDate.toISOString(),
+          startTime: reminderDate.toISOString(),
           plannedTime: plannedTime || null,
           sessionDuration: divideIntoSessions ? sessionDuration : null,
           breakTime: divideIntoSessions ? breakTime : null,

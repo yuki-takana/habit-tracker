@@ -250,12 +250,12 @@ export async function getAdminDashboardStats() {
 
 export async function getUserXp() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) return { xp: 0 };
+  if (!session?.user?.email) return { xp: 0, level: 1 };
   
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { xp: true }
+    select: { xp: true, level: true }
   });
   
-  return { xp: user?.xp || 0 };
+  return { xp: user?.xp || 0, level: user?.level || 1 };
 }

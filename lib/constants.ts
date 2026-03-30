@@ -21,3 +21,5 @@ export enum SessionStatus {
     PAUSED = "PAUSED",
     COMPLETED = "COMPLETED"
 }
+
+export const REMINDER_LEAD_TIME_MINS = 10;

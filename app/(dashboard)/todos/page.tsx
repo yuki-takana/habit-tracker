@@ -1,7 +1,6 @@
 "use client";
 
 import { AddTodoModal } from "@/features/todos/add-todo-modal";
-import { TodoItem } from "@/features/todos/todo-item";
 import {
     Plus, ClipboardList, Smartphone, Loader2,
     Clock, CheckCircle2, AlertCircle,
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { TodoItem } from "@/features/todos/todo-item";
 
 // ─── Category → tree config ───────────────────────────────────────────────────
 
@@ -432,8 +432,18 @@ export default function TodosPage() {
     const categorized = useMemo(() => {
         const now = new Date();
         return {
-            today: tasks.filter((t) => !t.completed && new Date(t.reminderTime) > now),
-            timeUp: tasks.filter((t) => !t.completed && new Date(t.reminderTime) <= now),
+            today: tasks.filter((t) => {
+                if (t.completed) return false;
+                const timeToCheck = t.deadline || t.reminderTime;
+                if (!timeToCheck) return true; 
+                return new Date(timeToCheck) > now;
+            }),
+            timeUp: tasks.filter((t) => {
+                if (t.completed) return false;
+                const timeToCheck = t.deadline || t.reminderTime;
+                if (!timeToCheck) return false;
+                return new Date(timeToCheck) <= now;
+            }),
             completed: tasks.filter((t) => t.completed),
         };
     }, [tasks]);
@@ -471,7 +481,8 @@ export default function TodosPage() {
                             key={task.id}
                             id={task.id}
                             task={task.task}
-                            reminderTime={new Date(task.reminderTime)}
+                            startTime={task.startTime}
+                            reminderTime={task.reminderTime ? new Date(task.reminderTime) : new Date()}
                             category={task.category || "General"}
                             status={task.status}
                             completed={task.completed}

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { REMINDER_LEAD_TIME_MINS } from "@/lib/constants";
+import { getTodayEndIST } from "@/lib/utils/getTodayEndIST";
+
 
 export async function POST(req: NextRequest) {
     try {
@@ -19,21 +22,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const { task, category, reminderTime, plannedTime, sessionDuration, breakTime } = await req.json();
+        const { task, category, startTime, deadline, reminderTime, plannedTime, sessionDuration, breakTime } = await req.json();
 
-        if (!task || !reminderTime) {
+
+        if (!task || !startTime) {
+            console.warn("Missing required fields:", { task, startTime });
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
             );
         }
 
+        const scheduledStart = new Date(startTime);
+        const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
+        const deadlineTime = new Date(getTodayEndIST());
+
         const todo = await prisma.todo.create({
             data: {
                 task,
                 category,
                 plannedTime: plannedTime ? parseInt(plannedTime) : null,
-                reminderTime: new Date(reminderTime),
+                startTime: scheduledStart,
+                reminderTime: calculatedReminderTime,
+                deadline: deadlineTime,
                 userId: user.id,
             },
         });
