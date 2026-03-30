@@ -1,0 +1,3 @@
+﻿app/(dashboard)/tasks/page.tsx(3,8): error TS2613: Module '"D:/habit-tracker/features/todos/todo-item"' has no default export. Did you mean to use 'import { TodoItem } from "D:/habit-tracker/features/todos/todo-item"' instead?
+app/(dashboard)/todos/page.tsx(16,8): error TS2613: Module '"D:/habit-tracker/features/todos/todo-item"' has no default export. Did you mean to use 'import { TodoItem } from "D:/habit-tracker/features/todos/todo-item"' instead?
+components/todos/TodosClient.tsx(8,8): error TS2613: Module '"D:/habit-tracker/features/todos/todo-item"' has no default export. Did you mean to use 'import { TodoItem } from "D:/habit-tracker/features/todos/todo-item"' instead?

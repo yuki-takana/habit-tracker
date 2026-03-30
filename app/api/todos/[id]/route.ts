@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { calculateTodoXP, addXpToUser } from "@/lib/gamify";
 
 export async function PATCH(
     req: NextRequest,
@@ -18,9 +19,9 @@ export async function PATCH(
         const { completed, reminderTime, extraTime } = await req.json();
         const updateData: any = {};
 
-        // Fetch current todo to check its state
         const currentTodo = await prisma.todo.findUnique({
             where: { id },
+            include: { user: true }
         });
 
         if (!currentTodo) {
@@ -43,25 +44,59 @@ export async function PATCH(
         }
 
         if (completed !== undefined) {
+
             updateData.completed = completed;
+
             if (completed === true && !currentTodo.completed) {
+
                 updateData.completedAt = new Date();
 
-                // Award XP
-                const earnedXp = (currentTodo.plannedTime || 10) * 2;
-                await prisma.user.update({
-                    where: { id: currentTodo.userId },
-                    data: { xp: { increment: earnedXp } }
+                // Debug count
+                const startOfDay = new Date();
+                startOfDay.setHours(0, 0, 0, 0);
+
+                const completedTodayCount = await prisma.todo.count({
+                    where: {
+                        userId: currentTodo.userId,
+                        completed: true,
+                        completedAt: { gte: startOfDay }
+                    }
                 });
+
+                const isFirstOfDay = completedTodayCount === 0;
+
+                let isEarly = false;
+                if (currentTodo.deadline) {
+                   
+                    const diffMs = currentTodo.deadline.getTime() - Date.now();
+    
+                    if (diffMs >= 2 * 60 * 60 * 1000) {
+                        isEarly = true;
+                    }
+                }
+
+                const earnedXp = calculateTodoXP({
+                    isAIGenerated: currentTodo.isAIGenerated,
+                    isEarly,
+                    isFirstOfDay,
+                    userLevel: currentTodo.user.level || 1,
+                });
+
+                await addXpToUser(prisma, currentTodo.userId, earnedXp);
+
+       
             } else if (completed === false) {
+                console.log("⚠️ UNDO COMPLETION - APPLY PENALTY");
+
                 updateData.completedAt = null;
 
-                // Remove XP
-                const earnedXp = (currentTodo.plannedTime || 10) * 2;
-                await prisma.user.update({
-                    where: { id: currentTodo.userId },
-                    data: { xp: { decrement: earnedXp } }
-                });
+                const penaltyXp = currentTodo.isAIGenerated ? 12 : 10;
+
+                console.log("Penalty XP:", penaltyXp);
+
+                await addXpToUser(prisma, currentTodo.userId, -penaltyXp);
+
+                console.log("❌ XP REMOVED");
             }
         }
 

@@ -47,28 +47,28 @@ model Session {
 }
 
 model User {
-  id              String        @id @default(auto()) @map("_id") @db.ObjectId
-  name            String?
-  email           String?       @unique
-  password        String?
-  phone           String? // Store in E.164 format (e.g., "+919876543210")
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  name              String?
+  email             String?       @unique
+  password          String?
+  phone             String? // Store in E.164 format (e.g., "+919876543210")
   whatsappEnabled   Boolean       @default(false)
   dailyGoalsEnabled Boolean       @default(true)
   emailVerified     DateTime?
-  image           String?
-  wakatimeApiKey  String?
-  githubApiKey    String?
-  linkedinApiKey  String?
-  twitterApiKey   String?
-  accounts        Account[]
-  sessions        Session[]
+  image             String?
+  wakatimeApiKey    String?
+  githubApiKey      String?
+  linkedinApiKey    String?
+  twitterApiKey     String?
+  accounts          Account[]
+  sessions          Session[]
   // Add your app-specific fields here
-  habits          Habit[]
-  tasks           Task[]
-  todos           Todo[]
-  wakaTimeStats   WakaTime[]
-  workoutPlans    WorkoutPlan[]
-  chatMessages    ChatMessage[]
+  habits            Habit[]
+  tasks             Task[]
+  todos             Todo[]
+  wakaTimeStats     WakaTime[]
+  workoutPlans      WorkoutPlan[]
+  chatMessages      ChatMessage[]
 
   height      Float?
   weight      Float?
@@ -100,6 +100,9 @@ model User {
   streakShields          Int                 @default(0)
   streakShieldContinuity Int                 @default(0) // Days with 50-60%+ todo completion
   xp                     Int                 @default(0)
+  level                  Int                 @default(1) // Gamification progression level
+  autoShieldEnabled      Boolean             @default(true)
+  lastGraceActivation    DateTime?
 
   roleLevel          Int       @default(0)
   roleTitle          String    @default("Beginner")
@@ -131,6 +134,8 @@ model ProgressTree {
   trees       Json // array of tree growth stages
   lastWatered DateTime?
   growthLevel Int       @default(0)
+  state       String    @default("alive") // "alive", "ghost", "retired"
+  stage       Int       @default(0) // 0 to 7
   status      String?
   createdAt   DateTime  @default(now())
 
@@ -186,7 +191,9 @@ model Todo {
   userId           String        @db.ObjectId
   task             String
   category         String?
+  startTime        DateTime?
   plannedTime      Int? // planned duration in minutes
+  deadline         DateTime?
   reminderTime     DateTime?
   extraTime        Int?
   whatsappNotified Boolean       @default(false)
@@ -194,6 +201,7 @@ model Todo {
   completedAt      DateTime?
   habitId          String?       @db.ObjectId
   challengeId      String?       @db.ObjectId
+  isAIGenerated    Boolean       @default(false)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   sessions         TodoSession[]

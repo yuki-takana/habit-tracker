@@ -1,17 +1,32 @@
 import { runLifeArchitect } from "@/lib/agents/life/architect";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { hasReachedBlueprintLimit } from '@/lib/subscription';
 
 export async function POST(req: Request) {
     try {
-        const { userGoal, context } = await req.json();
-        const userId = "user_placeholder"; // In a real app, get from auth
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
-        const result = await runLifeArchitect(userId, userGoal, context);
-        return NextResponse.json({ success: true, ...result });
+        const limitReached = await hasReachedBlueprintLimit(session.user.id);
+        if (limitReached) {
+            return NextResponse.json({ error: "Blueprint generation limit reached. Upgrade to Pro for unlimited AI blueprints." }, { status: 403 });
+        }
+
+        const { userGoal, context } = await req.json();
+
+        const result = await runLifeArchitect(session.user.id, userGoal, context);
+        
+        if (result.success) {
+            return NextResponse.json({ success: true, ...result });
+        } else {
+            return NextResponse.json({ error: result.message || "Failed to generate plan" }, { status: 500 });
+        }
     } catch (error) {
         console.error("Life Agent API Error:", error);
-        return NextResponse.json({ success: false, message: "Architecture Failed" }, { status: 500 });
+        return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
 }
-

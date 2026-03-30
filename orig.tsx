@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Clock, Check, Plus, Play, Loader2, Flame, Shield } from "lucide-react";
@@ -6,13 +6,11 @@ import confetti from "canvas-confetti";
 import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useXp } from "@/components/providers/xp-provider";
 
 interface TodoProps {
   id?: string;
   task: string;
-  startTime?: Date | string | null;
-  reminderTime: Date | string | null;
+  reminderTime: Date;
   category: string;
   status: string;
   completed?: boolean;
@@ -71,10 +69,9 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
   const [loading, setLoading]         = useState(false);
   const [particles, setParticles]     = useState<Particle[]>([]);
   const particleId                    = useRef(0);
-  const safeDate                      = reminderTime ? new Date(reminderTime) : new Date();
+  const safeDate                      = new Date(reminderTime);
   const [currentTime, setCurrentTime] = useState(isNaN(safeDate.getTime()) ? new Date() : safeDate);
   const catStyle                      = getCategoryStyle(category);
-  const { refreshXp }                 = useXp();
 
   useEffect(() => {
     const unlock = () => { try { getAudioCtx().resume(); } catch (_) {} };
@@ -121,14 +118,11 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
       toast.success("Task completed ≡ƒÄë", { description: task });
     }
     try {
-      const res = await fetch(`/api/todos/${id}`, {
+      await fetch(`/api/todos/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: nextState }),
       });
-      if (res.ok) {
-          await refreshXp();
-      }
     } catch {
       setIsCompleted(!nextState);
       toast.error("Failed to update task");
