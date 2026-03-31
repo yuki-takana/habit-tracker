@@ -22,4 +22,4 @@ export enum SessionStatus {
     COMPLETED = "COMPLETED"
 }
 
-export const REMINDER_LEAD_TIME_MINS = 10;
+export const REMINDER_LEAD_TIME_MINS = 5;
