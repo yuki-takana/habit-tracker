@@ -246,6 +246,7 @@ function TreeMini({
         <div
             ref={ref}
             onMouseEnter={handleOpen}
+            onMouseLeave={() => setActiveTree(null)}
             onClick={handleOpen}
             className="relative flex flex-col items-center cursor-pointer group h-30"
         >
@@ -328,12 +329,25 @@ function ForestView({ tasks }: { tasks: any[] }) {
     const [activeTree, setActiveTree] = useState<any>(null);
 
     const categories = useMemo(() => {
-        const map: Record<string, { total: number; completed: number }> = {};
+        const map: Record<string, {
+            total: number;
+            completed: number;
+            xp: number;
+        }> = {};
+
         tasks.forEach((t) => {
             const cat = (t.category || "general").toLowerCase();
-            if (!map[cat]) map[cat] = { total: 0, completed: 0 };
+
+            if (!map[cat]) {
+                map[cat] = { total: 0, completed: 0, xp: 0 };
+            }
+
             map[cat].total++;
-            if (t.completed) map[cat].completed++;
+
+            if (t.completed) {
+                map[cat].completed++;
+            }
+            map[cat].xp += t.earnedXp || 0;
         });
         return Object.entries(map);
     }, [tasks]);
@@ -352,13 +366,12 @@ function ForestView({ tasks }: { tasks: any[] }) {
                 <span className="text-xs text-zinc-400">{categories.length}</span>
             </div>
 
-            {/* 🌳 Forest (NO CARD) */}
             <Card>
                 <div className="relative flex flex-wrap  justify-center py-6">
 
                     {categories.map(([cat, counts]) => {
                         const config = getTreeConfig(cat);
-                        const xp = counts.completed * 15;
+                        const xp = counts.xp;
                         const stage = getStage(xp);
 
                         return (
@@ -396,6 +409,22 @@ export default function TodosPage() {
     const [isWhatsappEnabled, setIsWhatsappEnabled] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
     const [visibleCounts, setVisibleCounts] = useState({ today: 10, timeUp: 10, completed: 10 });
+    const [stats, setStats] = useState<any>({
+        total: 0,
+        completed: 0,
+        today: 0,
+        timeUps: 0,
+    });
+    const [pagination, setPagination] = useState<any>({
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+    });
+    const [grouped, setGrouped] = useState<any>({
+        today: [],
+        timeUp: [],
+        completed: [],
+    });
 
     useEffect(() => {
         if (session?.user) {
@@ -419,34 +448,42 @@ export default function TodosPage() {
         finally { setToggleLoading(false); }
     };
 
-    const fetchTasks = async () => {
+    const fetchTasks = async (page = 1) => {
         try {
-            const res = await fetch("/api/todos");
-            if (res.ok) setTasks(await res.json());
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
+            const res = await fetch(`/api/todos?page=${page}&limit=10`);
+
+            if (res.ok) {
+                const result = await res.json();
+
+                setTasks(result.data);
+                setStats(result.stats);
+                setPagination(result.pagination);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+    const fetchGroupedTasks = async () => {
+        try {
+            const res = await fetch(`/api/todos/dashboard`);
+
+            if (res.ok) {
+                const result = await res.json();
+                setGrouped(result.grouped);
+                setStats(result.stats);
+            }
+        } catch (e) {
+            console.error(e);
+        }
     };
 
-    useEffect(() => { fetchTasks(); }, []);
+    useEffect(() => {
+        fetchTasks();
+        fetchGroupedTasks();
+    }, []);
 
-    const categorized = useMemo(() => {
-        const now = new Date();
-        return {
-            today: tasks.filter((t) => {
-                if (t.completed) return false;
-                const timeToCheck = t.deadline || t.reminderTime;
-                if (!timeToCheck) return true; 
-                return new Date(timeToCheck) > now;
-            }),
-            timeUp: tasks.filter((t) => {
-                if (t.completed) return false;
-                const timeToCheck = t.deadline || t.reminderTime;
-                if (!timeToCheck) return false;
-                return new Date(timeToCheck) <= now;
-            }),
-            completed: tasks.filter((t) => t.completed),
-        };
-    }, [tasks]);
 
     const handleLoadMore = (cat: "today" | "timeUp" | "completed") =>
         setVisibleCounts((p) => ({ ...p, [cat]: p[cat] + 10 }));
@@ -566,9 +603,9 @@ export default function TodosPage() {
                     </div>
                 ) : tasks.length > 0 ? (
                     <div>
-                        {renderSection("Time Up", <AlertCircle size={18} />, categorized.timeUp, "timeUp")}
-                        {renderSection("Today's Missions", <Clock size={18} />, categorized.today, "today")}
-                        {renderSection("Completed", <CheckCircle2 size={18} />, categorized.completed, "completed")}
+                        {renderSection("Time Up", <AlertCircle size={18} />, grouped.timeUp, "timeUp")}
+                        {renderSection("Today's Missions", <Clock size={18} />, grouped.today, "today")}
+                        {renderSection("Completed", <CheckCircle2 size={18} />, grouped.completed, "completed")}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-24 px-8 rounded-[2.5rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-900/30">

@@ -94,11 +94,10 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-
-        if (!session || !session.user?.email) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -110,17 +109,37 @@ export async function GET() {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const todos = await prisma.todo.findMany({
-            where: { userId: user.id },
-            orderBy: { createdAt: "desc" },
-        });
+        const { searchParams } = new URL(req.url);
+        const page = parseInt(searchParams.get("page") || "1");
+        const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 50);
 
-        return NextResponse.json(todos);
+        const skip = (page - 1) * limit;
+
+        const [todos, total] = await Promise.all([
+            prisma.todo.findMany({
+                where: { userId: user.id },
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: limit,
+            }),
+            prisma.todo.count({
+                where: { userId: user.id },
+            }),
+        ]);
+
+        return NextResponse.json({
+            data: todos,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
+                hasPrevPage: page > 1,
+            },
+        });
     } catch (error) {
-        console.error("Error fetching todos:", error);
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
+        console.error(error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

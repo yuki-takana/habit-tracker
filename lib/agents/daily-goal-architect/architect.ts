@@ -137,19 +137,19 @@ YOU MUST CALCULATE EXACT REMINDER TIMES USING THIS ALGORITHM:
    - Starts: 07:30
    - Ends: 09:00
    - Break: 15 min
-   - reminderTime: "2024-03-20T07:30:00.000Z"
+   - startTime: "2024-03-20T07:30:00.000Z"
    
    Todo 2: "Code review" (60 min)
    - Starts: 09:15 (09:00 + 15 min break)
    - Ends: 10:15
    - Break: 10 min
-   - reminderTime: "2024-03-20T09:15:00.000Z"
+   - startTime: "2024-03-20T09:15:00.000Z"
    
    Todo 3: "Team standup" (30 min)
    - Starts: 10:25 (10:15 + 10 min break)
    - Ends: 10:55
    - Break: 3 min
-   - reminderTime: "2024-03-20T10:25:00.000Z"
+   - startTime: "2024-03-20T10:25:00.000Z"
 
 5. YOU MUST PROVIDE ISO TIMESTAMPS:
    - Use today's date: ${currentDate.toISOString().split('T')[0]}
@@ -172,13 +172,13 @@ You MUST call 'save_daily_goals' with this exact structure:
       task: "Specific, actionable task title",
       category: "Code|Fitness|Learning|Mindset|Business|Health|Relationships|Finance|Career|General",
       plannedTime: 45, // minutes - realistic estimate
-      reminderTime: "2024-03-20T07:30:00.000Z", // EXACT calculated ISO timestamp
+      startTime: "2024-03-20T07:30:00.000Z", // EXACT calculated ISO timestamp
       priority: 0-3, // P0=Critical, P1=High, P2=Medium, P3=Low
       linkedTo: "habitId|challengeId|projectId", // Reference to existing entities or null
       reasoning: "Why this task, at this time, for this duration"
     }
-    // IMPORTANT: Each reminderTime must be calculated based on:
-    // previousTodo.reminderTime + previousTodo.plannedTime + break duration
+    // IMPORTANT: Each startTime must be calculated based on:
+    // previousTodo.startTime + previousTodo.plannedTime + break duration
   ],
   morningRoutine: [
     { time: "07:00", task: "Wake up + hydration", duration: 10 },
