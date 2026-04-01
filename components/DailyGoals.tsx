@@ -304,8 +304,8 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
                                     <div className="space-y-3">
                                         {todayGoals.todos.map((todo: any) => (
                                             <Card key={todo.id} className="border-none bg-muted/20 hover:bg-muted/40 transition-all border-l-4 border-l-indigo-500">
-                                                <CardContent className="p-4 flex items-center gap-4">
-                                                    <div className="flex-shrink-0">
+                                                <CardContent className=" flex items-center gap-4">
+                                                    <div className="shrink-0">
                                                         {todo.completed ? (
                                                             <div className="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center">
                                                                 <CheckCircle2 className="h-4 w-4 text-white" />

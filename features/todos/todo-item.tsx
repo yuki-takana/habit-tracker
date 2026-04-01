@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Clock, Check, Plus, Play, Loader2, Flame, Shield } from "lucide-react";
@@ -64,14 +64,14 @@ function playDone() {
   } catch (_) {}
 }
 
-export function TodoItem({ id, task, reminderTime, category, status, completed, onToggleComplete }: TodoProps) {
+export function TodoItem({ id, task, startTime, reminderTime, category, status, completed, onToggleComplete }: TodoProps) {
   const [timeLeft, setTimeLeft]       = useState("");
   const hasNotified                   = useRef(false);
   const [isCompleted, setIsCompleted] = useState(completed || status === "completed");
   const [loading, setLoading]         = useState(false);
   const [particles, setParticles]     = useState<Particle[]>([]);
   const particleId                    = useRef(0);
-  const safeDate                      = reminderTime ? new Date(reminderTime) : new Date();
+  const safeDate                      = startTime ? new Date(startTime) : new Date(reminderTime ? reminderTime : Date.now() + 3600000);
   const [currentTime, setCurrentTime] = useState(isNaN(safeDate.getTime()) ? new Date() : safeDate);
   const catStyle                      = getCategoryStyle(category);
   const { refreshXp }                 = useXp();
@@ -118,7 +118,7 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
     onToggleComplete?.(id, nextState);
     if (nextState) {
       triggerCelebration(catStyle.particle);
-      toast.success("Task completed ≡ƒÄë", { description: task });
+      toast.success("Task completed", { description: task });
     }
     try {
       const res = await fetch(`/api/todos/${id}`, {
@@ -145,7 +145,7 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
       const res = await fetch(`/api/todos/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reminderTime: newDate.toISOString(), extraTime: minutes }),
+        body: JSON.stringify({ startTime: newDate.toISOString(), extraTime: minutes }),
       });
       if (res.ok) { setCurrentTime(newDate); setTimeLeft(""); }
     } catch (e) { console.error(e); }
@@ -163,9 +163,9 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
           hasNotified.current = true;
           try {
             if ("Notification" in window && Notification.permission === "granted")
-              new Notification("ΓÅ░ Task Reminder", { body: `${task} is due now!` });
+              new Notification("Task Reminder", { body: `${task} is due now!` });
           } catch (_) {}
-          toast.error("Time's up! ΓÅ░", { description: task });
+          toast.error("Time's up!", { description: task });
         }
         return;
       }

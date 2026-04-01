@@ -1,4 +1,6 @@
+import { REMINDER_LEAD_TIME_MINS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { getTodayEndIST } from "@/lib/utils/getTodayEndIST";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 
@@ -16,11 +18,11 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
         scheduledTodos: z.array(z.object({
             task: z.string().describe("Specific, actionable task title"),
             category: z.enum([
-                "Code", "Fitness", "Learning", "Mindset", "Business", 
+                "Code", "Fitness", "Learning", "Mindset", "Business",
                 "Health", "Relationships", "Finance", "Career", "General"
             ]).describe("Task category"),
             plannedTime: z.number().describe("Estimated duration in minutes"),
-            reminderTime: z.string().describe("ISO timestamp for when to start this task"),
+            startTime: z.string().describe("ISO timestamp for when to start this task"),
             priority: z.number().min(0).max(3).describe("Priority level (0=Critical, 1=High, 2=Medium, 3=Low)"),
             linkedTo: z.string().nullable().optional().describe("habitId, challengeId, or projectId if applicable"),
             reasoning: z.string().describe("Why this task, at this time, for this duration")
@@ -46,14 +48,14 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
             stretchGoals: z.array(z.string()).describe("Bonus achievements if energy permits")
         })
     }),
-    func: async ({ 
-        dailySummary, 
-        analysisInsights, 
-        scheduledTodos, 
-        morningRoutine, 
-        afternoonBlock, 
-        eveningWrapup, 
-        successMetrics 
+    func: async ({
+        dailySummary,
+        analysisInsights,
+        scheduledTodos,
+        morningRoutine,
+        afternoonBlock,
+        eveningWrapup,
+        successMetrics
     }) => {
         try {
             // Create todos in database
@@ -62,29 +64,34 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
                     // Parse the linkedTo field to determine if it's a habit or challenge
                     let habitId: string | undefined;
                     let challengeId: string | undefined;
-                    
+
                     if (todo.linkedTo) {
-                        const [type, id] = todo.linkedTo.includes(':') 
-                            ? todo.linkedTo.split(':') 
+                        const [type, id] = todo.linkedTo.includes(':')
+                            ? todo.linkedTo.split(':')
                             : [null, todo.linkedTo];
-                            
+
                         if (type === 'habit' || (!type && todo.category === 'Fitness')) {
                             habitId = id;
                         } else if (type === 'challenge') {
                             challengeId = id;
                         }
                     }
-
+                    const scheduledStart = new Date(todo.startTime);
+                    const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
+                    const deadlineTime = new Date(getTodayEndIST());
                     return prisma.todo.create({
                         data: {
                             userId,
                             task: todo.task,
                             category: todo.category,
                             plannedTime: todo.plannedTime,
-                            reminderTime: new Date(todo.reminderTime),
+                            startTime: scheduledStart,
+                            reminderTime: calculatedReminderTime,
+                            deadline: deadlineTime,
                             habitId: habitId || undefined,
                             challengeId: challengeId || undefined,
-                            completed: false
+                            completed: false,
+                            isAIGenerated: true,
                         }
                     });
                 })
@@ -148,8 +155,8 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
             });
         } catch (error) {
             console.error("[Daily Goals Tool] Error saving goals:", error);
-            return JSON.stringify({ 
-                success: false, 
+            return JSON.stringify({
+                success: false,
                 error: String(error),
                 message: "Failed to save daily goals. Please check the data and try again."
             });

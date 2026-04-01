@@ -1,4 +1,4 @@
-import { PlusIcon } from "lucide-react"
+import { PlusIcon } from "lucide-react";
 
 import {
   Avatar,
@@ -6,29 +6,44 @@ import {
   AvatarGroup,
   AvatarGroupCount,
   AvatarImage,
-} from "@/components/ui/avatar"
+} from "@/components/ui/avatar";
 
-export function AvatarGroupCountIconExample() {
+interface User {
+  id: string;
+  name?: string | null;
+  image?: string | null;
+}
+
+export function AvatarGroupCountIconExample({ users = [] }: { users: User[] }) {
+  const maxVisible = 3;
+
+  const visibleUsers = users.slice(0, maxVisible);
+  const remaining = users.length - maxVisible;
+
   return (
     <AvatarGroup className="grayscale">
-      <Avatar>
-        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-        <AvatarFallback>CN</AvatarFallback>
-      </Avatar>
-      <Avatar>
-        <AvatarImage src="https://github.com/maxleiter.png" alt="@maxleiter" />
-        <AvatarFallback>LR</AvatarFallback>
-      </Avatar>
-      <Avatar>
-        <AvatarImage
-          src="https://github.com/evilrabbit.png"
-          alt="@evilrabbit"
-        />
-        <AvatarFallback>ER</AvatarFallback>
-      </Avatar>
-      <AvatarGroupCount>
-        <PlusIcon />
-      </AvatarGroupCount>
+      {visibleUsers.map((user) => (
+        <Avatar key={user.id}>
+          <AvatarImage src={user.image || ""} alt={user.name || "User"} />
+          <AvatarFallback>
+            {user.name
+              ? user.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()
+              : "U"}
+          </AvatarFallback>
+        </Avatar>
+      ))}
+
+      {remaining > 0 && (
+        <AvatarGroupCount>
+          <PlusIcon className="mr-1" />
+          {remaining}
+        </AvatarGroupCount>
+      )}
     </AvatarGroup>
-  )
+  );
 }

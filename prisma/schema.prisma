@@ -195,6 +195,7 @@ model Todo {
   plannedTime      Int? // planned duration in minutes
   deadline         DateTime?
   reminderTime     DateTime?
+  earnedXp         Int           @default(0)
   extraTime        Int?
   whatsappNotified Boolean       @default(false)
   completed        Boolean       @default(false)

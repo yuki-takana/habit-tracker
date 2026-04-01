@@ -22,4 +22,17 @@ export enum SessionStatus {
     COMPLETED = "COMPLETED"
 }
 
-export const REMINDER_LEAD_TIME_MINS = 10;
+export const REMINDER_LEAD_TIME_MINS = 5;
+export const XP_PER_MINUTE = 2;
+export const XP_PER_HABIT = 10;
+export const XP_PER_TODO = 15;
+export const XP_PER_CHALLENGE = 50;
+export const DAILY_XP_CAP = 200;
+export const INACTIVITY_PENALTY = 20;
+export const EARLY_BONUS_THRESHOLD_HOURS = 2;
+export const LATE_PENALTY_THRESHOLD_HOURS = 0;
+export const LATE_PENALTY_XP = 5;
+export const MAX_DAILY_XP = 200;
+export const XP_MULTIPLIER_PER_LEVEL = 1.1;
+export const MAX_LEVEL = 50;
+export const XP_FOR_LEVEL_UP = (level: number) => Math.floor(100 * Math.pow(XP_MULTIPLIER_PER_LEVEL, level - 1));
