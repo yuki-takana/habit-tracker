@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { startOfDay } from "date-fns";
+import { REMINDER_LEAD_TIME_MINS } from "@/lib/constants";
+import { getTodayEndIST } from "@/lib/utils/getTodayEndIST";
 
 export async function POST(req: NextRequest) {
     try {
@@ -35,13 +37,18 @@ export async function POST(req: NextRequest) {
             where: {
                 userId,
                 habitId,
-                createdAt: { gte: today }
+                createdAt: { gte: today },
+                completed: false
             }
         });
 
         if (existingTodo) {
             return NextResponse.json({ message: "Todo already exists for today" });
         }
+
+        const scheduledStart = new Date();
+        const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
+        const deadlineTime = new Date(getTodayEndIST());
 
         // Create todo
         const todo = await prisma.todo.create({
@@ -50,6 +57,11 @@ export async function POST(req: NextRequest) {
                 task: `Habit: ${habit.name}`,
                 category: habit.category || "Ritual",
                 habitId,
+                startTime: scheduledStart,
+                reminderTime: calculatedReminderTime,
+                deadline: deadlineTime,
+                completed: false,
+                isAIGenerated: false,
                 createdAt: new Date()
             }
         });

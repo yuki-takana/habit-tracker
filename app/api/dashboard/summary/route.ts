@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { startOfDay, subDays } from "date-fns";
 import { processUserDailyProgress } from "@/lib/progress";
+import { REMINDER_LEAD_TIME_MINS } from "@/lib/constants";
+import { getTodayEndIST } from "@/lib/utils/getTodayEndIST";
 
 export async function GET() {
     try {
@@ -81,6 +83,10 @@ export async function GET() {
 
         const syncTasks = [];
 
+        const scheduledStart = new Date();
+        const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
+        const deadlineTime = new Date(getTodayEndIST());
+
         // Check Challenge
         if (activeChallenge?.autoCreateTodos) {
             const hasTodo = existingSyncTodos.some(t => t.challengeId === activeChallenge.id);
@@ -91,6 +97,11 @@ export async function GET() {
                         task: `Daily Challenge: ${activeChallenge.title}`,
                         category: activeChallenge.focus,
                         challengeId: activeChallenge.id,
+                        startTime: scheduledStart,
+                        reminderTime: calculatedReminderTime,
+                        deadline: deadlineTime,
+                        completed: false,
+                        isAIGenerated: false,
                         createdAt: new Date()
                     }
                 }));
@@ -107,6 +118,11 @@ export async function GET() {
                         task: `Habit: ${habit.name}`,
                         category: habit.category || "Ritual",
                         habitId: habit.id,
+                        startTime: scheduledStart,
+                        reminderTime: calculatedReminderTime,
+                        deadline: deadlineTime,
+                        completed: false,
+                        isAIGenerated: false,
                         createdAt: new Date()
                     }
                 }));

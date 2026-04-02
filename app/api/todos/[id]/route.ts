@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { calculateTodoXP, addXpToUser } from "@/lib/gamify";
-import { MAX_DAILY_XP } from "@/lib/constants";
+import { LATE_PENALTY_XP, MAX_DAILY_XP, REMINDER_LEAD_TIME_MINS } from "@/lib/constants";
 
 export async function PATCH(
     req: NextRequest,
@@ -17,7 +17,7 @@ export async function PATCH(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { completed, reminderTime, extraTime } = await req.json();
+        const { completed, reminderTime, startTime, extraTime } = await req.json();
         const updateData: any = {};
 
         const currentTodo = await prisma.todo.findUnique({
@@ -101,7 +101,7 @@ export async function PATCH(
 
                 // ─── APPLY PENALTY ───
                 if (isLate) {
-                    const latePenalty = MAX_DAILY_XP;
+                    const latePenalty = LATE_PENALTY_XP;
                     earnedXp = -latePenalty;
                 }
 
@@ -123,13 +123,16 @@ export async function PATCH(
                 // reset earnedXp
                 updateData.earnedXp = 0;
             }
-        }
-
-        if (reminderTime !== undefined) updateData.reminderTime = new Date(reminderTime);
-
-        if (extraTime !== undefined) {
-            const currentExtra = currentTodo.extraTime || 0;
-            updateData.extraTime = currentExtra + extraTime;
+        } else {
+    
+            if (startTime !== undefined) updateData.startTime = currentTodo.startTime;
+            const scheduledStart = currentTodo.startTime ? new Date(currentTodo.startTime) : new Date();
+            const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
+            updateData.reminderTime = calculatedReminderTime;
+            if (extraTime !== undefined) {
+                const currentExtra = currentTodo.extraTime || 0;
+                updateData.extraTime = currentExtra + extraTime;
+            }
         }
 
         const todo = await prisma.todo.update({
