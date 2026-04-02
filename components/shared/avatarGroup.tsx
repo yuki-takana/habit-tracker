@@ -21,7 +21,7 @@ export function AvatarGroupCountIconExample({ users = [] }: { users: User[] }) {
   const remaining = users.length - maxVisible;
 
   return (
-    <AvatarGroup className="grayscale">
+    <AvatarGroup className="">
       {visibleUsers.map((user) => (
         <Avatar key={user.id}>
           <AvatarImage src={user.image || ""} alt={user.name || "User"} />

@@ -53,8 +53,8 @@ const HeroSection = async () => {
             </div>
 
             <div className="text-center max-w-4xl relative z-10">
-                <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-slate-900 dark:text-white mb-8 uppercase leading-[0.9]">
-                    Level up your <span className="text-indigo-600 dark:text-indigo-400">habits<span className="text-slate-400 dark:text-zinc-800">.</span></span>
+                <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-slate-900 dark:text-white mb-8 capitalize leading-[0.9]">
+                    Turn daily habits into <span className="text-indigo-600 dark:text-indigo-400">your biggest flex<span className="text-slate-400 dark:text-zinc-800">.</span></span>
                 </h1>
 
                 <div className="flex flex-col items-center gap-6 mb-12 text-center px-4">
@@ -70,9 +70,10 @@ const HeroSection = async () => {
                     </div>
 
                     <h2 className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
-                        The <span className="text-slate-900 dark:text-white font-bold">90-day reset</span> protocol for builders.
+                        {/* The <span className="text-slate-900 dark:text-white font-bold">90-day reset</span> protocol for builders.
                         <br />
-                        Automate your habits, track your code, and architect your physical & financial transformation in one premium dashboard.
+                        Automate your habits, track your code, and architect your physical & financial transformation in one premium dashboard. */}
+                        The gamified habit tracker built for developers and builders. Log via WhatsApp, and watch your life level up — one habit at a time.
                     </h2>
                 </div>
 
@@ -91,11 +92,22 @@ const HeroSection = async () => {
                         View Progress
                     </Link>
                 </div>
-                <div className='pt-5 flex-col justify-center items-center'>
-                    <div className='w-full flex justify-center'>
+                <div className="w-full flex flex-col md:flex-row items-center justify-center gap-3 pt-5">
+
+                    <div className="flex items-center justify-center">
                         <AvatarGroupCountIconExample users={users} />
                     </div>
-                    <span>{users.length}+ users</span>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
+                        <div className="flex text-yellow-400 text-sm sm:text-base">
+                            {"★★★★★"}
+                        </div>
+                        <p className="text-sm sm:text-base text-gray-600">
+                            Loved by <span className="font-semibold text-foreground">{users.length}+</span> builders
+                        </p>
+
+                    </div>
+
                 </div>
 
                 <p className="mt-8 text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-zinc-600 opacity-50">
@@ -104,11 +116,11 @@ const HeroSection = async () => {
             </div>
 
             {/* App Preview Frame */}
-            <div className="mt-24 w-full max-w-5xl rounded-[3rem] border-8 border-slate-100/50 dark:border-zinc-900/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-md shadow-[0_40px_100px_-20px_rgba(99,102,241,0.2)]">
+            {/* <div className="mt-24 w-full max-w-5xl rounded-[3rem] border-8 border-slate-100/50 dark:border-zinc-900/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-md shadow-[0_40px_100px_-20px_rgba(99,102,241,0.2)]">
                 <div className="rounded-[2rem] overflow-hidden border border-slate-200 dark:border-zinc-800">
                     <HabitImpactGraph />
                 </div>
-            </div>
+            </div> */}
         </div>
     )
 }
