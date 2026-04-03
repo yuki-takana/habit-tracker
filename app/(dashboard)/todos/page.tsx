@@ -355,7 +355,7 @@ function ForestView({ tasks }: { tasks: any[] }) {
     if (!categories.length) return null;
 
     return (
-        <div className="mb-12 relative">
+        <div className="mb-12 relative ">
 
             {/* Header */}
             <div className="flex items-center gap-2 mb-6 px-1">

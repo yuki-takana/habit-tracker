@@ -6,6 +6,8 @@ import { AIAgentShowcase } from './ai-agent-showcase';
 import { DataFlowVisualization } from './data-flow-visualization';
 import { TestimonialSection } from './testimonial-section';
 import HabitPlayground from './habitPlayGround';
+import { Badge } from '../ui/badge';
+import WhatsappPlayground from './whatsappPlayground';
 
 const LandingPageContent = async () => {
     const users = await prisma.waitlist.findMany({
@@ -17,14 +19,28 @@ const LandingPageContent = async () => {
 
             {/* --- 1. THE BENTO GRID FEATURES --- */}
             <section className="w-full max-w-6xl px-6 py-24">
+                <div className="flex justify-center mb-4">
+                    <Badge
+                        variant="outline"
+                        className="gap-2 px-3 py-1 text-[10px] font-bold tracking-widest uppercase border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/10"
+                    >
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-500 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+                        </span>
+                        features in action
+                    </Badge>
+                </div>
+
                 <div className="text-center mb-16 space-y-4">
-                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                        Everything you care about. <span className="text-indigo-600 dark:text-indigo-400">Zero friction.</span>
+                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white camelcase tracking-tight">
+                        Everything you care about. <span className="text-indigo-600 dark:text-indigo-400">Zero friction.</span><span className="text-indigo-600 dark:text-indigo-400">Maximum signal</span>
                     </h2>
                     <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
                         Context switching is the enemy of progress. UFL unifies your technical, physical, and financial life.
                     </p>
                 </div>
+                <WhatsappPlayground />
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Feature 1: WhatsApp (Spans 2 columns) */}
@@ -97,7 +113,7 @@ transition-all duration-300 ease-out hover:border-blue-500/50 hover:shadow-2xl h
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.1),transparent)]" />
                     <div className="max-w-3xl mx-auto text-center relative z-10">
                         <Terminal className="text-indigo-500 mx-auto mb-10 animate-pulse" size={48} />
-                        <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter uppercase leading-none">
+                        <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter camelcase leading-none">
                             Spreadsheets are where <span className="text-indigo-400 italic">habits go to die.</span>
                         </h2>
                         <p className="text-lg md:text-xl text-slate-400 leading-relaxed font-medium">
@@ -113,7 +129,7 @@ transition-all duration-300 ease-out hover:border-blue-500/50 hover:shadow-2xl h
             {/* --- 3. HOW IT WORKS --- */}
             <section className="w-full max-w-6xl px-6 py-24">
                 <div className="text-center mb-20 space-y-4">
-                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tight">How the system works</h2>
+                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white camelcase tracking-tight">How the system works</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto italic">From day 0 to day 90.</p>
                 </div>
 
