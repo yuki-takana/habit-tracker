@@ -32,7 +32,7 @@ export function DataFlowVisualization() {
     return (
         <section className="w-full max-w-7xl px-6 py-24 mx-auto overflow-hidden">
             <div className="text-center mb-20 space-y-4">
-                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white camelcase">
                     The <span className="text-indigo-500 underline decoration-indigo-500/20 underline-offset-8">Data Loop.</span>
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">

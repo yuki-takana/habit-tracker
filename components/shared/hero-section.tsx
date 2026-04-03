@@ -54,22 +54,13 @@ const HeroSection = async () => {
 
             <div className="text-center max-w-4xl relative z-10">
                 <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-slate-900 dark:text-white mb-8 capitalize leading-[0.9]">
-                    Turn daily habits into <span className="text-indigo-600 dark:text-indigo-400">your biggest flex<span className="text-slate-400 dark:text-zinc-800">.</span></span>
+                    Turn daily tiny habits into <span className="text-indigo-600 dark:text-indigo-400">your biggest flex<span className="text-slate-400 dark:text-zinc-800">.</span></span>
                 </h1>
 
                 <div className="flex flex-col items-center gap-6 mb-12 text-center px-4">
-                    {/* Killer Feature Badge */}
-                    <div className='border border-emerald-300 rounded-full p-1'>
-                        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-50/50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-black uppercase tracking-widest shadow-2xl shadow-emerald-500/5 ">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            WhatsApp Sync Active
-                        </div>
-                    </div>
+                    
 
-                    <h2 className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
+                    <h2 className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
                         {/* The <span className="text-slate-900 dark:text-white font-bold">90-day reset</span> protocol for builders.
                         <br />
                         Automate your habits, track your code, and architect your physical & financial transformation in one premium dashboard. */}
@@ -103,7 +94,7 @@ const HeroSection = async () => {
                             {"★★★★★"}
                         </div>
                         <p className="text-sm sm:text-base text-gray-600">
-                            Loved by <span className="font-semibold text-foreground">{users.length}+</span> builders
+                            Loved by <span className="font-semibold text-foreground">{users.length}+</span> users
                         </p>
 
                     </div>

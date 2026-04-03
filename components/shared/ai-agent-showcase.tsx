@@ -154,7 +154,7 @@ export function AIAgentShowcase() {
     return (
         <section className="w-full max-w-6xl px-6 py-24 mx-auto">
             <div className="text-center mb-16 space-y-4">
-                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white camelcase">
                     Meet Your <span className="text-indigo-500">Board of Directors.</span>
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">
