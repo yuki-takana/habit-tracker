@@ -23,7 +23,8 @@ export async function getSubscriptionLimits(userId: string) {
 
     return {
         isPro,
-        maxHabits: isPro ? Infinity : parseInt(config.free_habit_limit) || 3,
+        maxHabits: isPro ? Infinity : 1,
+        maxChallenges: isPro ? Infinity : 1,
         maxBlueprintsPerWeek: isPro ? Infinity : parseInt(config.free_blueprint_limit) || 1,
     };
 }
@@ -40,6 +41,20 @@ export async function hasReachedHabitLimit(userId: string) {
 
     const currentCount = await getActiveHabitCount(userId);
     return currentCount >= limits.maxHabits;
+}
+
+export async function getActiveChallengeCount(userId: string) {
+    return await prisma.challenge.count({
+        where: { userId, status: "active" }
+    });
+}
+
+export async function hasReachedChallengeLimit(userId: string) {
+    const limits = await getSubscriptionLimits(userId);
+    if (limits.isPro) return false;
+
+    const currentCount = await getActiveChallengeCount(userId);
+    return currentCount >= limits.maxChallenges;
 }
 
 // For blueprints, checking count of plans created in the last 7 days

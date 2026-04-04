@@ -35,14 +35,30 @@ export default function InsightsPage() {
         );
     }
 
-    const { focusData, timelineData, boomingArea } = data || {
+    const { focusData, timelineData, boomingArea, isPro } = data || {
         focusData: [],
         timelineData: [],
-        boomingArea: "Growth"
+        boomingArea: "Growth",
+        isPro: false
     };
 
     return (
-        <div className="max-w-6xl mx-auto pb-20 px-6 sm:px-0">
+        <div className="relative max-w-6xl mx-auto pb-20 px-6 sm:px-0">
+            {!isPro && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl rounded-[3rem]">
+                    <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-10 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-md text-center mx-4">
+                        <div className="h-16 w-16 bg-indigo-500/10 rounded-full flex items-center justify-center mb-6 border border-indigo-500/20">
+                            <Sparkles className="h-8 w-8 text-indigo-500" />
+                        </div>
+                        <h4 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-3 text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-indigo-600 dark:from-white dark:to-indigo-400">Pro Insights Locked</h4>
+                        <p className="text-sm text-slate-500 font-medium mb-8 leading-relaxed">Deep-dive AI analysis, efficiency tracking, and focus distribution are exclusively available to Habit Architect Pro members.</p>
+                        <button onClick={() => window.location.href='/billing'} className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black tracking-wide hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/30 active:scale-95 uppercase text-xs">
+                            Upgrade to Pro
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-2">

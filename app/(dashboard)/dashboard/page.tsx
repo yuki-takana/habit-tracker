@@ -17,6 +17,7 @@ import TaskForm from '@/components/tasks/task-form'
 import ChallengeForm from '@/components/challenges/challenge-form'
 import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsWidget'
 import { LifeArchitectOverview } from '@/components/dashboard/LifeArchitectOverview'
+import { Lock, Settings2 } from 'lucide-react'
 
 const Dashboard = () => {
     const [data, setData] = useState<any>(null);
@@ -151,8 +152,18 @@ const Dashboard = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50"
+                    className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 overflow-hidden"
                 >
+                    {data?.keys && !data.keys.coding && (
+                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
+                            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
+                                <Lock className="h-8 w-8 text-indigo-500 mb-3" />
+                                <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Coding Locked</h4>
+                                <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">WakaTime / GitHub Integration Required</p>
+                                <Button onClick={() => window.location.href='/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14}/> Integrate Now</Button>
+                            </div>
+                        </div>
+                    )}
                     <div className="mb-8 flex items-center justify-between">
                         <div>
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Engineering Velocity</h3>
@@ -220,8 +231,18 @@ const Dashboard = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 }}
-                    className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 lg:col-span-2"
+                    className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 lg:col-span-2 overflow-hidden"
                 >
+                    {data?.keys && !data.keys.social && (
+                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
+                            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
+                                <Lock className="h-8 w-8 text-indigo-500 mb-3" />
+                                <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Social Locked</h4>
+                                <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">LinkedIn / Twitter Integration Required</p>
+                                <Button onClick={() => window.location.href='/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14}/> Integrate Now</Button>
+                            </div>
+                        </div>
+                    )}
                     <div className="mb-8 flex items-center justify-between">
                         <div>
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Authority Building</h3>

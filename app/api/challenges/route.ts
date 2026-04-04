@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { addDays } from "date-fns";
+import { hasReachedChallengeLimit } from "@/lib/subscription";
 
 export async function POST(req: NextRequest) {
     try {
@@ -25,26 +26,12 @@ export async function POST(req: NextRequest) {
         const startDate = new Date();
         const endDate = addDays(startDate, parseInt(durationDays));
 
-        // Conflict check: only one active challenge allowed unless force true
-        if (!force) {
-            const activeChallenge = await prisma.challenge.findFirst({
-                where: { userId, status: "active" }
-            });
-
-            if (activeChallenge) {
-                return NextResponse.json(
-                    { error: "Conflict", message: "You already have an active challenge. Replace it?" },
-                    { status: 409 }
-                );
-            }
-        }
-
-        // Deactivate previous active challenges if forcing
-        if (force) {
-            await prisma.challenge.updateMany({
-                where: { userId, status: "active" },
-                data: { status: "completed" } // or "failed" if preferred
-            });
+        const limitReached = await hasReachedChallengeLimit(userId);
+        if (limitReached) {
+            return NextResponse.json(
+                { error: "Free plan limit reached. Upgrade to Pro for unlimited challenges." },
+                { status: 403 }
+            );
         }
 
         const challenge = await prisma.challenge.create({

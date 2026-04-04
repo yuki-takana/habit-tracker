@@ -14,6 +14,7 @@ import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { TodoItem } from "@/features/todos/todo-item";
+import UFLProgressCard from "@/features/analytics/shareable-card";
 
 const EMOJI_POOL = ["🌱", "🌿", "🌷", "🌻", "🌳", "🌲", "🌼", "🍀"];
 
@@ -379,6 +380,8 @@ export default function TodosPage() {
                         >
                             {toggleLoading ? <Loader2 size={20} className="animate-spin" /> : <Smartphone size={20} />}
                         </button>
+
+                        <UFLProgressCard />
 
                         <button
                             onClick={() => setIsModalOpen(true)}
