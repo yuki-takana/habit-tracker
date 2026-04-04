@@ -4,8 +4,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trees, Leaf, Wind } from 'lucide-react';
 
+const EMOJI_POOL = ["🌱", "🌿", "🌷", "🌻", "🌳", "🌲", "🌼", "🍀"];
+
 interface TreeData {
   id: string;
+  categoryId: string;
+  taskCount: number;
+  emoji: string;
   x: number;
   y: number;
   scale: number;
@@ -30,22 +35,47 @@ export const ForestView = ({ tasks = [] }: { tasks?: any[] }) => {
   useEffect(() => {
     if (!tasks) return;
     
-    const completedTasks = tasks.filter(t => t.completed).slice(-50);
-    const generatedTrees = completedTasks.map((t) => {
-      let hash = 0;
-      for (let i = 0; i < t.id.length; i++) hash = Math.imul(31, hash) + t.id.charCodeAt(i) | 0;
-      const idSeed = Math.abs(hash);
-      
-      return {
-        id: t.id,
-        x: (idSeed % 80) + 10,
-        y: ((idSeed * 13) % 60) + 20,
-        scale: ((idSeed * 7) % 50) / 100 + 0.8,
-        health: 'healthy',
-        createdAt: new Date(t.completedAt || t.createdAt).getTime(),
-      } as TreeData;
-    });
+    const completedTasks = tasks.filter(t => t.completed);
     
+    const groups: Record<string, any[]> = {};
+    completedTasks.forEach(t => {
+      const cat = t.category || "General";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(t);
+    });
+
+    const generatedTrees: TreeData[] = [];
+
+    Object.entries(groups).forEach(([category, catTasks]) => {
+      // Sort tasks by completion date to grow sequentially
+      catTasks.sort((a, b) => new Date(a.completedAt || a.createdAt).getTime() - new Date(b.completedAt || b.createdAt).getTime());
+
+      const numTrees = Math.ceil(catTasks.length / 5);
+      for (let i = 0; i < numTrees; i++) {
+        const treeTasks = catTasks.slice(i * 5, (i + 1) * 5);
+        const taskCount = treeTasks.length;
+        
+        let str = category + "_" + i;
+        let hash = 0;
+        for (let j = 0; j < str.length; j++) hash = Math.imul(31, hash) + str.charCodeAt(j) | 0;
+        const idSeed = Math.abs(hash);
+
+        const emoji = EMOJI_POOL[idSeed % EMOJI_POOL.length];
+        
+        generatedTrees.push({
+          id: str,
+          categoryId: category,
+          taskCount: taskCount,
+          emoji: emoji,
+          x: (idSeed % 80) + 10,
+          y: ((idSeed * 13) % 60) + 20,
+          scale: 1.0 + (taskCount - 1) * 0.4, // grows from 1.0 up to 2.6
+          health: 'healthy',
+          createdAt: new Date(treeTasks[treeTasks.length - 1].completedAt || treeTasks[treeTasks.length - 1].createdAt).getTime(),
+        });
+      }
+    });
+
     setTrees(generatedTrees);
   }, [tasks]);
 
@@ -138,26 +168,14 @@ export const ForestView = ({ tasks = [] }: { tasks?: any[] }) => {
                 }}
                 className="cursor-help"
               >
-                <div className="relative group">
-                  <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {tree.health === 'healthy' ? (
-                      <>
-                        <path d="M20 5L35 30H25L38 50H2L15 50L5 30H15L20 5Z" fill="#10B981" />
-                        <path d="M18 50H22V60H18V50Z" fill="#78350F" />
-                      </>
-                    ) : (
-                      <>
-                        <path d="M20 5L35 30H25L38 50H2L15 50L5 30H15L20 5Z" fill="#B45309" opacity="0.6" />
-                        <path d="M18 50H22V60H18V50Z" fill="#451A03" />
-                        <path d="M12 25L8 28" stroke="#451A03" strokeWidth="2" />
-                        <path d="M28 35L32 32" stroke="#451A03" strokeWidth="2" />
-                      </>
-                    )}
-                  </svg>
+                <div className="relative group flex items-center justify-center">
+                  <div className="text-4xl drop-shadow-lg" style={{ filter: tree.health === 'weak' ? 'grayscale(0.8) opacity(0.7)' : 'none' }}>
+                    {tree.emoji}
+                  </div>
                   
                   {/* Tooltip on hover */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                    {tree.health === 'healthy' ? 'Lush Victory' : 'Time-lost Wither'}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                    <span className="font-bold text-emerald-400">{tree.categoryId}</span> - {tree.taskCount} {tree.taskCount === 1 ? 'task' : 'tasks'}
                   </div>
                 </div>
               </motion.div>
