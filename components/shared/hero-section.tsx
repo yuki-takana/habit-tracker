@@ -58,12 +58,9 @@ const HeroSection = async () => {
                 </h1>
 
                 <div className="flex flex-col items-center gap-6 mb-12 text-center px-4">
-                    
+
 
                     <h2 className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
-                        {/* The <span className="text-slate-900 dark:text-white font-bold">90-day reset</span> protocol for builders.
-                        <br />
-                        Automate your habits, track your code, and architect your physical & financial transformation in one premium dashboard. */}
                         The gamified habit tracker built for developers and builders. Log via WhatsApp, and watch your life level up — one habit at a time.
                     </h2>
                 </div>
