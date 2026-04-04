@@ -50,6 +50,11 @@ export async function getInsightsData() {
 
     if (!user) throw new Error("User not found");
 
+    const sub = await prisma.subscription.findFirst({
+        where: { userId: user.id, status: "active" }
+    });
+    const isPro = !!sub;
+
     // Calculate Focus Distribution
     const categories: Record<string, number> = {};
 
@@ -108,5 +113,6 @@ export async function getInsightsData() {
         ],
         timelineData,
         boomingArea,
+        isPro,
     };
 }

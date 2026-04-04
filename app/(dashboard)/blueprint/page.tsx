@@ -199,7 +199,11 @@ export default function BlueprintHubPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {agents.map((agent) => {
                     const Icon = agent.icon;
-                    const isLocked = limits?.blueprints?.hasReachedLimit;
+                    const isFreeAgent = agent.title === "Project Architect" || agent.title === "Career Mentor";
+                    const isPremiumLocked = limits && !limits.isPro && !isFreeAgent;
+                    const isLocked = isPremiumLocked || limits?.blueprints?.hasReachedLimit;
+                    
+                    const lockedMessage = isPremiumLocked ? "Upgrade to Pro to unlock" : "Weekly free limit reached";
 
                     return (
                         <div
@@ -243,7 +247,7 @@ export default function BlueprintHubPage() {
                                         {isLocked ? (
                                             <>
                                                 <Lock className="w-4 h-4 mr-2 text-rose-500" />
-                                                <span className="text-rose-500">Upgrade to Pro to unlock</span>
+                                                <span className="text-rose-500">{lockedMessage}</span>
                                             </>
                                         ) : (
                                             <>

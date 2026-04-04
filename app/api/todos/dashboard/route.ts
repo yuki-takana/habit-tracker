@@ -22,7 +22,10 @@ export async function GET() {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
-
+        const subscription = await prisma.subscription.findFirst({
+            where: { userId: user.id, status: "active" },
+        });
+        const isPro = !!subscription;
         const todos = await prisma.todo.findMany({
             where: { userId: user.id },
             orderBy: { createdAt: "desc" },
@@ -49,6 +52,10 @@ export async function GET() {
             } else {
                 grouped.today.push(todo);
             }
+        }
+
+        if (!isPro && grouped.today.length > 10) {
+            grouped.today = grouped.today.slice(0, 10);
         }
 
         return NextResponse.json({

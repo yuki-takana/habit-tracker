@@ -17,7 +17,6 @@ const navItems = [
     { name: "Insights", href: "/insights", icon: InfoIcon, key: "feature_insights" },
     { name: "Coding", href: "/coding", icon: Code2 },
     { name: "Blueprint", href: "/blueprint", icon: Bot },
-    { name: "Billing", href: "/billing", icon: CreditCard },
 ]
 
 export default function DashboardHeader({ isPro }: { isPro: boolean }) {

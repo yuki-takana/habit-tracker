@@ -60,6 +60,10 @@ export async function GET() {
                     streakShieldContinuity: true,
                     roleLevel: true,
                     roleTitle: true,
+                    wakatimeApiKey: true,
+                    githubApiKey: true,
+                    linkedinApiKey: true,
+                    twitterApiKey: true,
                     progressTrees: { orderBy: { createdAt: 'desc' }, take: 1 }
                 }
             })
@@ -193,7 +197,11 @@ export async function GET() {
                 durationDays: activeChallenge.durationDays,
                 startDate: activeChallenge.startDate,
                 currentDay: Math.max(1, Math.ceil((new Date().getTime() - new Date(activeChallenge.startDate).getTime()) / (1000 * 60 * 60 * 24)))
-            } : null
+            } : null,
+            keys: {
+                social: !!(user.linkedinApiKey || user.twitterApiKey),
+                coding: !!(user.wakatimeApiKey || user.githubApiKey)
+            }
         });
 
     } catch (error: any) {
