@@ -88,7 +88,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 {isLogin ? "Welcome back." : "Create account."}
               </h2>
               <p className="mt-2 text-slate-500">
-                {isLogin ? "Sign in to track your 90-day progress." : "Join to build powerful habits."}
+                {isLogin ? "Sign in to track your progress." : "Join to build powerful habits."}
               </p>
 
               <div className="mt-8 space-y-6">

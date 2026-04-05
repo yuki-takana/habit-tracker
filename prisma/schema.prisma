@@ -104,6 +104,10 @@ model User {
   autoShieldEnabled      Boolean             @default(true)
   lastGraceActivation    DateTime?
 
+  agentUsageCount        Int                 @default(0)
+  streakRestoreCount     Int                 @default(0)
+  agentPurchases         AgentPurchase[]
+
   roleLevel          Int       @default(0)
   roleTitle          String    @default("Beginner")
   lastProgressUpdate DateTime?
@@ -892,6 +896,17 @@ model ChatMessage {
   role      String // "user" (you) or "assistant" (AI)
   content   String
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AgentPurchase {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  agentId     String
+  purchasedAt DateTime @default(now())
+  expiresAt   DateTime
+  amountPaid  Int?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

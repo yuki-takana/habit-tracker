@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendWhatsAppReminder, getWhatsAppProvider, sendMetaTextMessage, sendUserAnalytics } from '@/services/whatsapp';
+import bcrypt from 'bcryptjs';
 
 export async function saveUserPhone(phoneNumber: string) {
   const session = await getServerSession(authOptions);
@@ -20,7 +21,7 @@ export async function saveUserPhone(phoneNumber: string) {
   try {
     // Send a welcome message upon setting up the number
     await sendMetaTextMessage(
-      phoneNumber, 
+      phoneNumber,
       "Welcome to UFL the real tracking system! 👋\n\nI'll be sending you reminders for your tasks here. Reply with '1' or 'Done' when you complete a task!"
     );
   } catch (error) {
@@ -50,16 +51,53 @@ export async function saveUserApiKeys(data: {
   });
 }
 
-export async function updateUserProfile(data: { name?: string; email?: string }) {
+export async function updateUserProfile(data: {
+  name?: string;
+  email?: string,
+  currentPassword?: string;
+  newPassword?: string;
+}) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) throw new Error("Unauthorized");
 
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  let updateData: any = {};
+
+  if (data.name) updateData.name = data.name;
+  if (data.email) updateData.email = data.email;
+
+  if (data.newPassword) {
+    if (data.newPassword.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+
+    // If user already has password → validate current password
+    if (user.password) {
+      if (!data.currentPassword) {
+        throw new Error("Current password required");
+      }
+
+      const isValid = await bcrypt.compare(
+        data.currentPassword,
+        user.password
+      );
+
+      if (!isValid) {
+        throw new Error("Invalid current password");
+      }
+    }
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+    updateData.password = hashedPassword;
+  }
+
   return await prisma.user.update({
     where: { email: session.user.email },
-    data: {
-      name: data.name,
-      email: data.email,
-    },
+    data: updateData,
   });
 }
 
@@ -81,7 +119,7 @@ export async function sendTestWhatsapp() {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { phone: true }
+    select: { phone: true, name: true },
   });
 
   if (!user?.phone) throw new Error("Phone number not set");
@@ -92,8 +130,9 @@ export async function sendTestWhatsapp() {
   //   3,
   //   "85%"
   // );
-  // await sendWhatsAppReminder(user.phone,"Abhishek", "Test Message from Habit Tracker!", provider);
-  await sendMetaTextMessage(user.phone,"hello this is test message from UFL!")
+  await sendWhatsAppReminder(user.phone,"Abhishek", "Test Message from Habit Tracker!", provider);
+  // await sendMetaTextMessage(user.phone, "hello this is test message from UFL!")
+
   return { success: true };
 }
 
@@ -162,7 +201,7 @@ export async function fetchUserSubscriptionTier() {
   if (!session?.user?.id) return { plan: 'free' };
   const { getSubscriptionLimits } = await import('@/lib/subscription');
   const limits = await getSubscriptionLimits(session.user.id);
-  return { plan: limits.isPro ? 'pro' : 'free' };
+  return { plan: limits.isPro ? 'pro' : 'free', periodEnd: limits.periodEnd };
 }
 
 export async function getAdminDashboardStats() {
@@ -251,11 +290,38 @@ export async function getAdminDashboardStats() {
 export async function getUserXp() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return { xp: 0, level: 1 };
-  
+
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     select: { xp: true, level: true }
   });
-  
+
   return { xp: user?.xp || 0, level: user?.level || 1 };
+}
+
+export async function getGamificationConfig() {
+  const config = await prisma.systemConfig.findUnique({ where: { key: 'xp_level_thresholds' } });
+  if (config?.value) {
+    try {
+      return JSON.parse(config.value);
+    } catch { }
+  }
+  return null;
+}
+
+export async function updateGamificationConfig(thresholds: any[]) {
+  const session = await getServerSession(authOptions);
+  const adminEmail = "abhisheaurya@gmail.com";
+
+  if (session?.user?.email !== adminEmail) {
+    throw new Error("Unauthorized: Only admin can update gamification settings");
+  }
+
+  await prisma.systemConfig.upsert({
+    where: { key: 'xp_level_thresholds' },
+    update: { value: JSON.stringify(thresholds) },
+    create: { key: 'xp_level_thresholds', value: JSON.stringify(thresholds) }
+  });
+
+  return true;
 }

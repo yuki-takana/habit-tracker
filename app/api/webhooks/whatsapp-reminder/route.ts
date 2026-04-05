@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
   const WEBHOOK_VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'abcdefghijklmnopqrstuvwxyz';
 
   if (mode === 'subscribe' && token === WEBHOOK_VERIFY_TOKEN) {
-    console.log("✅ Webhook Verified!");
     return new NextResponse(challenge, { status: 200 });
   }
 
@@ -22,8 +21,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log("📩 New Webhook Event:", JSON.stringify(body, null, 2));
-
     const entry = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const message = changes?.value?.messages?.[0];

@@ -18,14 +18,19 @@ export async function isProUser(userId: string) {
 }
 
 export async function getSubscriptionLimits(userId: string) {
+    const sub = await getUserSubscription(userId);
     const isPro = await isProUser(userId);
     const config = await getSubscriptionConfig();
 
     return {
         isPro,
-        maxHabits: isPro ? Infinity : 1,
+        periodEnd: sub?.currentPeriodEnd || null,
+        maxHabits: isPro ? Infinity : parseInt(config.free_habit_limit) || 3,
         maxChallenges: isPro ? Infinity : 1,
         maxBlueprintsPerWeek: isPro ? Infinity : parseInt(config.free_blueprint_limit) || 1,
+        hasForestView: isPro,
+        bossChallengeEnabled: isPro,
+        xpMultiplierEnabled: isPro,
     };
 }
 

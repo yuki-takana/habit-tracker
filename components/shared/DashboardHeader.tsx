@@ -19,7 +19,7 @@ const navItems = [
     { name: "Blueprint", href: "/blueprint", icon: Bot },
 ]
 
-export default function DashboardHeader({ isPro }: { isPro: boolean }) {
+export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, periodEnd?: Date | null }) {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
     const [config, setConfig] = React.useState<any>(null)
@@ -67,6 +67,11 @@ export default function DashboardHeader({ isPro }: { isPro: boolean }) {
                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold tracking-wide uppercase">
                             <Shield size={14} />
                             <span>Pro Max</span>
+                            {periodEnd && (
+                                <span className="ml-1 opacity-70 normal-case font-medium text-[10px]">
+                                    ({Math.max(0, Math.ceil((new Date(periodEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))}d left)
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>

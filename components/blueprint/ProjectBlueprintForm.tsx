@@ -65,6 +65,7 @@ export function ProjectBlueprintForm() {
                 body: JSON.stringify(payload),
             })
             const data = await response.json()
+            console.log("Project Agent response:", data)
             if (data.success && data.planId) {
                 router.push(`/blueprint/project/${data.planId}`)
             } else {

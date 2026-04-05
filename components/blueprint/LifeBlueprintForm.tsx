@@ -64,6 +64,7 @@ export function LifeBlueprintForm() {
                 body: JSON.stringify(payload),
             })
             const data = await response.json()
+            console.log("Life Blueprint Agent response:", data)
             if (data.success && data.planId) {
                 router.push(`/blueprint/life/${data.planId}`)
             } else {

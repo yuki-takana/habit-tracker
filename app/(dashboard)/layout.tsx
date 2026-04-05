@@ -17,7 +17,7 @@ export default async function DashboardLayout({
     redirect("/signin");
   }
 
-  const { plan } = await fetchUserSubscriptionTier();
+  const { plan, periodEnd } = await fetchUserSubscriptionTier();
   const config = await getSubscriptionConfig();
   const isPro = plan === "pro";
 
@@ -25,7 +25,7 @@ export default async function DashboardLayout({
     <div className="flex flex-1 min-h-screen">
       <DashboardSidebar />
       <main className="flex-1 transition-all duration-300 lg:pl-[256px]">
-        <DashboardHeader isPro={isPro} />
+        <DashboardHeader isPro={isPro} periodEnd={periodEnd} />
         <div className="container mx-auto px-4 py-6">
           <FeatureGateGuard config={config}>
             {children}
