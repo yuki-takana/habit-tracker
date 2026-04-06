@@ -7,6 +7,7 @@ import { Sparkles, ArrowRight, Dumbbell, Wallet, Code, BriefcaseBusiness, Trendi
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { ActiveBlueprintCard } from '../ui/ActiveBlueprintCard'
 
 const iconMap: Record<string, any> = {
     Dumbbell: Dumbbell,
@@ -91,29 +92,18 @@ export function ActiveBlueprintsWidget() {
                     const Icon = iconMap[bp.icon] || Sparkles;
                     return (
                         <motion.div
-                            key={i}
+                            key={bp.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.1 }}
+                            transition={{ delay: i * 0.08 }}
                         >
-                            <Link href={bp.link} className="block group">
-                                <div className="h-full flex flex-col justify-between p-6 rounded-[2rem] border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1">
-                                    <div>
-                                        <div className={`w-12 h-12 rounded-2xl bg-slate-50 dark:bg-zinc-950 border border-slate-100 dark:border-zinc-800 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform ${bp.color}`}>
-                                            <Icon className="w-6 h-6" />
-                                        </div>
-                                        <h4 className="text-sm font-black text-slate-900 dark:text-white truncate uppercase tracking-tighter mb-1">
-                                            {bp.title}
-                                        </h4>
-                                        <p className="text-[10px] font-bold text-slate-400 dark:text-zinc-600 uppercase tracking-widest">
-                                            {bp.type} Protocol
-                                        </p>
-                                    </div>
-                                    <div className="mt-6 pt-4 border-t border-slate-50 dark:border-zinc-800 flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Execute</span>
-                                        <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
-                                    </div>
-                                </div>
+                            <Link href={bp.link}>
+                                <ActiveBlueprintCard
+                                    title={bp.title}
+                                    badgeLabel={bp.type}
+                                    icon={<Icon className="w-5 h-5" />}
+                                    badgeColor={bp.badgeColor}
+                                />
                             </Link>
                         </motion.div>
                     )

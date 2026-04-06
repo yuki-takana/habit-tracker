@@ -19,16 +19,22 @@ export const ActiveBlueprintCard: React.FC<ActiveBlueprintCardProps> = ({
   delay = 0,
 }) => {
   return (
-    <div className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-border/50 h-full bg-card rounded-2xl overflow-hidden relative">
+    <div className={`group hover:shadow-lg hover:-translate-y-1 transition-all duration-500 cursor-pointer
+    border h-full rounded-2xl overflow-hidden relative p-2
+    bg-white border-slate-200
+    dark:bg-[#111113] dark:border-zinc-800
+    hover:shadow-indigo-500/5`}>
       {/* Subtle Glow */}
-      <div 
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" 
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
           background: `radial-gradient(120px circle at left top, var(--primary)/5, transparent)`
         }}
       />
-      
-      <div className="p-5 flex flex-col h-full justify-between gap-4 relative z-10">
+
+      <div className="p-5 flex flex-col h-full justify-between gap-4 relative z-10 rounded-2xl border
+      bg-white border-slate-200
+      dark:bg-[#18181B] dark:border-zinc-800">
         <div className="flex items-center justify-between">
           <div className={`p-2.5 rounded-xl border ${badgeColor} bg-background shadow-xs`}>
             {icon}
