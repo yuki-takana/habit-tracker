@@ -1,3 +1,4 @@
+import { recordAgentUsage } from '@/lib/agent-limits';
 import { runLifeArchitect } from "@/lib/agents/life/architect";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -10,6 +11,12 @@ export async function POST(req: Request) {
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        try {
+            await recordAgentUsage(session.user.id, "life");
+        } catch (err: any) {
+            return NextResponse.json({ success: false, message: err.message, error: err.message }, { status: 403 });
+        }
+
 
         const limitReached = await hasReachedBlueprintLimit(session.user.id);
         if (limitReached) {
@@ -19,7 +26,7 @@ export async function POST(req: Request) {
         const { userGoal, context } = await req.json();
 
         const result = await runLifeArchitect(session.user.id, userGoal, context);
-        
+
         if (result.success) {
             return NextResponse.json({ success: true, ...result });
         } else {

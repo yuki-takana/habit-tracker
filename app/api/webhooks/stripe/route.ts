@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/services/stripe';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+import { purchaseAgent } from '@/lib/agent-limits';
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -24,10 +25,19 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
 
     if (event.type === 'checkout.session.completed') {
-        const subscription = await stripe.subscriptions.retrieve(session.subscription as string) as any;
         const userId = session.metadata?.userId;
+        const type = session.metadata?.type;
 
-        if (userId) {
+        if (userId && type === 'agentPurchase') {
+            const agentId = session.metadata?.agentId;
+            const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+            if (agentId) {
+                await purchaseAgent(userId, agentId, amountPaid);
+            }
+        }
+        else if (userId && session.subscription) {
+            const subscription = await stripe.subscriptions.retrieve(session.subscription as string) as any;
+
             await prisma.subscription.upsert({
                 where: { userId },
                 create: {

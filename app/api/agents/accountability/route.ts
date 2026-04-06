@@ -1,3 +1,4 @@
+import { recordAgentUsage } from '@/lib/agent-limits';
 import { runAccountabilityAgent } from "@/lib/agents/accountability/architect";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -9,11 +10,16 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ success: false, message: "Unauthorized: Please log in." }, { status: 401 });
     }
+    try {
+      await recordAgentUsage(session.user.id, "accountability");
+    } catch (err: any) {
+      return NextResponse.json({ success: false, message: err.message, error: err.message }, { status: 403 });
+    }
 
     const { feedback } = await req.json();
-    
+
     if (!feedback) {
-       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
     }
 
     const result = await runAccountabilityAgent(session.user.id, feedback);

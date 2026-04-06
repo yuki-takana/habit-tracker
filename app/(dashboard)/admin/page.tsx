@@ -467,7 +467,17 @@ const AdminDashboard = () => {
                                         onChange={(e) => setSubConfig({ ...subConfig, pro_yearly_price_inr: e.target.value })}
                                     />
                                 </div>
+                                <div>
+                                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Agent Unlock Price (INR)</label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 flex h-10 w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:border-zinc-700 dark:text-white dark:focus:ring-indigo-400"
+                                        value={subConfig.agent_price_inr || "49"}
+                                        onChange={(e) => setSubConfig({ ...subConfig, agent_price_inr: e.target.value })}
+                                    />
+                                </div>
                             </div>
+
                             <div className="space-y-4">
                                 <h4 className="font-semibold text-slate-800 dark:text-slate-200">Feature Limits (Free Tier)</h4>
                                 <div>

@@ -1,3 +1,4 @@
+import { recordAgentUsage } from '@/lib/agent-limits';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
@@ -9,6 +10,12 @@ export async function POST(req: Request) {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        try {
+            await recordAgentUsage(session.user.id, "mindset");
+        } catch (err: any) {
+            return NextResponse.json({ success: false, message: err.message, error: err.message }, { status: 403 });
         }
 
         const limitReached = await hasReachedBlueprintLimit(session.user.id);

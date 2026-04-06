@@ -107,6 +107,7 @@ model User {
   agentUsageCount        Int                 @default(0)
   streakRestoreCount     Int                 @default(0)
   agentPurchases         AgentPurchase[]
+  agentRecords           AgentRecord[]
 
   roleLevel          Int       @default(0)
   roleTitle          String    @default("Beginner")
@@ -909,4 +910,19 @@ model AgentPurchase {
   amountPaid  Int?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AgentRecord {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  agentId     String
+  isPurchased Boolean  @default(false)
+  promptsUsed Int      @default(0)
+  promptLimit Int      @default(5)
+  purchasedAt DateTime?
+  amountPaid  Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, agentId])
 }
