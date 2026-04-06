@@ -15,7 +15,7 @@ export async function GET() {
         }
 
         const userId = session.user.id;
-        
+
         // Process progress updates (lazy sync)
         await processUserDailyProgress(userId);
 
@@ -88,6 +88,7 @@ export async function GET() {
         const syncTasks = [];
 
         const scheduledStart = new Date();
+        scheduledStart.setHours(scheduledStart.getHours() + 1);
         const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
         const deadlineTime = new Date(getTodayEndIST());
 
@@ -160,9 +161,9 @@ export async function GET() {
 
             chartData.push({
                 day: dayName,
-                commits: Math.round(codingHours * 2), 
+                commits: Math.round(codingHours * 2),
                 freelance: Math.round(codingHours * 1.5),
-                energy: 70 + (codingHours * 2) + (intensity / 10), 
+                energy: 70 + (codingHours * 2) + (intensity / 10),
                 workoutIntensity: intensity
             });
         }
@@ -190,7 +191,7 @@ export async function GET() {
                 { week: 'Week 2', connections: 12, posts: 4 },
                 { week: 'Week 3', connections: 8, posts: 3 },
                 { week: 'Week 4', connections: 20, posts: 7 },
-            ], 
+            ],
             activeChallenge: activeChallenge ? {
                 title: activeChallenge.title,
                 focus: activeChallenge.focus,

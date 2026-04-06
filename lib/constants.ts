@@ -3,6 +3,7 @@ export const DEFAULT_SUBSCRIPTION_CONFIG = {
     pro_monthly_price_inr: "299",
     pro_yearly_price_usd: "39.99",
     pro_yearly_price_inr: "2499",
+    agent_price_inr: "49",
     free_habit_limit: "3",
     free_blueprint_limit: "1",
     active_payment_gateway: "both", // "stripe" | "razorpay" | "both"

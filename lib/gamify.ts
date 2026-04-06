@@ -1,4 +1,6 @@
-// Absolute XP Level System (Rule 06)
+import { prisma } from '@/lib/prisma'; // Ensure prisma is imported if not globally passed
+
+// Default fallback Absolute XP Level System (Rule 06)
 export const LEVEL_THRESHOLDS = [
   { level: 1, xp: 0 },
   { level: 2, xp: 150 },
@@ -12,9 +14,21 @@ export const LEVEL_THRESHOLDS = [
   { level: 10, xp: 10000 },
 ];
 
-export function getLevelForXp(xp: number): number {
+export async function getLevelThresholds(prismaInstance: any = prisma) {
+  try {
+    const config = await prismaInstance.systemConfig.findUnique({
+      where: { key: 'xp_level_thresholds' }
+    });
+    if (config?.value) return JSON.parse(config.value);
+  } catch (err) {
+    console.error("Failed to parse xp_level_thresholds from config", err);
+  }
+  return LEVEL_THRESHOLDS;
+}
+
+export function getLevelForXp(xp: number, thresholds: any[] = LEVEL_THRESHOLDS): number {
   let matchedLevel = 1;
-  for (const threshold of LEVEL_THRESHOLDS) {
+  for (const threshold of thresholds) {
     if (xp >= threshold.xp) {
       matchedLevel = threshold.level;
     } else {
@@ -57,9 +71,11 @@ export async function addXpToUser(prisma: any, userId: string, xpDelta: number) 
   // Floor rule: XP can never go below 0
   let newXp = Math.max(0, user.xp + xpDelta);
   
+  const thresholds = await getLevelThresholds(prisma);
+
   // Levels never regress
   let newLevel = user.level;
-  const calcLevel = getLevelForXp(newXp);
+  const calcLevel = getLevelForXp(newXp, thresholds);
   
   if (calcLevel > newLevel) {
     newLevel = calcLevel;

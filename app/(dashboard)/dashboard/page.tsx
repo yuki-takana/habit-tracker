@@ -18,6 +18,7 @@ import ChallengeForm from '@/components/challenges/challenge-form'
 import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsWidget'
 import { LifeArchitectOverview } from '@/components/dashboard/LifeArchitectOverview'
 import { Lock, Settings2 } from 'lucide-react'
+import { getDashboardSummary } from '@/lib/utils/api'
 
 const Dashboard = () => {
     const [data, setData] = useState<any>(null);
@@ -27,8 +28,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const res = await fetch('/api/dashboard/summary');
-                const result = await res.json();
+                const result = await getDashboardSummary();
                 setData(result);
             } catch (err) {
                 console.error("Failed to load dashboard data", err);

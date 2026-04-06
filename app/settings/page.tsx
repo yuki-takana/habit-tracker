@@ -21,13 +21,20 @@ export default function SettingsPage() {
   const [integrationsLoading, setIntegrationsLoading] = useState(false);
   const [isPro, setIsPro] = useState<boolean | null>(null);
   const [xp, setXp] = useState(0);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     const fetchSubStatus = async () => {
       if ((session?.user as any)?.id) {
         const limits = await fetchUserSubscriptionTier();
         setIsPro(limits.plan === 'pro');
-        
+
         const { getUserXp } = await import('@/app/action');
         const xpData = await getUserXp();
         setXp(xpData.xp);
@@ -76,7 +83,16 @@ export default function SettingsPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateUserProfile({ name, email });
+      if (newPassword && newPassword !== confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+      await updateUserProfile({
+        name,
+        email,
+        currentPassword,
+        newPassword
+      });
       await update({ name, email });
       toast.success("Profile updated successfully!");
     } catch (error) {
@@ -137,6 +153,72 @@ export default function SettingsPage() {
                   className="mt-1 block w-full rounded-xl border-slate-200 dark:border-zinc-700 dark:bg-zinc-800 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 transition-all"
                   placeholder="your@email.com"
                 />
+              </div>
+              <div className="border-t pt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordSection(!showPasswordSection)}
+                  className="text-indigo-600 font-medium text-sm hover:underline"
+                >
+                  {showPasswordSection ? "Cancel Password Change" : "Change Password"}
+                </button>
+
+                {showPasswordSection && (
+                  <div className="mt-4 space-y-4">
+
+                    {/* Current Password */}
+                    <div className="relative">
+                      <input
+                        type={showCurrent ? "text" : "password"}
+                        placeholder="Current Password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border"
+                      />
+                      <span
+                        onClick={() => setShowCurrent(!showCurrent)}
+                        className="absolute right-3 top-2.5 cursor-pointer"
+                      >
+                        {showCurrent ? "🙈" : "👁️"}
+                      </span>
+                    </div>
+
+                    {/* New Password */}
+                    <div className="relative">
+                      <input
+                        type={showNew ? "text" : "password"}
+                        placeholder="New Password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border"
+                      />
+                      <span
+                        onClick={() => setShowNew(!showNew)}
+                        className="absolute right-3 top-2.5 cursor-pointer"
+                      >
+                        {showNew ? "🙈" : "👁️"}
+                      </span>
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div className="relative">
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        placeholder="Confirm Password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border"
+                      />
+                      <span
+                        onClick={() => setShowConfirm(!showConfirm)}
+                        className="absolute right-3 top-2.5 cursor-pointer"
+                      >
+                        {showConfirm ? "🙈" : "👁️"}
+                      </span>
+                    </div>
+
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex justify-end">
