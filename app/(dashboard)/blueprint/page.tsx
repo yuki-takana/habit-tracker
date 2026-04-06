@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { activePaymentGateways } from "@/lib/payments/client";
 
 declare global {
     interface Window {
@@ -154,7 +155,7 @@ const blueprintTypeConfig: Record<string, { icon: any; color: string; badgeColor
     Career: { icon: BriefcaseBusiness, color: "text-amber-500", badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20", label: "Career" },
     Gym: { icon: Dumbbell, color: "text-cyan-500", badgeColor: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20", label: "Fitness" },
     Networking: { icon: Users, color: "text-blue-600", badgeColor: "bg-blue-500/10 text-blue-600 border-blue-500/20", label: "Networking" },
-    Business: { icon: BriefcaseBusiness, color: "text-slate-800", badgeColor: "bg-slate-500/10 text-slate-800 border-slate-500/20", label: "Business" },
+    Business: { icon: BriefcaseBusiness, color: "text-blue-800", badgeColor: "bg-blue-500/10 text-blue-800 border-blue-500/20", label: "Business" },
     Health: { icon: Heart, color: "text-rose-500", badgeColor: "bg-rose-500/10 text-rose-600 border-rose-500/20", label: "Health" },
     Learning: { icon: GraduationCap, color: "text-orange-600", badgeColor: "bg-orange-500/10 text-orange-600 border-orange-500/20", label: "Learning" },
     Mindset: { icon: Brain, color: "text-pink-600", badgeColor: "bg-pink-500/10 text-pink-600 border-pink-500/20", label: "Mindset" },
@@ -173,13 +174,19 @@ export default function BlueprintHubPage() {
     const [checkoutType, setCheckoutType] = useState<'stripe' | 'razorpay'>('razorpay');
     const [selectedAgent, setSelectedAgent] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [ config, setConfig ] = useState<any>(null)
 
     useEffect(() => {
         // Simple logic to detect Gateway based on user env var, defaulting to Razorpay.
         // We let the user dynamically choose between Stripe and Razorpay using constants
         // but for now we'll prefer Stripe if explicitly set, else Razorpay.
-        const gateway = process.env.NEXT_PUBLIC_ACTIVE_GATEWAY || 'razorpay';
-        setCheckoutType(gateway as any);
+        let gateway;
+        const fetchGateway = async () => {
+            gateway = await activePaymentGateways();
+            setCheckoutType(gateway[0] as any);
+            setConfig(gateway[1] || null);
+        };
+        fetchGateway();
 
         const fetch_ = async () => {
             try {
@@ -205,7 +212,7 @@ export default function BlueprintHubPage() {
             }
         }
         fetch_()
-    }, [])
+    }, [config])
 
     const handleUnlock = async (agentId: string) => {
         try {
@@ -288,7 +295,7 @@ export default function BlueprintHubPage() {
             </div>
 
             {/* Grid of Agents Using AgentCard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {agents.map((agent) => {
                     // isFreeAgent denotes agents that don't need Pro unlocks historically. 
                     // However, we now have prompts limits for all agents via AgentCard natively.
@@ -306,6 +313,7 @@ export default function BlueprintHubPage() {
                                 description={agent.description}
                                 isActive={false}
                                 isPro={isPro}
+                                config={config}
                                 isPurchased={record.isPurchased}
                                 promptsUsed={record.promptsUsed}
                                 promptLimit={record.promptLimit}
@@ -346,7 +354,7 @@ export default function BlueprintHubPage() {
                         </p>
 
                         <div className="text-4xl font-black text-primary mb-6">
-                            ₹49 <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">/ lifetime</span>
+                            ₹{config || 0} <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">/ lifetime</span>
                         </div>
 
                         <button
@@ -396,7 +404,7 @@ export default function BlueprintHubPage() {
                                     <Link href={bp.link}>
                                         <ActiveBlueprintCard
                                             title={bp.title}
-                                            badgeLabel={config.label}
+                                            badgeLabel={bp.type}
                                             icon={<Icon className="w-5 h-5" />}
                                             badgeColor={config.badgeColor}
                                         />

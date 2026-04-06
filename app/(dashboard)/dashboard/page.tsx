@@ -19,6 +19,7 @@ import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsW
 import { LifeArchitectOverview } from '@/components/dashboard/LifeArchitectOverview'
 import { Lock, Settings2 } from 'lucide-react'
 import { getDashboardSummary } from '@/lib/utils/api'
+import clsx from 'clsx'
 
 const Dashboard = () => {
     const [data, setData] = useState<any>(null);
@@ -29,6 +30,7 @@ const Dashboard = () => {
         const fetchDashboardData = async () => {
             try {
                 const result = await getDashboardSummary();
+                console.log("Dashboard summary data:", result);
                 setData(result);
             } catch (err) {
                 console.error("Failed to load dashboard data", err);
@@ -148,54 +150,59 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
                 {/* Coding Activity */}
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 overflow-hidden"
-                >
-                    {data?.keys && !data.keys.coding && (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
-                            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
-                                <Lock className="h-8 w-8 text-indigo-500 mb-3" />
-                                <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Coding Locked</h4>
-                                <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">WakaTime / GitHub Integration Required</p>
-                                <Button onClick={() => window.location.href='/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14}/> Integrate Now</Button>
+                {data?.keys?.coding && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 overflow-hidden"
+                    >
+                        {data?.keys && !data.keys.coding && (
+                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
+                                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
+                                    <Lock className="h-8 w-8 text-indigo-500 mb-3" />
+                                    <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Coding Locked</h4>
+                                    <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">WakaTime / GitHub Integration Required</p>
+                                    <Button onClick={() => window.location.href = '/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14} /> Integrate Now</Button>
+                                </div>
+                            </div>
+                        )}
+                        <div className="mb-8 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Engineering Velocity</h3>
+                                <p className="text-xs text-slate-500 font-medium">Daily Git Commits & Project Time</p>
+                            </div>
+                            <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
+                                <Activity className="h-5 w-5 text-indigo-500" />
                             </div>
                         </div>
-                    )}
-                    <div className="mb-8 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Engineering Velocity</h3>
-                            <p className="text-xs text-slate-500 font-medium">Daily Git Commits & Project Time</p>
+                        <div className="h-75 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={data?.githubActivityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
+                                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(99, 102, 241, 0.05)' }}
+                                        contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }}
+                                    />
+                                    <Bar dataKey="commits" name="Commits" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                                    <Bar dataKey="freelance" name="Freelance" fill="#a5b4fc" radius={[6, 6, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
-                        <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
-                            <Activity className="h-5 w-5 text-indigo-500" />
-                        </div>
-                    </div>
-                    <div className="h-75 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data?.githubActivityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
-                                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
-                                <Tooltip
-                                    cursor={{ fill: 'rgba(99, 102, 241, 0.05)' }}
-                                    contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }}
-                                />
-                                <Bar dataKey="commits" name="Commits" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                                <Bar dataKey="freelance" name="Freelance" fill="#a5b4fc" radius={[6, 6, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                )}
 
                 {/* Bio-Rhythms (Energy vs Gym) */}
                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50"
+                    className={clsx(
+    "rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50",
+    !data?.keys?.coding && "lg:col-span-2"
+  )}
                 >
                     <div className="mb-8 flex items-center justify-between">
                         <div>
@@ -227,44 +234,46 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Social Proof & Connections */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 }}
-                    className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 lg:col-span-2 overflow-hidden"
-                >
-                    {data?.keys && !data.keys.social && (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
-                            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
-                                <Lock className="h-8 w-8 text-indigo-500 mb-3" />
-                                <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Social Locked</h4>
-                                <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">LinkedIn / Twitter Integration Required</p>
-                                <Button onClick={() => window.location.href='/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14}/> Integrate Now</Button>
+                {data?.keys?.social && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7 }}
+                        className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 lg:col-span-2 overflow-hidden"
+                    >
+                        {data?.keys && !data.keys.social && (
+                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
+                                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
+                                    <Lock className="h-8 w-8 text-indigo-500 mb-3" />
+                                    <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Social Locked</h4>
+                                    <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">LinkedIn / Twitter Integration Required</p>
+                                    <Button onClick={() => window.location.href = '/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14} /> Integrate Now</Button>
+                                </div>
+                            </div>
+                        )}
+                        <div className="mb-8 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Authority Building</h3>
+                                <p className="text-xs text-slate-500 font-medium">LinkedIn/Twitter Outreach & Content Sync</p>
+                            </div>
+                            <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
+                                <Users className="h-5 w-5 text-emerald-500" />
                             </div>
                         </div>
-                    )}
-                    <div className="mb-8 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Authority Building</h3>
-                            <p className="text-xs text-slate-500 font-medium">LinkedIn/Twitter Outreach & Content Sync</p>
+                        <div className="h-75 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={data?.networkingData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
+                                    <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                                    <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }} />
+                                    <Line type="monotone" dataKey="connections" name="Connections" stroke="#10b981" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
+                                    <Line type="monotone" dataKey="posts" name="Posts" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
+                                </LineChart>
+                            </ResponsiveContainer>
                         </div>
-                        <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
-                            <Users className="h-5 w-5 text-emerald-500" />
-                        </div>
-                    </div>
-                    <div className="h-75 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={data?.networkingData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
-                                <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
-                                <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }} />
-                                <Line type="monotone" dataKey="connections" name="Connections" stroke="#10b981" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
-                                <Line type="monotone" dataKey="posts" name="Posts" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                )}
 
             </div>
         </motion.div>

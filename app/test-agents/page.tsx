@@ -81,7 +81,7 @@ export default function AgentTestPage() {
         setLimits(data.records || {});
       }
     } catch (e) {
-        console.error(e);
+      console.error(e);
     }
   };
 
@@ -117,7 +117,7 @@ export default function AgentTestPage() {
           color: DOMAINS[agentId as DomainKey]?.color || "#ffffff",
         },
       };
-      
+
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
@@ -151,8 +151,8 @@ export default function AgentTestPage() {
     // Fast fail checkout limit block
     const limitRecord = limits[activeAgent] || { promptsUsed: 0, promptLimit: 5, isPurchased: false };
     if (!isPro && !limitRecord.isPurchased && limitRecord.promptsUsed >= limitRecord.promptLimit) {
-        addLog(`❌ Limit Reached! Unlock agent to continue.`, "error");
-        return;
+      addLog(`❌ Limit Reached! Unlock agent to continue.`, "error");
+      return;
     }
 
     setLoading(true);
@@ -162,16 +162,16 @@ export default function AgentTestPage() {
     setElapsed("0.0");
 
     addLog(`🚀 Firing ${DOMAINS[activeAgent].label}...`, "start");
-    
+
     // Auto-update limit local state
     if (!isPro && !limitRecord.isPurchased) {
-        setLimits(prev => ({
-            ...prev,
-            [activeAgent]: {
-                ...limitRecord,
-                promptsUsed: limitRecord.promptsUsed + 1
-            }
-        }));
+      setLimits(prev => ({
+        ...prev,
+        [activeAgent]: {
+          ...limitRecord,
+          promptsUsed: limitRecord.promptsUsed + 1
+        }
+      }));
     }
 
     try {
@@ -200,7 +200,7 @@ export default function AgentTestPage() {
       addLog(`❌ Error: ${msg}`, "error");
       setError(msg);
       // Revert limit decrement if errored out securely via limits refresh
-      fetchLimits(); 
+      fetchLimits();
     } finally {
       setLoading(false);
     }
@@ -209,7 +209,7 @@ export default function AgentTestPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      
+
       {/* BACKGROUND EFFECTS */}
       <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-indigo-500/10 blur-[100px] pointer-events-none" />
@@ -237,6 +237,7 @@ export default function AgentTestPage() {
                 icon={d.icon}
                 color={d.color}
                 isPro={isPro}
+                config={49}
                 isPurchased={limitInfo.isPurchased}
                 promptsUsed={limitInfo.promptsUsed}
                 promptLimit={limitInfo.promptLimit}
@@ -254,7 +255,7 @@ export default function AgentTestPage() {
               <span className="text-xl">{DOMAINS[activeAgent].icon}</span>
               <h2 className="font-bold tracking-wider uppercase text-sm">Active: {DOMAINS[activeAgent].label}</h2>
             </div>
-            
+
             <textarea
               className="w-full bg-black/50 border border-zinc-800 rounded-xl p-5 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 resize-none transition-all"
               rows={4}
@@ -264,7 +265,7 @@ export default function AgentTestPage() {
               style={{ padding: "16px" }}
               onKeyDown={(e) => { if (e.key === "Enter" && e.metaKey) runAgent(); }}
             />
-            
+
             <div className="flex justify-between items-center">
               <span className="text-xs text-zinc-500">Press Cmd/Ctrl + Enter to run</span>
               <button
@@ -283,39 +284,39 @@ export default function AgentTestPage() {
                 Error: {error}
               </div>
             )}
-            
+
             {/* Logic area */}
             {response && (
               <div className="p-4 rounded-xl bg-black border border-zinc-800">
-                 <pre className="text-xs text-zinc-400 whitespace-pre-wrap overflow-auto max-h-64">
-                    {JSON.stringify(response, null, 2)}
-                 </pre>
+                <pre className="text-xs text-zinc-400 whitespace-pre-wrap overflow-auto max-h-64">
+                  {JSON.stringify(response, null, 2)}
+                </pre>
               </div>
             )}
           </div>
 
           <div className="bg-zinc-900/50 rounded-3xl p-6 border border-zinc-800 flex flex-col h-96 lg:h-auto">
-             <h3 className="font-bold text-white mb-4 uppercase tracking-widest text-xs">Terminal Logs</h3>
-             <div className="flex-1 overflow-auto rounded-xl bg-black p-4 font-mono text-xs">
-                {logs.length === 0 ? (
-                  <span className="text-zinc-600">Waiting for commands... _</span>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {logs.map((L, i) => (
-                       <div key={i} className="flex gap-3">
-                         <span className="text-zinc-600 shrink-0">{L.time}</span>
-                         <span className={
-                           L.type === 'error' ? 'text-red-400' :
-                           L.type === 'success' ? 'text-green-400' :
-                           L.type === 'start' ? 'text-indigo-400' :
-                           'text-zinc-400'
-                         }>{L.msg}</span>
-                       </div>
-                    ))}
-                    <div ref={logsEndRef} />
-                  </div>
-                )}
-             </div>
+            <h3 className="font-bold text-white mb-4 uppercase tracking-widest text-xs">Terminal Logs</h3>
+            <div className="flex-1 overflow-auto rounded-xl bg-black p-4 font-mono text-xs">
+              {logs.length === 0 ? (
+                <span className="text-zinc-600">Waiting for commands... _</span>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {logs.map((L, i) => (
+                    <div key={i} className="flex gap-3">
+                      <span className="text-zinc-600 shrink-0">{L.time}</span>
+                      <span className={
+                        L.type === 'error' ? 'text-red-400' :
+                          L.type === 'success' ? 'text-green-400' :
+                            L.type === 'start' ? 'text-indigo-400' :
+                              'text-zinc-400'
+                      }>{L.msg}</span>
+                    </div>
+                  ))}
+                  <div ref={logsEndRef} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

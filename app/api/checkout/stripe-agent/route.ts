@@ -7,6 +7,7 @@ import { getSubscriptionConfig } from '@/app/action';
 
 export async function POST(req: Request) {
     try {
+        console.log('Received request for agent checkout');
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

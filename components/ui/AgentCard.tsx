@@ -12,6 +12,7 @@ export interface AgentCardProps {
   description?: string;
   isActive: boolean;
   isPro: boolean;
+  config: any;
   isPurchased: boolean;
   promptsUsed: number;
   promptLimit: number;
@@ -27,6 +28,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({
   description,
   isActive,
   isPro,
+  config,
   isPurchased,
   promptsUsed,
   promptLimit,
@@ -158,9 +160,9 @@ export const AgentCard: React.FC<AgentCardProps> = ({
               <button
                 onClick={handlePurchaseClick}
                 disabled={isHandlingPurchase}
-                className="group/btn relative mt-2 w-full overflow-hidden rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                className="group/btn relative mt-2 w-full overflow-hidden rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
-                <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover/btn:duration-1000 group-hover/btn:[transform:skew(-12deg)_translateX(100%)]">
+                <div className="absolute inset-0 flex h-full w-full justify-center transform-[skew(-12deg)_translateX(-100%)] group-hover/btn:duration-1000 group-hover/btn:transform-[skew(-12deg)_translateX(100%)]">
                   <div className="relative h-full w-8 bg-white/20 dark:bg-white/10" />
                 </div>
                 <div className="flex items-center justify-center gap-2">
@@ -169,7 +171,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({
                   ) : (
                     <>
                       <Zap className="h-4 w-4" />
-                      Unlock for ₹49
+                      Unlock for ₹{config}
                     </>
                   )}
                 </div>
