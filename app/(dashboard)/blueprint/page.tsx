@@ -160,6 +160,8 @@ export default function BlueprintHubPage() {
     const [activeBlueprints, setActiveBlueprints] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [limits, setLimits] = useState<any>(null)
+    const [selectedAgent, setSelectedAgent] = React.useState<any>(null)
+    const [isModalOpen, setIsModalOpen] = React.useState(false)
 
     useEffect(() => {
         const fetch_ = async () => {
@@ -182,6 +184,44 @@ export default function BlueprintHubPage() {
         fetch_()
     }, [])
 
+    const handleUnlock = async () => {
+        try {
+            // call backend to create order
+            const res = await fetch("/api/payment/create-agent-order", {
+                method: "POST",
+                body: JSON.stringify({
+                    agent: selectedAgent.title
+                })
+            });
+
+            const data = await res.json();
+
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+                amount: data.amount,
+                order_id: data.order_id,
+                handler: async function (response: any) {
+                    await fetch("/api/payment/verify-agent-payment", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            ...response,
+                            agent: selectedAgent.title
+                        })
+                    });
+
+                    setIsModalOpen(false);
+                    // refresh UI or unlock locally
+                }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
         <div className="space-y-12">
             {/* Header Section */}
@@ -202,18 +242,25 @@ export default function BlueprintHubPage() {
                     const isFreeAgent = agent.title === "Project Architect" || agent.title === "Career Mentor";
                     const isPremiumLocked = limits && !limits.isPro && !isFreeAgent;
                     const isLocked = isPremiumLocked || limits?.blueprints?.hasReachedLimit;
-                    
+
                     const lockedMessage = isPremiumLocked ? "Upgrade to Pro to unlock" : "Weekly free limit reached";
 
                     return (
                         <div
                             key={agent.title}
-                            onClick={() => isLocked ? router.push('/billing') : router.push(agent.href)}
+                            onClick={() => {
+                                if (isLocked) {
+                                    setSelectedAgent(agent)
+                                    setIsModalOpen(true)
+                                } else {
+                                    router.push(agent.href)
+                                }
+                            }}
                             className="h-full"
                         >
                             <Card className={`group relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card cursor-pointer h-full ${isLocked ? 'opacity-70 grayscale-[0.2]' : ''}`}>
                                 {/* Background Gradient */}
-                                <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                                <div className={`absolute inset-0 bg-linear-to-br ${agent.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
                                 <CardContent className="p-8 relative z-10 space-y-6">
                                     <div className="flex justify-between items-start">
@@ -263,6 +310,40 @@ export default function BlueprintHubPage() {
                     );
                 })}
             </div>
+
+            {/* /// Modal for Locked Agents */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-zinc-800 text-center">
+
+                        <h2 className="text-2xl font-bold mb-2">
+                            Unlock {selectedAgent?.title}
+                        </h2>
+
+                        <p className="text-sm text-muted-foreground mb-6">
+                            Get full access to this AI agent and boost your productivity.
+                        </p>
+
+                        <div className="text-4xl font-black text-indigo-600 mb-6">
+                            ₹49
+                        </div>
+
+                        <button
+                            onClick={handleUnlock}
+                            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition"
+                        >
+                            Unlock Now
+                        </button>
+
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            className="mt-4 text-sm text-muted-foreground"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Active Blueprints Section */}
             <div className="pt-8 border-t border-border/50">
