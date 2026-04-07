@@ -1,7 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { AgentCard } from "@/components/ui/AgentCard";
-import Script from "next/script";
 
 // Add razorpay globally
 declare global {
@@ -208,7 +207,6 @@ export default function AgentTestPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
       {/* BACKGROUND EFFECTS */}
       <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />

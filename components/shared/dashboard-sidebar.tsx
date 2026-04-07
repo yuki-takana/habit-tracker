@@ -63,7 +63,7 @@ const navItems = [
     },
 ];
 
-const DashboardSidebar = () => {
+const DashboardSidebar = ({isPro}:{ isPro: boolean}) => {
     const pathname = usePathname()
     const [config, setConfig] = React.useState<any>(null)
     const [dashboardData, setDashboardData] = useState<any>(null)
@@ -74,7 +74,6 @@ const DashboardSidebar = () => {
             setConfig(subConfig)
 
             const result = await getDashboardSummary()
-            console.log("Dashboard data in sidebar: result ", result)
             setDashboardData(result)
         }
 
@@ -116,6 +115,18 @@ const DashboardSidebar = () => {
                         )
                     })}
                 </nav>
+                {!isPro && (
+                    <div className="px-6 mt-6">
+                        <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                            <h4 className="font-bold mb-1">Unlock Productivity</h4>
+                            <p className="text-xs text-white/80 mb-3">Get unlimited habits, AI generation & detailed analytics.</p>
+                            <Link href="/billing" className="block w-full text-center py-2 bg-white text-indigo-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors">
+                                Upgrade Now
+                            </Link>
+                        </div>
+                    </div>
+                )}
             </aside>
 
         </>

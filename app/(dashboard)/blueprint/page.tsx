@@ -1,8 +1,6 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { AgentCard } from "@/components/ui/AgentCard";
 import { ActiveBlueprintCard } from "@/components/ui/ActiveBlueprintCard";
 import {
@@ -279,9 +277,6 @@ export default function BlueprintHubPage() {
 
     return (
         <div className="space-y-12 pb-16">
-            {checkoutType === 'razorpay' && (
-                <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-            )}
 
             {/* Header Section */}
             <div className="text-center space-y-4">
