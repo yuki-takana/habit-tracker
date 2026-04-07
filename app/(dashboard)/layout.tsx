@@ -23,7 +23,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex flex-1 min-h-screen">
-      <DashboardSidebar />
+      <DashboardSidebar isPro={isPro}/>
       <main className="flex-1 transition-all duration-300 lg:pl-[256px]">
         <DashboardHeader isPro={isPro} periodEnd={periodEnd} />
         <div className="container mx-auto px-4 py-6">

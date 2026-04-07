@@ -3,7 +3,6 @@ import { getSubscriptionLimits } from '@/lib/subscription';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import Script from 'next/script';
 import PricingClient from './PricingClient';
 
 export default async function BillingPage() {
@@ -15,7 +14,6 @@ export default async function BillingPage() {
 
     return (
         <>
-            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
             <PricingClient config={config} isPro={limits.isPro} />
         </>
     );

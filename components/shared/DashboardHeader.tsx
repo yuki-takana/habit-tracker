@@ -7,10 +7,11 @@ import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
 import { getSubscriptionConfig } from '@/app/action'
+import { getDashboardSummary } from '@/lib/utils/api'
 
 const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, key: "feature_dashboard" },
-    { name: "Workouts", href: "/workouts", icon: Dumbbell, key: "feature_workouts" },
+    // { name: "Workouts", href: "/workouts", icon: Dumbbell, key: "feature_workouts" },
     { name: "Habits", href: "/habits", icon: Flame, key: "feature_habits" },
     { name: "Challenges", href: "/challenges", icon: Target, key: "feature_challenges" },
     { name: "Todos", href: "/todos", icon: List, key: "feature_todos" },
@@ -23,17 +24,24 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
     const [config, setConfig] = React.useState<any>(null)
+    const [dashboardData, setDashboardData] = useState<any>(null)
+
 
     // Fetch config for feature gating
     useEffect(() => {
         const fetchConfig = async () => {
             const data = await getSubscriptionConfig()
+            const result = await getDashboardSummary()
             setConfig(data)
+            setDashboardData(result)
         }
         fetchConfig()
     }, [])
 
     const filteredNavItems = navItems.filter(item => {
+        if (item.href === "/coding") {
+            return dashboardData?.keys?.coding === true
+        }
         if (!item.key) return true
         if (!config) return true
         return config[item.key] === "true"
