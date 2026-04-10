@@ -56,6 +56,7 @@ export async function updateUserProfile(data: {
   email?: string,
   currentPassword?: string;
   newPassword?: string;
+  dailyGoalsEnabled?: boolean;
 }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) throw new Error("Unauthorized");
@@ -70,6 +71,9 @@ export async function updateUserProfile(data: {
 
   if (data.name) updateData.name = data.name;
   if (data.email) updateData.email = data.email;
+  if (typeof data.dailyGoalsEnabled !== "undefined") {
+    updateData.dailyGoalsEnabled = data.dailyGoalsEnabled;
+  }
 
   if (data.newPassword) {
     if (data.newPassword.length < 6) {
@@ -130,7 +134,7 @@ export async function sendTestWhatsapp() {
   //   3,
   //   "85%"
   // );
-  await sendWhatsAppReminder(user.phone,"Abhishek", "Test Message from Habit Tracker!", provider);
+  await sendWhatsAppReminder(user.phone, "Abhishek", "Test Message from Habit Tracker!", provider);
   // await sendMetaTextMessage(user.phone, "hello this is test message from UFL!")
 
   return { success: true };
@@ -155,6 +159,22 @@ export async function toggleGlobalWhatsapp(enabled: boolean) {
     where: { key: 'whatsapp_global_enabled' },
     update: { value: String(enabled) },
     create: { key: 'whatsapp_global_enabled', value: String(enabled) }
+  });
+}
+export async function toggleDailyTodo(enabled: boolean) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  return await prisma.user.update({
+    where: {
+      id: session.user.id
+    },
+    data: {
+      dailyGoalsEnabled: enabled
+    }
   });
 }
 

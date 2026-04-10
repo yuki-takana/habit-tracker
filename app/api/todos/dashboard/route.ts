@@ -28,7 +28,7 @@ export async function GET() {
         const isPro = !!subscription;
         const todos = await prisma.todo.findMany({
             where: { userId: user.id },
-            orderBy: { createdAt: "desc" },
+            orderBy: { startTime: "asc" },
         });
 
         const grouped = {

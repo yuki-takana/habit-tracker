@@ -4,9 +4,10 @@ import { Smartphone, User, Bell, Shield, Trash2, Save, Send, Github, Code2, Exte
 import PhoneVerification from '@/components/PhoneVerification';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { updateUserProfile, sendTestWhatsapp, toggleWhatsapp, saveUserApiKeys, fetchUserSubscriptionTier } from '@/app/action';
+import { updateUserProfile, sendTestWhatsapp, toggleWhatsapp, saveUserApiKeys, fetchUserSubscriptionTier, toggleDailyTodo } from '@/app/action';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { Switch } from '@/components/ui/switch';
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -28,6 +29,8 @@ export default function SettingsPage() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDailyTodoEnabled, setIsDailyTodoEnabled] = useState(true)
 
   useEffect(() => {
     const fetchSubStatus = async () => {
@@ -91,7 +94,8 @@ export default function SettingsPage() {
         name,
         email,
         currentPassword,
-        newPassword
+        newPassword,
+        dailyGoalsEnabled: isDailyTodoEnabled
       });
       await update({ name, email });
       toast.success("Profile updated successfully!");
@@ -114,6 +118,18 @@ export default function SettingsPage() {
       setTestLoading(false);
     }
   };
+  const handleToggle = async (checked: boolean) => {
+    setIsSaving(true)
+    try {
+      await toggleDailyTodo(checked)
+      setIsDailyTodoEnabled(checked)
+      toast.success(`Daily Todo is now ${checked ? 'ENABLED' : 'DISABLED'}`)
+    } catch (error) {
+      toast.error("Failed to update status")
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8 mt-12">
@@ -222,14 +238,22 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 shadow-lg shadow-indigo-600/20 active:scale-95"
-              >
-                {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
-                Save Changes
-              </button>
+              <div className='flex items-center justify-center gap-2'>
+                <span>Daily Todo</span>
+                <Switch
+                  checked={isDailyTodoEnabled}
+                  onCheckedChange={handleToggle}
+                  disabled={isSaving}
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-medium disabled:opacity-50 shadow-lg shadow-indigo-600/20 active:scale-95"
+                >
+                  {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Changes
+                </button>
+              </div>
             </div>
           </form>
 
