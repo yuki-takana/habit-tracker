@@ -172,7 +172,7 @@ export async function sendInteractiveWhatsAppReminder(
   provider: 'meta' | 'twilio' | 'local' = 'meta'
 ) {
   const formattedPhone = to.replace('+', '');
-  const messageText = `Hey ${userName}! 🌟\n\nYour todo "${taskName}" is scheduled for now. Have you completed it?`;
+  const messageText = `Hey ${userName}! 👋\n\n⏰ "${taskName}" starts in a few minutes.\n\nAre you ready to begin?`;
 
   if (provider === 'meta') {
     try {
@@ -193,15 +193,22 @@ export async function sendInteractiveWhatsAppReminder(
                 {
                   type: 'reply',
                   reply: {
-                    id: `DONE_${todoId}`,
-                    title: 'Done ✅'
+                    id: `START_${todoId}`,
+                    title: '▶️ Start'
                   }
                 },
                 {
                   type: 'reply',
                   reply: {
-                    id: `LATER_${todoId}`,
-                    title: 'Later 🕒'
+                    id: `15MIN_${todoId}`,
+                    title: '⏳ 15 min'
+                  }
+                },
+                {
+                  type: 'reply',
+                  reply: {
+                    id: `30MIN_${todoId}`,
+                    title: '⏳ 30 min'
                   }
                 }
               ]
@@ -213,8 +220,7 @@ export async function sendInteractiveWhatsAppReminder(
       return { success: true, data: response.data };
     } catch (error: any) {
       console.error('Meta Interactive Error:', error.response?.data || error.message);
-      // Fallback to text message if interactive fails (e.g., outside 24h window)
-      return sendWhatsAppReminder(to, `${messageText}\n\nReply with "1" for Done or "3" for Later.`, 'meta');
+      return sendWhatsAppReminder(to, `${messageText}\n\nReply with "start" to begin, or "15" / "30" to delay.`, 'meta');
     }
   } else if (provider === 'twilio') {
     // Twilio implementation - Twilio also supports interactive messages but simpler to stick to text 
@@ -222,7 +228,7 @@ export async function sendInteractiveWhatsAppReminder(
     // For now, keeping Twilio as text fallback as it's more reliable across different Twilio tiers.
     try {
       const result = await client.messages.create({
-        body: `${messageText}\n\n1️⃣ Done\n2️⃣ Not yet\n3️⃣ Later`,
+        body: `${messageText}\n\n1️⃣ Start\n2️⃣ 15 min\n3️⃣ 30 min`,
         from: fromPhone,
         to: `whatsapp:${to.startsWith('+') ? to : '+' + to}`
       });

@@ -202,6 +202,10 @@ model Todo {
   reminderTime     DateTime?
   earnedXp         Int           @default(0)
   extraTime        Int?
+  status           String        @default("upcoming")
+  startedAt        DateTime?
+  delayCount       Int           @default(0)
+  lastDelayedAt    DateTime?
   whatsappNotified Boolean       @default(false)
   completed        Boolean       @default(false)
   completedAt      DateTime?

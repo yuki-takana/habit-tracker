@@ -26,14 +26,38 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState<Date>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [category, setCategory] = useState("Code");
   const [hours, setHours] = useState("09");
   const [minutes, setMinutes] = useState("00");
+  const [deadlineHours, setDeadlineHours] = useState("23");
+  const [deadlineMinutes, setDeadlineMinutes] = useState("59");
   const [loading, setLoading] = useState(false);
   const [plannedTime, setPlannedTime] = useState("");
   const [sessionDuration, setSessionDuration] = useState("");
   const [breakTime, setBreakTime] = useState("");
   const [divideIntoSessions, setDivideIntoSessions] = useState(false);
+
+  const handleDateSelect = (newDate: Date | undefined) => {
+    setDate(newDate);
+    if (newDate) {
+      setIsCalendarOpen(false);
+      const future = new Date(Date.now() + 10 * 60000); // Pad +10 mins into the future
+      let h = future.getHours();
+      let m = future.getMinutes();
+      
+      const nearest5 = Math.ceil(m / 5) * 5;
+      if (nearest5 >= 60) {
+        h = (h + 1) % 24;
+        m = 0;
+      } else {
+        m = nearest5;
+      }
+      
+      setHours(h.toString().padStart(2, '0'));
+      setMinutes(m.toString().padStart(2, '0'));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +69,11 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
     reminderDate.setMinutes(parseInt(minutes));
     reminderDate.setSeconds(0);
 
+    const deadlineDate = new Date(date);
+    deadlineDate.setHours(parseInt(deadlineHours));
+    deadlineDate.setMinutes(parseInt(deadlineMinutes));
+    deadlineDate.setSeconds(0);
+
     setLoading(true);
     try {
       const res = await fetch("/api/todos", {
@@ -54,6 +83,7 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
           task: title,
           category,
           startTime: reminderDate.toISOString(),
+          deadline: deadlineDate.toISOString(),
           plannedTime: plannedTime || null,
           sessionDuration: divideIntoSessions ? sessionDuration : null,
           breakTime: divideIntoSessions ? breakTime : null,
@@ -127,7 +157,7 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Reminder Window</label>
                     <div className="flex gap-3">
-                      <Popover>
+                      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
@@ -144,7 +174,7 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                           <Calendar
                             mode="single"
                             selected={date}
-                            onSelect={setDate}
+                            onSelect={handleDateSelect}
                             initialFocus
                             className="rounded-2xl border-none"
                           />
@@ -176,6 +206,35 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                           </SelectContent>
                         </Select>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Deadline</label>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Select value={deadlineHours} onValueChange={setDeadlineHours}>
+                        <SelectTrigger className="w-20 h-12 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-bold">
+                          <SelectValue placeholder="HH" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                          {Array.from({ length: 24 }).map((_, i) => (
+                            <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                              {i.toString().padStart(2, '0')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-slate-400 font-bold">:</span>
+                      <Select value={deadlineMinutes} onValueChange={setDeadlineMinutes}>
+                        <SelectTrigger className="w-20 h-12 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-bold">
+                          <SelectValue placeholder="MM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "59"].map((m) => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

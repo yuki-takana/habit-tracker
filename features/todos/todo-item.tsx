@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Clock, Check, Plus, Play, Loader2, Flame, Shield } from "lucide-react";
+import { Clock, Check, Plus, Play, Loader2, CalendarClock, AlertCircle, RefreshCw } from "lucide-react";
 import confetti from "canvas-confetti";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useXp } from "@/components/providers/xp-provider";
@@ -12,10 +13,13 @@ interface TodoProps {
   id?: string;
   task: string;
   startTime?: Date | string | null;
+  deadline?: Date | string | null;
+  startedAt?: Date | string | null;
   reminderTime: Date | string | null;
   category: string;
   status: string;
   completed?: boolean;
+  delayCount?: number;
   onToggleComplete?: (id: string, completed: boolean) => void;
 }
 
@@ -30,13 +34,13 @@ interface Particle {
 }
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string; particle: string }> = {
-  fitness:   { bg: "bg-orange-500/10",  text: "text-orange-500",  dot: "bg-orange-400",  particle: "#f97316" },
-  health:    { bg: "bg-rose-500/10",    text: "text-rose-500",    dot: "bg-rose-400",    particle: "#f43f5e" },
-  work:      { bg: "bg-indigo-500/10",  text: "text-indigo-500",  dot: "bg-indigo-400",  particle: "#6366f1" },
-  finance:   { bg: "bg-emerald-500/10", text: "text-emerald-500", dot: "bg-emerald-400", particle: "#10b981" },
-  learning:  { bg: "bg-amber-500/10",   text: "text-amber-500",   dot: "bg-amber-400",   particle: "#f59e0b" },
-  mindset:   { bg: "bg-purple-500/10",  text: "text-purple-500",  dot: "bg-purple-400",  particle: "#a855f7" },
-  general:   { bg: "bg-sky-500/10",     text: "text-sky-500",     dot: "bg-sky-400",     particle: "#0ea5e9" },
+  fitness: { bg: "bg-orange-500/10", text: "text-orange-500", dot: "bg-orange-400", particle: "#f97316" },
+  health: { bg: "bg-rose-500/10", text: "text-rose-500", dot: "bg-rose-400", particle: "#f43f5e" },
+  work: { bg: "bg-indigo-500/10", text: "text-indigo-500", dot: "bg-indigo-400", particle: "#6366f1" },
+  finance: { bg: "bg-emerald-500/10", text: "text-emerald-500", dot: "bg-emerald-400", particle: "#10b981" },
+  learning: { bg: "bg-amber-500/10", text: "text-amber-500", dot: "bg-amber-400", particle: "#f59e0b" },
+  mindset: { bg: "bg-purple-500/10", text: "text-purple-500", dot: "bg-purple-400", particle: "#a855f7" },
+  general: { bg: "bg-sky-500/10", text: "text-sky-500", dot: "bg-sky-400", particle: "#0ea5e9" },
 };
 
 function getCategoryStyle(category: string) {
@@ -61,25 +65,32 @@ function playDone() {
     g.gain.setValueAtTime(0.18, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
     o.start(); o.stop(ctx.currentTime + 0.5);
-  } catch (_) {}
+  } catch (_) { }
 }
 
-export function TodoItem({ id, task, startTime, reminderTime, category, status, completed, onToggleComplete }: TodoProps) {
-  const [timeLeft, setTimeLeft]       = useState("");
-  const hasNotified                   = useRef(false);
+export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTime, category, status, completed, delayCount, onToggleComplete }: TodoProps) {
+  const [timeLeft, setTimeLeft] = useState("");
+  const hasNotified = useRef(false);
+  const router = useRouter();
   const [isCompleted, setIsCompleted] = useState(completed || status === "completed");
-  const [loading, setLoading]         = useState(false);
-  const [particles, setParticles]     = useState<Particle[]>([]);
-  const particleId                    = useRef(0);
-  const safeDate                      = startTime ? new Date(startTime) : new Date(reminderTime ? reminderTime : Date.now() + 3600000);
-  const [currentTime, setCurrentTime] = useState(isNaN(safeDate.getTime()) ? new Date() : safeDate);
-  const catStyle                      = getCategoryStyle(category);
-  const { refreshXp }                 = useXp();
+  const [loading, setLoading] = useState(false);
+  const [localStatus, setLocalStatus] = useState(status || "upcoming");
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const particleId = useRef(0);
+
+  const catStyle = getCategoryStyle(category);
+  const { refreshXp } = useXp();
+
   useEffect(() => {
-    const unlock = () => { try { getAudioCtx().resume(); } catch (_) {} };
+    const unlock = () => { try { getAudioCtx().resume(); } catch (_) { } };
     document.addEventListener("click", unlock, { once: true });
     return () => document.removeEventListener("click", unlock);
   }, []);
+
+  useEffect(() => {
+    setIsCompleted(completed || status === "completed");
+    setLocalStatus(status);
+  }, [completed, status]);
 
   const spawnParticles = useCallback((color: string) => {
     const n = 12;
@@ -106,19 +117,19 @@ export function TodoItem({ id, task, startTime, reminderTime, category, status, 
     playDone();
   }, [spawnParticles]);
 
-  useEffect(() => {
-    setIsCompleted(completed || status === "completed");
-  }, [completed, status]);
 
   const toggleComplete = async (e: React.MouseEvent) => {
     if (!id) return;
     const nextState = !isCompleted;
     setIsCompleted(nextState);
+    if (nextState) setLocalStatus("completed");
     onToggleComplete?.(id, nextState);
+
     if (nextState) {
       triggerCelebration(catStyle.particle);
       toast.success("Task completed", { description: task });
     }
+
     try {
       const res = await fetch(`/api/todos/${id}`, {
         method: "PATCH",
@@ -126,57 +137,122 @@ export function TodoItem({ id, task, startTime, reminderTime, category, status, 
         body: JSON.stringify({ completed: nextState }),
       });
       if (res.ok) {
-          await refreshXp();
+        await refreshXp();
+        router.refresh();
       }
     } catch {
       setIsCompleted(!nextState);
+      if (!nextState) setLocalStatus(status);
       toast.error("Failed to update task");
     }
   };
 
-  const extendTime = async (minutes: number) => {
+  const startTask = async () => {
     if (!id) return;
     setLoading(true);
-    const now = new Date();
-    const base = currentTime > now ? currentTime : now;
-    const newDate = new Date(base.getTime() + minutes * 60000);
+    setLocalStatus("in_progress");
     try {
-      const res = await fetch(`/api/todos/${id}`, {
+      await fetch(`/api/todos/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startTime: newDate.toISOString(), extraTime: minutes }),
+        body: JSON.stringify({ startedAt: new Date().toISOString(), status: "in_progress" }),
       });
-      if (res.ok) { setCurrentTime(newDate); setTimeLeft(""); }
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setLocalStatus(status);
+      toast.error("Failed to start task");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const delayTask = async (minutes: number) => {
+    if (!id) return;
+    setLoading(true);
+    const updatedStartTime = new Date(Date.now() + minutes * 60000).toISOString();
+    let updatedDeadline = undefined;
+    if (deadline) {
+      updatedDeadline = new Date(new Date(deadline).getTime() + minutes * 60000).toISOString();
+    }
+    const newDelayCount = (delayCount || 0) + 1;
+
+    setLocalStatus("upcoming"); // visually sets to upcoming while delayed
+    toast.success(`Task delayed by ${minutes}m`);
+
+    try {
+      await fetch(`/api/todos/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startTime: updatedStartTime,
+          ...(updatedDeadline && { deadline: updatedDeadline }),
+          delayCount: newDelayCount,
+          lastDelayedAt: new Date().toISOString(),
+          status: "upcoming"
+        }),
+      });
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setLocalStatus(status);
+      toast.error("Failed to delay task");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (isCompleted) { setTimeLeft("Done!"); return; }
+    if (isCompleted || localStatus === "completed") { setTimeLeft("Done!"); return; }
+
     const calc = () => {
-      if (!currentTime || isNaN(currentTime.getTime())) { setTimeLeft("Invalid"); return; }
-      const diff = currentTime.getTime() - Date.now();
-      if (diff <= 0) {
-        setTimeLeft("Time's up!");
-        if (!hasNotified.current) {
-          hasNotified.current = true;
-          try {
-            if ("Notification" in window && Notification.permission === "granted")
-              new Notification("Task Reminder", { body: `${task} is due now!` });
-          } catch (_) {}
-          toast.error("Time's up!", { description: task });
+      // Show countdown ONLY if deadline exists and status includes progress or late tracking
+      if (deadline && (localStatus === "in_progress" || localStatus === "late")) {
+        const d = new Date(deadline).getTime();
+        const diff = d - Date.now();
+        if (diff <= 0) {
+          setTimeLeft("Overdue!");
+          if (!hasNotified.current) {
+            hasNotified.current = true;
+            try {
+              if ("Notification" in window && Notification.permission === "granted")
+                new Notification("Task Deadline", { body: `${task} is overdue!` });
+            } catch (_) { }
+            toast.error("Deadline passed!", { description: task });
+          }
+        } else {
+          const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+          setTimeLeft(`${h}h ${m}m ${s}s`);
         }
-        return;
+      } else {
+        setTimeLeft(""); // Clear timer
       }
-      const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-      setTimeLeft(`${h}h ${m}m ${s}s`);
     };
+
     const t = setInterval(calc, 1000);
     calc();
     return () => clearInterval(t);
-  }, [currentTime, isCompleted, task]);
+  }, [deadline, isCompleted, localStatus, task]);
 
-  const isTimeUp = timeLeft === "Time's up!";
+  // Derived styling mappings based on status
+  let outerBorder = "border-zinc-200/70 dark:border-zinc-800/80 hover:border-indigo-400/50 hover:shadow-xl hover:shadow-indigo-500/5";
+  let opacityAndScale = "opacity-100 scale-100";
+  let checkBtnConfig = "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 hover:border-indigo-400";
+
+  if (isCompleted) {
+    outerBorder = "border-emerald-500/20";
+    opacityAndScale = "opacity-70 scale-[0.985]";
+    checkBtnConfig = "bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/30";
+  } else if (localStatus === "late" || localStatus === "missed") {
+    outerBorder = "border-red-400/50 bg-red-50/30 dark:bg-red-950/20 shadow-lg shadow-red-500/5";
+    checkBtnConfig = "border-red-300 dark:border-red-800 bg-white dark:bg-zinc-800/60 hover:border-red-500";
+  } else if (localStatus === "ready") {
+    outerBorder = "border-amber-400/50 bg-amber-50/20 dark:bg-amber-950/20 shadow-lg shadow-amber-500/5 hover:border-amber-500";
+    checkBtnConfig = "border-amber-300 dark:border-amber-800 bg-white dark:bg-zinc-800/60 hover:border-amber-500";
+  } else if (localStatus === "in_progress") {
+    outerBorder = "border-indigo-400/50 shadow-md shadow-indigo-500/10 bg-indigo-50/10 dark:bg-indigo-950/10";
+    checkBtnConfig = "border-indigo-300 dark:border-indigo-800 bg-white dark:bg-zinc-800/60 hover:border-indigo-500";
+  }
 
   return (
     <>
@@ -187,14 +263,11 @@ export function TodoItem({ id, task, startTime, reminderTime, category, status, 
       `}</style>
 
       <div className={cn(
-        "todo-enter group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4",
+        "todo-enter group relative grid grid-cols-1 sm:flex sm:flex-row sm:items-center justify-between gap-y-3 gap-x-4",
         "px-5 py-4 rounded-[1.6rem] border transition-all duration-300 overflow-hidden",
         "bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm",
-        isCompleted
-          ? "border-emerald-500/20 opacity-70 scale-[0.985]"
-          : isTimeUp
-          ? "border-red-400/40 hover:border-red-400/70 hover:shadow-lg hover:shadow-red-500/5"
-          : "border-zinc-200/70 dark:border-zinc-800/80 hover:border-indigo-400/50 hover:shadow-xl hover:shadow-indigo-500/5"
+        opacityAndScale,
+        outerBorder
       )}>
         {/* Category accent bar */}
         <div className={cn("absolute left-0 top-4 bottom-4 w-1 rounded-full", catStyle.dot)} />
@@ -215,98 +288,136 @@ export function TodoItem({ id, task, startTime, reminderTime, category, status, 
           />
         ))}
 
-        {/* Left: checkbox + content */}
-        <div className="flex items-center gap-4 pl-3 flex-1 min-w-0">
-          <button
-            onClick={toggleComplete}
-            disabled={loading}
-            className={cn(
-              "shrink-0 w-9 h-9 rounded-[0.85rem] border-2 flex items-center justify-center transition-all duration-200",
-              "disabled:opacity-50 active:scale-90",
-              isCompleted
-                ? "bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/30"
-                : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 hover:border-indigo-400"
-            )}
-          >
-            {loading
-              ? <Loader2 size={14} className="animate-spin text-indigo-400" />
-              : isCompleted
-              ? <Check size={16} className="text-white" strokeWidth={3} />
-              : <div className={cn("w-2 h-2 rounded-full transition-colors", catStyle.dot, "opacity-40 group-hover:opacity-80")} />
-            }
-          </button>
-
-          <div className="min-w-0 flex-1">
-            <p className={cn(
-              "text-sm font-bold leading-snug tracking-tight transition-all duration-300 truncate",
-              isCompleted ? "line-through text-zinc-400 dark:text-zinc-500" : "text-zinc-800 dark:text-zinc-100"
-            )}>
-              {task}
-            </p>
-            <span className={cn(
-              "inline-block mt-1 text-[9px] font-extrabold tracking-[.18em] uppercase px-2 py-0.5 rounded-md",
-              catStyle.bg, catStyle.text
-            )}>
-              {category}
-            </span>
-          </div>
-        </div>
-
-        {/* Right: timer + actions */}
-        <div className="flex items-center gap-2 flex-shrink-0 pl-3 sm:pl-0">
-          {/* Extend time buttons */}
-          {isTimeUp && !isCompleted && (
-            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-3 duration-500">
-              <button
-                onClick={() => extendTime(10)}
-                disabled={loading}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-orange-100 transition-all active:scale-95 border border-orange-200/50 dark:border-orange-500/20"
-              >
-                <Plus size={11} /> 10m
-              </button>
-              <button
-                onClick={() => extendTime(15)}
-                disabled={loading}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-amber-100 transition-all active:scale-95 border border-amber-200/50 dark:border-amber-500/20"
-              >
-                <Plus size={11} /> 15m
-              </button>
-            </div>
-          )}
-
-          {/* Focus button */}
-          {!isCompleted && id && (
-            <Link
-              href={`/todos/${id}/sessions`}
-              onClick={() => toast("Entering focus mode ≡ƒºá", { description: task })}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-[0.9rem] bg-indigo-600 text-white text-[10px] font-extrabold tracking-widest uppercase hover:bg-indigo-700 transition-all active:scale-95 shadow-md shadow-indigo-500/20 whitespace-nowrap"
+        {/* ROW 1: Checkbox + Content + Start Button + Status Badge */}
+        <div className="flex items-center justify-between w-full">
+          {/* Left Block */}
+          <div className="flex items-center gap-4 pl-3 flex-1 min-w-0">
+            <button
+              onClick={toggleComplete}
+              disabled={loading}
+              className={cn(
+                "shrink-0 w-9 h-9 rounded-[0.85rem] border-2 flex items-center justify-center transition-all duration-200",
+                "disabled:opacity-50 active:scale-90",
+                checkBtnConfig
+              )}
             >
-              <Play size={11} fill="currentColor" />
-              Focus
-            </Link>
-          )}
+              {loading
+                ? <Loader2 size={14} className="animate-spin text-indigo-400" />
+                : isCompleted
+                  ? <Check size={16} className="text-white" strokeWidth={3} />
+                  : <div className={cn("w-2 h-2 rounded-full transition-colors", catStyle.dot, "opacity-40 group-hover:opacity-80")} />
+              }
+            </button>
 
-          {/* Timer badge */}
-          <div className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-[0.9rem] border transition-all duration-500 min-w-[110px] justify-center",
-            isTimeUp
-              ? "bg-red-50 dark:bg-red-500/10 border-red-200/60 dark:border-red-500/20"
-              : isCompleted
-              ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200/60 dark:border-emerald-500/20"
-              : "bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200/60 dark:border-zinc-800"
-          )}>
-            <Clock
-              size={13}
-              className={isTimeUp ? "text-red-500" : isCompleted ? "text-emerald-500" : "text-zinc-400"}
-            />
-            <span className={cn(
-              "text-xs font-mono font-extrabold tabular-nums",
-              isTimeUp ? "text-red-500 animate-pulse" : isCompleted ? "text-emerald-500" : "text-zinc-600 dark:text-zinc-300"
-            )}>
-              {timeLeft}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className={cn(
+                "text-sm font-bold leading-snug tracking-tight transition-all duration-300 truncate",
+                isCompleted ? "line-through text-zinc-400 dark:text-zinc-500" : "text-zinc-800 dark:text-zinc-100"
+              )}>
+                {task}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn(
+                  "inline-block text-[9px] font-extrabold tracking-[.18em] uppercase px-2 py-0.5 rounded-md",
+                  catStyle.bg, catStyle.text
+                )}>
+                  {category}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Aligned Block in Row 1 */}
+          <div className="flex items-center gap-2 shrink-0">
+
+            {(localStatus === "late" || localStatus === "missed") && !isCompleted && !deadline && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 text-[10px] font-extrabold tracking-wide border border-red-200/50 dark:border-red-500/20">
+                <AlertCircle size={12} /> {localStatus === "missed" ? "Missed" : "Late"}
+              </div>
+            )}
+
+            {(timeLeft !== "" || isCompleted || localStatus === "in_progress" || localStatus === "upcoming" || localStatus === "ready") && (
+              <div className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-[0.9rem] border transition-all duration-500 min-w-auto sm:min-w-[110px] justify-center",
+                timeLeft === "Overdue!" || localStatus === "late" || localStatus === "missed"
+                  ? "bg-red-50 dark:bg-red-500/10 border-red-200/60 dark:border-red-500/20"
+                  : isCompleted || timeLeft === "Done!"
+                    ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200/60 dark:border-emerald-500/20"
+                    : localStatus === "ready" || localStatus === "upcoming"
+                      ? "bg-amber-50 dark:bg-amber-500/10 border-amber-200/60 dark:border-amber-500/20"
+                      : "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-200/60 dark:border-indigo-800"
+              )}>
+                <Clock
+                  size={13}
+                  className={
+                    timeLeft === "Overdue!" || localStatus === "late" || localStatus === "missed" ? "text-red-500"
+                      : isCompleted ? "text-emerald-500"
+                        : localStatus === "ready" || localStatus === "upcoming" ? "text-amber-500"
+                          : "text-indigo-400"
+                  }
+                />
+                <span className={cn(
+                  "text-xs font-mono font-extrabold tabular-nums whitespace-nowrap",
+                  timeLeft === "Overdue!" || localStatus === "late" || localStatus === "missed" ? "text-red-500 animate-pulse"
+                    : isCompleted ? "text-emerald-500"
+                      : localStatus === "ready" || localStatus === "upcoming" ? "text-amber-600 dark:text-amber-400"
+                        : "text-indigo-600 dark:text-indigo-300"
+                )}>
+                  {isCompleted ? "Done!" : timeLeft || (
+                    localStatus === "upcoming"
+                      ? (startTime ? `Starts ${new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "Upcoming")
+                      : localStatus === "ready"
+                        ? "Ready"
+                        : "In Progress"
+                  )}
+                </span>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* ROW 2: Additional Actions (Only Visible if Applicable) */}
+        {!isCompleted && (!startedAt || localStatus === "in_progress") && (
+          <div className="flex items-center gap-1.5 pl-14 sm:pl-0 shrink-0 overflow-x-auto w-full sm:w-auto mt-1 sm:mt-0 pb-1 sm:pb-0">
+            {!startedAt && (
+              <>
+                <button
+                  onClick={() => delayTask(15)}
+                  disabled={loading}
+                  className="flex shrink-0 items-center gap-1 px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-orange-100 transition-all active:scale-95 border border-orange-200/50 dark:border-orange-500/20"
+                >
+                  <Plus size={11} /> 15m
+                </button>
+                <button
+                  onClick={() => delayTask(30)}
+                  disabled={loading}
+                  className="flex shrink-0 items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-amber-100 transition-all active:scale-95 border border-amber-200/50 dark:border-amber-500/20"
+                >
+                  <Plus size={11} /> 30m
+                </button>
+                {!isCompleted && !startedAt && localStatus !== "in_progress" && (
+                  <button
+                    onClick={() => startTask()}
+                    disabled={loading}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold tracking-wide uppercase hover:bg-indigo-100 transition-all active:scale-95 border border-indigo-200/50 dark:border-indigo-500/20"
+                  >
+                    <Play size={11} fill="currentColor" /> <span className="hidden sm:inline">Start Now</span><span className="sm:hidden">Start</span>
+                  </button>
+                )}
+              </>
+            )}
+
+            {localStatus === "in_progress" && id && (
+              <Link
+                href={`/todos/${id}/sessions`}
+                onClick={() => toast("Entering focus mode ≡ƒºá", { description: task })}
+                className="flex shrink-0 items-center gap-1.5 px-4 py-2 rounded-[0.9rem] bg-indigo-600 text-white text-[10px] font-extrabold tracking-widest uppercase hover:bg-indigo-700 transition-all active:scale-95 shadow-md shadow-indigo-500/20 whitespace-nowrap"
+              >
+                <Play size={11} fill="currentColor" /> Focus
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

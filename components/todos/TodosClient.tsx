@@ -13,12 +13,15 @@ interface Todo {
   id: string
   task: string
   startTime: Date | string | null
+  deadline?: Date | string | null
+  startedAt?: Date | string | null
   reminderTime: string | Date | null
   category: string
   status: string
   completed: boolean
   completedAt?: Date | string | null
   plannedTime?: number | null
+  delayCount?: number
 }
 
 export function TodosClient({ initialTodos }: { initialTodos: Todo[] }) {
@@ -33,21 +36,45 @@ export function TodosClient({ initialTodos }: { initialTodos: Todo[] }) {
     return () => clearInterval(t)
   }, [])
 
-  const isOverdue = (todo: Todo) =>
-    !todo.completed && todo.startTime && new Date(todo.startTime).getTime() < Date.now()
+  useEffect(() => {
+    setTodos(initialTodos)
+  }, [initialTodos])
+
+  const getLiveStatus = (todo: Todo) => {
+    if (todo.completedAt || todo.completed || todo.status === "completed") return "completed";
+    if (todo.status === "failed" || todo.status === "missed") return todo.status;
+    
+    const startedAt = todo.startedAt ? new Date(todo.startedAt).getTime() : null;
+    const startTime = todo.startTime ? new Date(todo.startTime).getTime() : null;
+    const deadline = todo.deadline ? new Date(todo.deadline).getTime() : null;
+
+    if (!startedAt && deadline && now > deadline) return "missed";
+    if (!startedAt && startTime && now < startTime) return "upcoming";
+    if (!startedAt && startTime && now >= startTime) return "ready";
+    if (startedAt && (!deadline || now <= deadline)) return "in_progress";
+    if (startedAt && deadline && now > deadline) return "late";
+
+    return todo.status || "upcoming";
+  }
+
+  const isOverdue = (todo: Todo) => getLiveStatus(todo) === "late";
 
   const filtered = todos.filter(t => {
-    if (filter === "done") return t.completed
-    if (filter === "pending") return !t.completed && !isOverdue(t)
-    if (filter === "overdue") return isOverdue(t)
+    const s = getLiveStatus(t);
+    if (filter === "done") return s === "completed";
+    if (filter === "pending") return s === "upcoming" || s === "ready" || s === "in_progress";
+    if (filter === "overdue") return s === "late";
     return true
   })
 
   const stats = {
     total: todos.length,
-    done: todos.filter(t => t.completed).length,
-    pending: todos.filter(t => !t.completed && !isOverdue(t)).length,
-    overdue: todos.filter(t => isOverdue(t)).length,
+    done: todos.filter(t => getLiveStatus(t) === "completed").length,
+    pending: todos.filter(t => {
+      const s = getLiveStatus(t);
+      return s === "upcoming" || s === "ready" || s === "in_progress";
+    }).length,
+    overdue: todos.filter(t => getLiveStatus(t) === "late").length,
   }
 
   const handleToggle = useCallback((id: string, completed: boolean) => {
@@ -159,10 +186,13 @@ export function TodosClient({ initialTodos }: { initialTodos: Todo[] }) {
                 id={todo.id}
                 task={todo.task}
                 startTime={todo.startTime}
+                deadline={todo.deadline}
+                startedAt={todo.startedAt}
                 reminderTime={todo.reminderTime}
                 category={todo.category}
-                status={todo.status}
+                status={getLiveStatus(todo)}
                 completed={todo.completed}
+                delayCount={todo.delayCount}
                 onToggleComplete={handleToggle}
               />
             ))

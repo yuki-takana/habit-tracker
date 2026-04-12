@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendMetaTextMessage } from '@/services/whatsapp';
+import { sendMetaTextMessage, sendInteractiveWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
 import { processTodoCompletion } from '@/lib/xp-engine';
+import { REMINDER_LEAD_TIME_MINS } from '@/lib/constants';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -54,21 +55,34 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ status: 'ok' });
         }
 
-        if (action === 'DONE') {
-          const result = await processTodoCompletion({
-            prisma,
-            todoId,
+        if (action === 'START') {
+          await prisma.todo.update({
+             where: { id: todoId },
+             data: { startedAt: new Date(), status: 'in_progress' }
           });
-
           await sendMetaTextMessage(
             from,
-            `🔥 ${result.earnedXp >= 0 ? '+' : ''}${result.earnedXp} XP for: ${result.task}`
+            `🚀 Awesome! "${todo.task}" is now in progress.\n\nReply 'Done' when you've finished to earn your XP!`
           );
-        }
-        if (action === 'LATER') {
+        } else if (action === '15MIN' || action === '30MIN') {
+          const addMins = action === '15MIN' ? 15 : 30;
+          const newStartTime = new Date(Date.now() + addMins * 60000); 
+          const newReminderTime = new Date(newStartTime.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
+          
+          await prisma.todo.update({
+              where: { id: todoId },
+              data: {
+                  startTime: newStartTime,
+                  reminderTime: newReminderTime,
+                  delayCount: (todo.delayCount || 0) + 1,
+                  lastDelayedAt: new Date(),
+                  status: 'upcoming',
+                  whatsappNotified: false
+              }
+          });
           await sendMetaTextMessage(
             from,
-            `No worries! You can complete it later: ${todo.task}`
+            `Understood! 🕒 I've delayed "${todo.task}" by ${addMins} minutes. I'll catch up with you again soon!`
           );
         }
 
@@ -103,26 +117,68 @@ export async function POST(req: NextRequest) {
         intent.includes('completed') ||
         intent.includes('yes')
       ) {
-        await prisma.todo.update({
-          where: { id: pendingTodo.id },
-          data: {
-            completed: true,
-            completedAt: new Date()
-          }
+        const result = await processTodoCompletion({
+            prisma,
+            todoId: pendingTodo.id,
         });
 
-        const earnedXp = (pendingTodo.plannedTime || 10) * 2;
+        const xp = result.earnedXp;
+        let responseMessage = '';
+        if (xp < 0) {
+            responseMessage = `🔥 Task Marked Done. \n\nAh, we missed our mark and lost ${Math.abs(xp)} XP. It's okay, let's bounce back stronger on the next one!`;
+        } else if (xp > 10) {
+            responseMessage = `🚀 Awesome velocity! \n\nYou crushed it early and earned +${xp} XP. Keep that high energy flowing!`;
+        } else {
+            responseMessage = `✅ Solid job! \n\nCompleted. (+${xp} XP). Keep it up!`;
+        }
 
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { xp: { increment: earnedXp } }
+        let nextTodoToRemind: any = null;
+
+        // --- CHAIN NEXT TODO ---
+        const nextTodo = await prisma.todo.findFirst({
+            where: {
+                userId: user.id,
+                completed: false,
+                id: { not: pendingTodo.id },
+                status: { notIn: ['failed', 'missed', 'completed'] }
+            },
+            orderBy: { startTime: 'asc' }
         });
 
-        await sendMetaTextMessage(
-          from,
-          `✅ Completed: ${pendingTodo.task} (+${earnedXp} XP)`
-        );
-      } else if (intent.includes('skip')) {
+        if (nextTodo) {
+            const now = new Date();
+            nextTodoToRemind = nextTodo;
+            // Force to 'ready' if start time is in the future
+            if (!nextTodo.startedAt && nextTodo.startTime && nextTodo.startTime > now) {
+                nextTodoToRemind = await prisma.todo.update({
+                    where: { id: nextTodo.id },
+                    data: {
+                        startTime: now,
+                        reminderTime: new Date(now.getTime() - REMINDER_LEAD_TIME_MINS * 60000)
+                    }
+                });
+            }
+            responseMessage += `\n\n🎯 Check below for your next task!`;
+        }
+
+        await sendMetaTextMessage(from, responseMessage);
+
+        if (nextTodoToRemind) {
+            const provider = await getWhatsAppProvider();
+            await sendInteractiveWhatsAppReminder(
+                from,
+                nextTodoToRemind.task,
+                user.name || 'User',
+                nextTodoToRemind.id,
+                provider
+            );
+            
+            await prisma.todo.update({
+                where: { id: nextTodoToRemind.id },
+                data: { whatsappNotified: true }
+            });
+        }
+      } else if (intent.includes('skip') || intent.includes('later')) {
         await sendMetaTextMessage(
           from,
           `⏩ Skipped: ${pendingTodo.task}`

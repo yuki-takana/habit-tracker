@@ -18,7 +18,7 @@ export async function PATCH(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { completed, reminderTime, startTime, extraTime } = await req.json();
+        const { completed, reminderTime, startTime, extraTime, status, startedAt, delayCount, lastDelayedAt, deadline } = await req.json();
         const updateData: any = {};
 
         const currentTodo = await prisma.todo.findUnique({
@@ -28,13 +28,6 @@ export async function PATCH(
 
         if (!currentTodo) {
             return NextResponse.json({ error: "Todo not found" }, { status: 404 });
-        }
-
-        // If todo is already completed, don't allow updates unless we are untoggling completion
-        if (currentTodo.completed && completed !== false && completed === undefined && reminderTime === undefined && extraTime === undefined) {
-            // This logic needs to be careful. 
-            // If user sends nothing or just unrelated fields, we block.
-            // But if they are marking it as NOT completed (completed: false), we allow.
         }
 
         // Refined logic: If it's completed, it can't be updated EXCEPT to set completed: false
@@ -47,6 +40,7 @@ export async function PATCH(
 
         if (completed !== undefined) {
             updateData.completed = completed;
+            updateData.status = completed ? "completed" : "in_progress"; // fallback logic
 
             if (completed === true && !currentTodo.completed) {
                 console.log("todo is about to complete ")
@@ -64,11 +58,24 @@ export async function PATCH(
                 updateData.earnedXp = 0;
             }
         } else {
-            console.log("hello its time to add extra time ")
-            if (startTime !== undefined) updateData.startTime = currentTodo.startTime;
-            const scheduledStart = currentTodo.startTime ? new Date(currentTodo.startTime) : new Date();
+            console.log("updating todo details")
+            console.log("payload for updating ", completed, reminderTime, startTime, extraTime, status, startedAt, delayCount, lastDelayedAt, deadline )
+            if (startedAt !== undefined) {
+                if (currentTodo.status === "in_progress") {
+                    return NextResponse.json({ error: "Task is already started" }, { status: 400 });
+                }
+                updateData.startedAt = startedAt;
+            }
+            if (startTime !== undefined) updateData.startTime = startTime;
+            if (deadline !== undefined) updateData.deadline = deadline;
+            if (status !== undefined) updateData.status = status;
+            if (delayCount !== undefined) updateData.delayCount = delayCount;
+            if (lastDelayedAt !== undefined) updateData.lastDelayedAt = lastDelayedAt;
+            
+            const scheduledStart = startTime !== undefined ? (startTime ? new Date(startTime) : new Date()) : (currentTodo.startTime ? new Date(currentTodo.startTime) : new Date());
             const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
             updateData.reminderTime = calculatedReminderTime;
+            
             if (extraTime !== undefined) {
                 const currentExtra = currentTodo.extraTime || 0;
                 updateData.extraTime = currentExtra + extraTime;

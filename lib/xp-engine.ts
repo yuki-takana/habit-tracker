@@ -45,19 +45,27 @@ export async function processTodoCompletion({
 
   // ─── LATE ───
   let isLate = false;
-  const baseTime = todo.startTime || todo.reminderTime;
+  if (todo.deadline) {
+    if (now > todo.deadline.getTime()) isLate = true;
+  }
 
-  if (baseTime) {
-    const diff = now - new Date(baseTime).getTime();
-    if (diff > 0) isLate = true;
+  // ─── STARTED LATE ───
+  let startedLate = false;
+  if (todo.startTime && todo.startedAt) {
+    if (todo.startedAt.getTime() > todo.startTime.getTime()) {
+      startedLate = true;
+    }
   }
 
   // ─── CALCULATE XP ───
   let earnedXp = calculateTodoXP({
     isAIGenerated: todo.isAIGenerated,
     isEarly,
+    isLate,
     isFirstOfDay,
     userLevel: todo.user.level || 1,
+    delayCount: todo.delayCount || 0,
+    startedLate,
   });
   console.log("xp earned or burned", earnedXp)
 
