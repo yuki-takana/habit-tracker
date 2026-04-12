@@ -197,7 +197,7 @@ model Todo {
   task             String
   category         String?
   startTime        DateTime?
-  plannedTime      Int? // planned duration in minutes
+  plannedTime      Int? 
   deadline         DateTime?
   reminderTime     DateTime?
   earnedXp         Int           @default(0)

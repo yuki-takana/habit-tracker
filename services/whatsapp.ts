@@ -71,6 +71,7 @@ export async function sendMetaTextMessage(to: string, message: string) {
 export async function sendWhatsAppReminder(to: string, userName: string, taskName: string, provider: 'meta' | 'twilio' | 'local' = 'meta') {
 
   if (provider === 'meta') {
+    const todoId = "69ab2957db047c4a38894c8d"
     try {
       // Meta requires a specific format: 91XXXXXXXXXX (no +)
       const formattedPhone = to.replace('+', '');
@@ -87,8 +88,8 @@ export async function sendWhatsAppReminder(to: string, userName: string, taskNam
               {
                 type: 'body',
                 parameters: [
-                  { type: 'text', text: userName }, // {{1}} -> User Name
-                  { type: 'text', text: taskName }  // {{2}} -> Habit Name
+                  { type: 'text', text: userName },
+                  { type: 'text', text: taskName }
                 ]
               }
             ]
@@ -107,9 +108,9 @@ export async function sendWhatsAppReminder(to: string, userName: string, taskNam
   }
 }
 export async function sendUserAnalytics(
-  to: string, 
-  userName: string, 
-  taskCount: number, 
+  to: string,
+  userName: string,
+  taskCount: number,
   completionRate: string
 ) {
   const formattedPhone = to.replace(/\D/g, '');
@@ -122,13 +123,13 @@ export async function sendUserAnalytics(
         to: formattedPhone,
         type: 'template',
         template: {
-          name: 'daily_summary_ufl', 
+          name: 'daily_summary_ufl',
           language: { code: 'en' },
           components: [
             {
               type: 'body',
               parameters: [
-                { type: 'text', text: userName },   
+                { type: 'text', text: userName },
                 { type: 'text', text: String(taskCount) },
                 { type: 'text', text: completionRate }
               ]
@@ -138,7 +139,7 @@ export async function sendUserAnalytics(
               sub_type: 'url',
               index: '0',
               parameters: [
-                { type: 'text', text: "dashboard" } 
+                { type: 'text', text: "dashboard" }
               ]
             }
           ]

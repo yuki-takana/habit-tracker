@@ -8,17 +8,7 @@ import clsx from 'clsx'
 
 import { getSubscriptionConfig } from '@/app/action'
 import { getDashboardSummary } from '@/lib/utils/api'
-
-const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, key: "feature_dashboard" },
-    // { name: "Workouts", href: "/workouts", icon: Dumbbell, key: "feature_workouts" },
-    { name: "Habits", href: "/habits", icon: Flame, key: "feature_habits" },
-    { name: "Challenges", href: "/challenges", icon: Target, key: "feature_challenges" },
-    { name: "Todos", href: "/todos", icon: List, key: "feature_todos" },
-    { name: "Insights", href: "/insights", icon: InfoIcon, key: "feature_insights" },
-    { name: "Coding", href: "/coding", icon: Code2 },
-    { name: "Blueprint", href: "/blueprint", icon: Bot },
-]
+import { navItems } from './dashboard-sidebar'
 
 export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, periodEnd?: Date | null }) {
     const [isOpen, setIsOpen] = useState(false)

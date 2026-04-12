@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { calculateTodoXP, addXpToUser } from "@/lib/gamify";
 import { LATE_PENALTY_XP, MAX_DAILY_XP, REMINDER_LEAD_TIME_MINS } from "@/lib/constants";
+import { processTodoCompletion } from "@/lib/xp-engine";
 
 export async function PATCH(
     req: NextRequest,
@@ -48,83 +49,22 @@ export async function PATCH(
             updateData.completed = completed;
 
             if (completed === true && !currentTodo.completed) {
-
-                updateData.completedAt = new Date();
-
-                const now = Date.now();
-
-                // ─── DAILY STREAK CHECK ───
-                const startOfDay = new Date();
-                startOfDay.setHours(0, 0, 0, 0);
-
-                const completedTodayCount = await prisma.todo.count({
-                    where: {
-                        userId: currentTodo.userId,
-                        completed: true,
-                        completedAt: { gte: startOfDay }
-                    }
+                console.log("todo is about to complete ")
+                const result = await processTodoCompletion({
+                    prisma,
+                    todoId: id,
                 });
-
-                const isFirstOfDay = completedTodayCount === 0;
-
-                // ─── EARLY BONUS ───
-                let isEarly = false;
-
-                if (currentTodo.deadline) {
-                    const diffMs = currentTodo.deadline.getTime() - now;
-
-                    if (diffMs >= 2 * 60 * 60 * 1000) {
-                        isEarly = true;
-                    }
-                }
-
-                let isLate = false;
-                const baseTime =
-                    currentTodo.startTime ||
-                    currentTodo.reminderTime;
-
-                if (baseTime) {
-                    const diff = now - new Date(baseTime).getTime();
-
-                    if (diff > 0) {
-                        isLate = true;
-                    }
-                }
-
-                // ─── CALCULATE XP ───
-                let earnedXp = calculateTodoXP({
-                    isAIGenerated: currentTodo.isAIGenerated,
-                    isEarly,
-                    isFirstOfDay,
-                    userLevel: currentTodo.user.level || 1,
-                });
-
-                // ─── APPLY PENALTY ───
-                if (isLate) {
-                    const latePenalty = LATE_PENALTY_XP;
-                    earnedXp = -latePenalty;
-                }
-
-                // Safety
-                // if (earnedXp < 0) earnedXp = 0;
-
-                // ─── SAVE XP TO TODO ───
-                updateData.earnedXp = earnedXp;
-
-                // ─── ADD TO USER ───
-                await addXpToUser(prisma, currentTodo.userId, earnedXp);
+                updateData.earnedXp = result.earnedXp;
 
             } else if (completed === false) {
                 updateData.completedAt = null;
 
                 const penaltyXp = currentTodo.earnedXp || 10;
-                // remove from user
                 await addXpToUser(prisma, currentTodo.userId, -penaltyXp);
-                // reset earnedXp
                 updateData.earnedXp = 0;
             }
         } else {
-    
+            console.log("hello its time to add extra time ")
             if (startTime !== undefined) updateData.startTime = currentTodo.startTime;
             const scheduledStart = currentTodo.startTime ? new Date(currentTodo.startTime) : new Date();
             const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);

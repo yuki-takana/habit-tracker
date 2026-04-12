@@ -109,8 +109,28 @@ export default function SettingsPage() {
 
   const handleSendTest = async () => {
     setTestLoading(true);
+    const todo = {
+      user: {
+        phone: "+918417875526",
+        name: "Abhishek"
+      },
+      task: "drink water",
+      id: "69db589f87ed191b053f31ba"
+    }
     try {
-      await sendTestWhatsapp();
+      // await sendTestWhatsapp();
+      await fetch('/api/test-whatsapp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: todo.user.phone,
+          task: todo.task,
+          name: todo.user.name,
+          todoId: todo.id
+        })
+      });
       toast.success("Test WhatsApp message sent!");
     } catch (error: any) {
       toast.error(error.message || "Failed to send test message.");

@@ -41,16 +41,16 @@ export async function POST(request: Request) {
       }
     });
 
-    console.log(`📊 Found ${todos.length} pending todos for notification.`);
+    console.log(`Found ${todos.length} pending todos for notification.`);
 
     const results = [];
     for (const todo of todos) {
-      console.log(`📤 Processing Todo ID: ${todo.id} | Task: ${todo.task} | User: ${todo.user?.name}`);
+      console.log(`Processing Todo ID: ${todo.id} | Task: ${todo.task} | User: ${todo.user?.name}`);
 
       if (todo?.user?.phone) {
         try {
           const provider = await getWhatsAppProvider();
-          console.log(`⚙️ Using Provider: ${provider} for ${todo.user.phone}`);
+          console.log(`Using Provider: ${provider} for ${todo.user.phone}`);
 
           await sendInteractiveWhatsAppReminder(
             todo.user.phone,
@@ -65,14 +65,14 @@ export async function POST(request: Request) {
             data: { whatsappNotified: true }
           });
           
-          console.log(`✅ Successfully notified and updated Todo: ${todo.id}`);
+          console.log(`Successfully notified and updated Todo: ${todo.id}`);
           results.push({ id: todo.id, status: 'success' });
         } catch (error: any) {
-          console.error(`❌ Failed to send to ${todo.user.phone}:`, error.message);
+          console.error(`Failed to send to ${todo.user.phone}:`, error.message);
           // results.push({ id: id: todo.id, status: 'error', error: String(error) });
         }
       } else {
-        console.warn(`⚠️ User for Todo ${todo.id} has no phone number.`);
+        console.warn(`User for Todo ${todo.id} has no phone number.`);
       }
     }
 

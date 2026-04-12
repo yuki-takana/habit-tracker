@@ -75,7 +75,6 @@ export function TodoItem({ id, task, startTime, reminderTime, category, status, 
   const [currentTime, setCurrentTime] = useState(isNaN(safeDate.getTime()) ? new Date() : safeDate);
   const catStyle                      = getCategoryStyle(category);
   const { refreshXp }                 = useXp();
-
   useEffect(() => {
     const unlock = () => { try { getAudioCtx().resume(); } catch (_) {} };
     document.addEventListener("click", unlock, { once: true });
