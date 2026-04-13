@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   // Testing ke liye console log
   console.log("CRON TRIGGERED AT:", new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
 
