@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ApiClient } from "@/lib/api-client";
 
 export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -76,35 +77,26 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
 
     setLoading(true);
     try {
-      const res = await fetch("/api/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task: title,
-          category,
-          startTime: reminderDate.toISOString(),
-          deadline: deadlineDate.toISOString(),
-          plannedTime: plannedTime || null,
-          sessionDuration: divideIntoSessions ? sessionDuration : null,
-          breakTime: divideIntoSessions ? breakTime : null,
-        }),
+      await ApiClient.createTodo({
+        task: title,
+        category,
+        startTime: reminderDate.toISOString(),
+        deadline: deadlineDate.toISOString(),
+        plannedTime: plannedTime || null,
+        sessionDuration: divideIntoSessions ? sessionDuration : null,
+        breakTime: divideIntoSessions ? breakTime : null,
       });
 
-      if (res.ok) {
-        setTitle("");
-        setDate(undefined);
-        setHours("09");
-        setMinutes("00");
-        setCategory("Code");
-        onClose();
-        router.refresh();
-      } else {
-        const data = await res.json();
-        alert(data.error || "Something went wrong");
-      }
-    } catch (error) {
+      setTitle("");
+      setDate(undefined);
+      setHours("09");
+      setMinutes("00");
+      setCategory("Code");
+      onClose();
+      router.refresh();
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to create todo");
+      alert(error.message || "Failed to create todo");
     } finally {
       setLoading(false);
     }

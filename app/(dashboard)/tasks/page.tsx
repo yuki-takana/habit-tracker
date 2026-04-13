@@ -30,8 +30,12 @@ const TasksPage = () => {
     return (
         <div className="max-w-5xl mx-auto pb-20 px-4">
             <div className="mb-12">
-                <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">90-Day Challenge Tasks</h1>
-                <p className="text-slate-500 text-lg">Long-term goals and milestones for your transformation.</p>
+                <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
+                    90-Day Challenge Tasks
+                </h1>
+                <p className="text-slate-500 text-lg">
+                    Long-term goals and milestones for your transformation.
+                </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -57,10 +61,16 @@ const TasksPage = () => {
                             {tasks.map((task) => (
                                 <TodoItem
                                     key={task.id}
+                                    id={task.id}
                                     task={task.title}
-                                    reminderTime={new Date(task.endDate)}
                                     category={task.category || "General"}
-                                    status={task.status}
+                                    status={task.status || "upcoming"}
+                                    completed={task.completed ?? false}
+                                    startTime={task.startTime ?? task.startDate ?? null}
+                                    deadline={task.endDate ?? task.deadline ?? null}
+                                    startedAt={task.startedAt ?? null}
+                                    reminderTime={task.reminderTime ? new Date(task.reminderTime) : null}
+                                    delayCount={task.delayCount ?? 0}
                                 />
                             ))}
                         </div>

@@ -1,13 +1,23 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Clock, Check, Plus, Play, Loader2, CalendarClock, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  Clock,
+  Check,
+  Plus,
+  Play,
+  Loader2,
+  AlertCircle,
+  Timer,
+  Flame,
+} from "lucide-react";
 import confetti from "canvas-confetti";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useXp } from "@/components/providers/xp-provider";
+import { ApiClient } from "@/lib/api-client";
 
 interface TodoProps {
   id?: string;
@@ -33,23 +43,92 @@ interface Particle {
   delay: number;
 }
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string; particle: string }> = {
-  fitness: { bg: "bg-orange-500/10", text: "text-orange-500", dot: "bg-orange-400", particle: "#f97316" },
-  health: { bg: "bg-rose-500/10", text: "text-rose-500", dot: "bg-rose-400", particle: "#f43f5e" },
-  work: { bg: "bg-indigo-500/10", text: "text-indigo-500", dot: "bg-indigo-400", particle: "#6366f1" },
-  finance: { bg: "bg-emerald-500/10", text: "text-emerald-500", dot: "bg-emerald-400", particle: "#10b981" },
-  learning: { bg: "bg-amber-500/10", text: "text-amber-500", dot: "bg-amber-400", particle: "#f59e0b" },
-  mindset: { bg: "bg-purple-500/10", text: "text-purple-500", dot: "bg-purple-400", particle: "#a855f7" },
-  general: { bg: "bg-sky-500/10", text: "text-sky-500", dot: "bg-sky-400", particle: "#0ea5e9" },
+const CATEGORY_CONFIG: Record<
+  string,
+  {
+    bg: string;
+    text: string;
+    dot: string;
+    particle: string;
+    bar: string;
+    timerColor: string;
+    badgeBg: string;
+  }
+> = {
+  fitness: {
+    bg: "bg-orange-500/10",
+    text: "text-orange-400",
+    dot: "bg-orange-400",
+    particle: "#f97316",
+    bar: "bg-orange-500",
+    timerColor: "text-orange-400",
+    badgeBg: "bg-orange-500/10 border-orange-500/20",
+  },
+  health: {
+    bg: "bg-rose-500/10",
+    text: "text-rose-400",
+    dot: "bg-rose-400",
+    particle: "#f43f5e",
+    bar: "bg-rose-500",
+    timerColor: "text-rose-400",
+    badgeBg: "bg-rose-500/10 border-rose-500/20",
+  },
+  work: {
+    bg: "bg-indigo-500/10",
+    text: "text-indigo-400",
+    dot: "bg-indigo-400",
+    particle: "#6366f1",
+    bar: "bg-indigo-500",
+    timerColor: "text-indigo-400",
+    badgeBg: "bg-indigo-500/10 border-indigo-500/20",
+  },
+  finance: {
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-400",
+    dot: "bg-emerald-400",
+    particle: "#10b981",
+    bar: "bg-emerald-500",
+    timerColor: "text-emerald-400",
+    badgeBg: "bg-emerald-500/10 border-emerald-500/20",
+  },
+  learning: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-400",
+    dot: "bg-amber-400",
+    particle: "#f59e0b",
+    bar: "bg-amber-500",
+    timerColor: "text-amber-400",
+    badgeBg: "bg-amber-500/10 border-amber-500/20",
+  },
+  mindset: {
+    bg: "bg-purple-500/10",
+    text: "text-purple-400",
+    dot: "bg-purple-400",
+    particle: "#a855f7",
+    bar: "bg-purple-500",
+    timerColor: "text-purple-400",
+    badgeBg: "bg-purple-500/10 border-purple-500/20",
+  },
+  general: {
+    bg: "bg-sky-500/10",
+    text: "text-sky-400",
+    dot: "bg-sky-400",
+    particle: "#0ea5e9",
+    bar: "bg-sky-500",
+    timerColor: "text-sky-400",
+    badgeBg: "bg-sky-500/10 border-sky-500/20",
+  },
 };
 
-function getCategoryStyle(category: string) {
-  return CATEGORY_COLORS[category?.toLowerCase()] ?? CATEGORY_COLORS["general"];
+function getCategoryConfig(category: string) {
+  return CATEGORY_CONFIG[category?.toLowerCase()] ?? CATEGORY_CONFIG["general"];
 }
 
 let audioCtx: AudioContext | null = null;
 function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  if (!audioCtx)
+    audioCtx = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
   return audioCtx;
 }
 
@@ -57,32 +136,87 @@ function playDone() {
   try {
     const ctx = getAudioCtx();
     if (ctx.state === "suspended") ctx.resume();
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
+    const o = ctx.createOscillator(),
+      g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
     o.frequency.setValueAtTime(523, ctx.currentTime);
     o.frequency.setValueAtTime(659, ctx.currentTime + 0.08);
     o.frequency.setValueAtTime(784, ctx.currentTime + 0.16);
     g.gain.setValueAtTime(0.18, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    o.start(); o.stop(ctx.currentTime + 0.5);
+    o.start();
+    o.stop(ctx.currentTime + 0.5);
   } catch (_) { }
 }
 
-export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTime, category, status, completed, delayCount, onToggleComplete }: TodoProps) {
+function formatDuration(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (h > 0) return `${h}h ${pad(m)}m ${pad(s)}s`;
+  return `${m}m ${pad(s)}s`;
+}
+
+function getProgressPercent(
+  startedAt: Date | string | null | undefined,
+  deadline: Date | string | null | undefined
+): number {
+  if (!startedAt || !deadline) return 0;
+  const start = new Date(startedAt).getTime();
+  const end = new Date(deadline).getTime();
+  const now = Date.now();
+  const total = end - start;
+  if (total <= 0) return 100;
+  const elapsed = now - start;
+  return Math.min(100, Math.max(0, (elapsed / total) * 100));
+}
+
+export function TodoItem({
+  id,
+  task,
+  startTime,
+  deadline,
+  startedAt,
+  reminderTime,
+  category,
+  status,
+  completed,
+  delayCount,
+  onToggleComplete,
+}: TodoProps) {
   const [timeLeft, setTimeLeft] = useState("");
+  const [overdueMs, setOverdueMs] = useState(0);
+  const [progressPct, setProgressPct] = useState(0);
   const hasNotified = useRef(false);
   const router = useRouter();
-  const [isCompleted, setIsCompleted] = useState(completed || status === "completed");
+  const [isCompleted, setIsCompleted] = useState(
+    completed || status === "completed"
+  );
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(status || "upcoming");
   const [particles, setParticles] = useState<Particle[]>([]);
   const particleId = useRef(0);
 
-  const catStyle = getCategoryStyle(category);
+  const cat = getCategoryConfig(category);
   const { refreshXp } = useXp();
 
+  const isOverdue =
+    (localStatus === "late" || timeLeft === "Overdue!") && !isCompleted;
+  const isInProgress = localStatus === "in_progress" && !isCompleted;
+  const showTimerSection =
+    (isInProgress || isOverdue) && (deadline || startedAt);
+
+    console.log("show timer section is ",isInProgress, showTimerSection, deadline , startedAt)
+
   useEffect(() => {
-    const unlock = () => { try { getAudioCtx().resume(); } catch (_) { } };
+    const unlock = () => {
+      try {
+        getAudioCtx().resume();
+      } catch (_) { }
+    };
     document.addEventListener("click", unlock, { once: true });
     return () => document.removeEventListener("click", unlock);
   }, []);
@@ -108,17 +242,30 @@ export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTim
       };
     });
     setParticles((p) => [...p, ...newParticles]);
-    setTimeout(() => setParticles((p) => p.filter((x) => !newParticles.find((n) => n.id === x.id))), 900);
+    setTimeout(
+      () =>
+        setParticles((p) =>
+          p.filter((x) => !newParticles.find((n) => n.id === x.id))
+        ),
+      900
+    );
   }, []);
 
-  const triggerCelebration = useCallback((color: string) => {
-    spawnParticles(color);
-    confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors: [color, "#ffffff", "#10b981"] });
-    playDone();
-  }, [spawnParticles]);
+  const triggerCelebration = useCallback(
+    (color: string) => {
+      spawnParticles(color);
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.65 },
+        colors: [color, "#ffffff", "#10b981"],
+      });
+      playDone();
+    },
+    [spawnParticles]
+  );
 
-
-  const toggleComplete = async (e: React.MouseEvent) => {
+  const toggleComplete = async (e?: React.MouseEvent) => {
     if (!id) return;
     const nextState = !isCompleted;
     setIsCompleted(nextState);
@@ -126,20 +273,14 @@ export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTim
     onToggleComplete?.(id, nextState);
 
     if (nextState) {
-      triggerCelebration(catStyle.particle);
+      triggerCelebration(cat.particle);
       toast.success("Task completed", { description: task });
     }
 
     try {
-      const res = await fetch(`/api/todos/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed: nextState }),
-      });
-      if (res.ok) {
-        await refreshXp();
-        router.refresh();
-      }
+      await ApiClient.toggleTodoComplete(id, nextState);
+      await refreshXp();
+      router.refresh();
     } catch {
       setIsCompleted(!nextState);
       if (!nextState) setLocalStatus(status);
@@ -152,11 +293,7 @@ export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTim
     setLoading(true);
     setLocalStatus("in_progress");
     try {
-      await fetch(`/api/todos/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startedAt: new Date().toISOString(), status: "in_progress" }),
-      });
+      await ApiClient.startTodo(id);
       router.refresh();
     } catch (e) {
       console.error(e);
@@ -170,28 +307,21 @@ export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTim
   const delayTask = async (minutes: number) => {
     if (!id) return;
     setLoading(true);
-    const updatedStartTime = new Date(Date.now() + minutes * 60000).toISOString();
+    const updatedStartTime = new Date(
+      Date.now() + minutes * 60000
+    ).toISOString();
     let updatedDeadline = undefined;
     if (deadline) {
-      updatedDeadline = new Date(new Date(deadline).getTime() + minutes * 60000).toISOString();
+      updatedDeadline = new Date(
+        new Date(deadline).getTime() + minutes * 60000
+      ).toISOString();
     }
     const newDelayCount = (delayCount || 0) + 1;
-
-    setLocalStatus("upcoming"); // visually sets to upcoming while delayed
+    setLocalStatus("upcoming");
     toast.success(`Task delayed by ${minutes}m`);
 
     try {
-      await fetch(`/api/todos/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          startTime: updatedStartTime,
-          ...(updatedDeadline && { deadline: updatedDeadline }),
-          delayCount: newDelayCount,
-          lastDelayedAt: new Date().toISOString(),
-          status: "upcoming"
-        }),
-      });
+      await ApiClient.delayTodo(id, updatedStartTime, updatedDeadline, newDelayCount);
       router.refresh();
     } catch (e) {
       console.error(e);
@@ -202,75 +332,111 @@ export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTim
     }
   };
 
+  // Live countdown tick
   useEffect(() => {
-    if (isCompleted || localStatus === "completed") { setTimeLeft("Done!"); return; }
+    if (isCompleted || localStatus === "completed") {
+      setTimeLeft("Done!");
+      return;
+    }
 
     const calc = () => {
-      // Show countdown ONLY if deadline exists and status includes progress or late tracking
       if (deadline && (localStatus === "in_progress" || localStatus === "late")) {
         const d = new Date(deadline).getTime();
         const diff = d - Date.now();
+
         if (diff <= 0) {
           setTimeLeft("Overdue!");
+          setOverdueMs(Math.abs(diff));
+          setProgressPct(100);
           if (!hasNotified.current) {
             hasNotified.current = true;
             try {
-              if ("Notification" in window && Notification.permission === "granted")
-                new Notification("Task Deadline", { body: `${task} is overdue!` });
+              if (
+                "Notification" in window &&
+                Notification.permission === "granted"
+              )
+                new Notification("Task Deadline", {
+                  body: `${task} is overdue!`,
+                });
             } catch (_) { }
             toast.error("Deadline passed!", { description: task });
           }
         } else {
-          const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-          setTimeLeft(`${h}h ${m}m ${s}s`);
+          setTimeLeft(formatDuration(diff));
+          setOverdueMs(0);
+          setProgressPct(getProgressPercent(startedAt, deadline));
         }
       } else {
-        setTimeLeft(""); // Clear timer
+        setTimeLeft("");
+        setProgressPct(0);
       }
     };
 
     const t = setInterval(calc, 1000);
     calc();
     return () => clearInterval(t);
-  }, [deadline, isCompleted, localStatus, task]);
+  }, [deadline, isCompleted, localStatus, task, startedAt]);
 
-  // Derived styling mappings based on status
-  let outerBorder = "border-zinc-200/70 dark:border-zinc-800/80 hover:border-indigo-400/50 hover:shadow-xl hover:shadow-indigo-500/5";
-  let opacityAndScale = "opacity-100 scale-100";
-  let checkBtnConfig = "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 hover:border-indigo-400";
-
-  if (isCompleted) {
-    outerBorder = "border-emerald-500/20";
-    opacityAndScale = "opacity-70 scale-[0.985]";
-    checkBtnConfig = "bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/30";
-  } else if (localStatus === "late" || localStatus === "missed") {
-    outerBorder = "border-red-400/50 bg-red-50/30 dark:bg-red-950/20 shadow-lg shadow-red-500/5";
-    checkBtnConfig = "border-red-300 dark:border-red-800 bg-white dark:bg-zinc-800/60 hover:border-red-500";
-  } else if (localStatus === "ready") {
-    outerBorder = "border-amber-400/50 bg-amber-50/20 dark:bg-amber-950/20 shadow-lg shadow-amber-500/5 hover:border-amber-500";
-    checkBtnConfig = "border-amber-300 dark:border-amber-800 bg-white dark:bg-zinc-800/60 hover:border-amber-500";
-  } else if (localStatus === "in_progress") {
-    outerBorder = "border-indigo-400/50 shadow-md shadow-indigo-500/10 bg-indigo-50/10 dark:bg-indigo-950/10";
-    checkBtnConfig = "border-indigo-300 dark:border-indigo-800 bg-white dark:bg-zinc-800/60 hover:border-indigo-500";
-  }
+  // Card border/bg based on status
+  const cardBorderClass = isCompleted
+    ? "border-emerald-500/15"
+    : isOverdue
+      ? "border-red-500/30 bg-red-950/10"
+      : isInProgress
+        ? "border-indigo-500/25 bg-indigo-950/[0.06]"
+        : localStatus === "ready"
+          ? "border-amber-500/30 bg-amber-950/10"
+          : "border-zinc-800/80 hover:border-zinc-700/80";
 
   return (
     <>
       <style>{`
-        @keyframes fup-todo { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)} }
-        @keyframes todo-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        .todo-enter { animation: todo-in .3s ease forwards; }
+        @keyframes particle-up {
+          0%  { opacity: 1; transform: translate(0, 0) scale(1); }
+          100%{ opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+        }
+        @keyframes todo-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes overdue-pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.45; }
+        }
+        @keyframes progress-stripe {
+          0%   { background-position: 0 0; }
+          100% { background-position: 28px 0; }
+        }
+        .todo-card-enter { animation: todo-in 0.28s ease forwards; }
+        .overdue-blink   { animation: overdue-pulse 1.1s ease-in-out infinite; }
+        .progress-stripe {
+          background-image: repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 5px,
+            rgba(255,255,255,0.06) 5px,
+            rgba(255,255,255,0.06) 10px
+          );
+          background-size: 28px 28px;
+          animation: progress-stripe 1.2s linear infinite;
+        }
       `}</style>
 
-      <div className={cn(
-        "todo-enter group relative grid grid-cols-1 sm:flex sm:flex-row sm:items-center justify-between gap-y-3 gap-x-4",
-        "px-5 py-4 rounded-[1.6rem] border transition-all duration-300 overflow-hidden",
-        "bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm",
-        opacityAndScale,
-        outerBorder
-      )}>
+      <div
+        className={cn(
+          "todo-card-enter relative rounded-2xl border transition-all duration-300 overflow-hidden",
+          "bg-zinc-900/70 backdrop-blur-sm",
+          isCompleted ? "opacity-60 scale-[0.988]" : "opacity-100 scale-100",
+          cardBorderClass
+        )}
+      >
         {/* Category accent bar */}
-        <div className={cn("absolute left-0 top-4 bottom-4 w-1 rounded-full", catStyle.dot)} />
+        <div
+          className={cn(
+            "absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full",
+            cat.dot
+          )}
+        />
 
         {/* Particles */}
         {particles.map((p) => (
@@ -279,145 +445,324 @@ export function TodoItem({ id, task, startTime, deadline, startedAt, reminderTim
             className="absolute w-1.5 h-1.5 rounded-full pointer-events-none z-10"
             style={{
               background: p.color,
-              left: p.left, top: p.top,
+              left: p.left,
+              top: p.top,
               // @ts-ignore
-              "--dx": p.dx + "px", "--dy": p.dy + "px",
-              animation: "fup-todo .82s ease-out forwards",
+              "--dx": p.dx + "px",
+              "--dy": p.dy + "px",
+              animation: "particle-up .82s ease-out forwards",
               animationDelay: p.delay + "s",
             }}
           />
         ))}
 
-        {/* ROW 1: Checkbox + Content + Start Button + Status Badge */}
-        <div className="flex items-center justify-between w-full">
-          {/* Left Block */}
-          <div className="flex items-center gap-4 pl-3 flex-1 min-w-0">
+        {/* ── MAIN CONTENT ── */}
+        <div className="pl-5 pr-4 pt-3.5 pb-3 flex flex-col gap-2.5">
+
+          {/* ── ROW 1: Checkbox + Task Info + Status Chip ── */}
+          <div className="flex items-center gap-3">
+
+            {/* Checkbox */}
             <button
               onClick={toggleComplete}
               disabled={loading}
               className={cn(
-                "shrink-0 w-9 h-9 rounded-[0.85rem] border-2 flex items-center justify-center transition-all duration-200",
-                "disabled:opacity-50 active:scale-90",
-                checkBtnConfig
+                "shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 flex items-center justify-center",
+                "transition-all duration-200 active:scale-90 disabled:opacity-50",
+                isCompleted
+                  ? "bg-emerald-500/20 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                  : `border-zinc-700 bg-zinc-800/60 hover:border-opacity-80 hover:${cat.dot.replace("bg-", "border-")}`
               )}
             >
-              {loading
-                ? <Loader2 size={14} className="animate-spin text-indigo-400" />
-                : isCompleted
-                  ? <Check size={16} className="text-white" strokeWidth={3} />
-                  : <div className={cn("w-2 h-2 rounded-full transition-colors", catStyle.dot, "opacity-40 group-hover:opacity-80")} />
-              }
+              {loading ? (
+                <Loader2 size={13} className="animate-spin text-indigo-400" />
+              ) : isCompleted ? (
+                <Check size={14} className="text-emerald-400" strokeWidth={3} />
+              ) : (
+                <div
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all duration-200",
+                    cat.dot,
+                    "opacity-40 group-hover:opacity-90"
+                  )}
+                />
+              )}
             </button>
 
-            <div className="min-w-0 flex-1">
-              <p className={cn(
-                "text-sm font-bold leading-snug tracking-tight transition-all duration-300 truncate",
-                isCompleted ? "line-through text-zinc-400 dark:text-zinc-500" : "text-zinc-800 dark:text-zinc-100"
-              )}>
+            {/* Task name + category */}
+            <div className="flex-1 min-w-0">
+              <p
+                className={cn(
+                  "text-sm font-bold leading-snug tracking-tight break-words whitespace-normal transition-all duration-300",
+                  isCompleted
+                    ? "line-through text-zinc-500"
+                    : "text-zinc-100"
+                )}
+              >
                 {task}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={cn(
-                  "inline-block text-[9px] font-extrabold tracking-[.18em] uppercase px-2 py-0.5 rounded-md",
-                  catStyle.bg, catStyle.text
-                )}>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span
+                  className={cn(
+                    "text-[9px] font-black tracking-[.18em] uppercase px-2 py-0.5 rounded-md border",
+                    cat.badgeBg,
+                    cat.text
+                  )}
+                >
                   {category}
                 </span>
+                {(delayCount ?? 0) > 0 && (
+                  <span className="text-[9px] font-bold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-0.5 tracking-wide">
+                    ↻ delayed ×{delayCount}
+                  </span>
+                )}
               </div>
+            </div>
+
+            {/* Status chip — right aligned */}
+            <div className="shrink-0">
+              {isCompleted ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black tracking-wide">
+                  <Check size={10} strokeWidth={3} />
+                  <span className="hidden sm:inline">Done</span>
+                </div>
+              ) : isOverdue ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black tracking-wide overdue-blink">
+                  <AlertCircle size={10} />
+                  <span className="hidden sm:inline">Overdue</span>
+                </div>
+              ) : isInProgress ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black tracking-wide">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
+                  <span className="hidden sm:inline">In Progress</span>
+                  <span className="sm:hidden">Active</span>
+                </div>
+              ) : localStatus === "ready" ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black tracking-wide">
+                  <Flame size={10} />
+                  <span className="hidden sm:inline">Ready</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-800/80 border border-zinc-700/60 text-zinc-400 text-[10px] font-black tracking-wide">
+                  <Clock size={10} />
+                  <span className="hidden sm:inline">
+                    {startTime
+                      ? new Date(startTime).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                      : "Upcoming"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Right Aligned Block in Row 1 */}
-          <div className="flex items-center gap-2 shrink-0">
-
-            {(localStatus === "late" || localStatus === "missed") && !isCompleted && !deadline && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 text-[10px] font-extrabold tracking-wide border border-red-200/50 dark:border-red-500/20">
-                <AlertCircle size={12} /> {localStatus === "missed" ? "Missed" : "Late"}
-              </div>
-            )}
-
-            {(timeLeft !== "" || isCompleted || localStatus === "in_progress" || localStatus === "upcoming" || localStatus === "ready") && (
-              <div className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-[0.9rem] border transition-all duration-500 min-w-auto sm:min-w-[110px] justify-center",
-                timeLeft === "Overdue!" || localStatus === "late" || localStatus === "missed"
-                  ? "bg-red-50 dark:bg-red-500/10 border-red-200/60 dark:border-red-500/20"
-                  : isCompleted || timeLeft === "Done!"
-                    ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200/60 dark:border-emerald-500/20"
-                    : localStatus === "ready" || localStatus === "upcoming"
-                      ? "bg-amber-50 dark:bg-amber-500/10 border-amber-200/60 dark:border-amber-500/20"
-                      : "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-200/60 dark:border-indigo-800"
-              )}>
-                <Clock
-                  size={13}
-                  className={
-                    timeLeft === "Overdue!" || localStatus === "late" || localStatus === "missed" ? "text-red-500"
-                      : isCompleted ? "text-emerald-500"
-                        : localStatus === "ready" || localStatus === "upcoming" ? "text-amber-500"
-                          : "text-indigo-400"
-                  }
-                />
-                <span className={cn(
-                  "text-xs font-mono font-extrabold tabular-nums whitespace-nowrap",
-                  timeLeft === "Overdue!" || localStatus === "late" || localStatus === "missed" ? "text-red-500 animate-pulse"
-                    : isCompleted ? "text-emerald-500"
-                      : localStatus === "ready" || localStatus === "upcoming" ? "text-amber-600 dark:text-amber-400"
-                        : "text-indigo-600 dark:text-indigo-300"
-                )}>
-                  {isCompleted ? "Done!" : timeLeft || (
-                    localStatus === "upcoming"
-                      ? (startTime ? `Starts ${new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "Upcoming")
-                      : localStatus === "ready"
-                        ? "Ready"
-                        : "In Progress"
+          {/* ── TIMER SECTION — only when in_progress or overdue ── */}
+          {showTimerSection && (
+            <div
+              className={cn(
+                "flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all duration-300",
+                isOverdue
+                  ? "bg-red-950/20 border-red-500/20"
+                  : "bg-[#0d0d1a] border-zinc-800/80"
+              )}
+            >
+              {/* Timer icon + value */}
+              <div className="shrink-0 flex items-center gap-2">
+                <Timer
+                  size={14}
+                  className={cn(
+                    isOverdue ? "text-red-400" : cat.timerColor,
+                    isOverdue && "overdue-blink"
                   )}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ROW 2: Additional Actions (Only Visible if Applicable) */}
-        {!isCompleted && (!startedAt || localStatus === "in_progress") && (
-          <div className="flex items-center gap-1.5 pl-14 sm:pl-0 shrink-0 overflow-x-auto w-full sm:w-auto mt-1 sm:mt-0 pb-1 sm:pb-0">
-            {!startedAt && (
-              <>
-                <button
-                  onClick={() => delayTask(15)}
-                  disabled={loading}
-                  className="flex shrink-0 items-center gap-1 px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-orange-100 transition-all active:scale-95 border border-orange-200/50 dark:border-orange-500/20"
-                >
-                  <Plus size={11} /> 15m
-                </button>
-                <button
-                  onClick={() => delayTask(30)}
-                  disabled={loading}
-                  className="flex shrink-0 items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-amber-100 transition-all active:scale-95 border border-amber-200/50 dark:border-amber-500/20"
-                >
-                  <Plus size={11} /> 30m
-                </button>
-                {!isCompleted && !startedAt && localStatus !== "in_progress" && (
-                  <button
-                    onClick={() => startTask()}
-                    disabled={loading}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold tracking-wide uppercase hover:bg-indigo-100 transition-all active:scale-95 border border-indigo-200/50 dark:border-indigo-500/20"
+                />
+                <div>
+                  <p className="text-[8px] font-bold tracking-[.15em] uppercase text-zinc-600 leading-none mb-0.5">
+                    {isOverdue ? "Over by" : "Time left"}
+                  </p>
+                  <p
+                    className={cn(
+                      "font-mono text-base sm:text-lg font-black leading-none tabular-nums",
+                      isOverdue
+                        ? "text-red-400 overdue-blink"
+                        : cat.timerColor
+                    )}
                   >
-                    <Play size={11} fill="currentColor" /> <span className="hidden sm:inline">Start Now</span><span className="sm:hidden">Start</span>
+                    {isOverdue ? formatDuration(overdueMs) : timeLeft}
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress bar + timestamps */}
+              {!isOverdue && deadline && (
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <div className="relative h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                    <div
+                      className={cn(
+                        "absolute inset-y-0 left-0 rounded-full transition-all duration-500",
+                        progressPct > 85
+                          ? "bg-red-500 progress-stripe"
+                          : progressPct > 60
+                            ? "bg-amber-500"
+                            : cat.bar
+                      )}
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-zinc-600 font-mono">
+                      {startedAt
+                        ? new Date(startedAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                        : "–"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[9px] font-mono font-bold",
+                        progressPct > 85 ? "text-red-400" : "text-zinc-500"
+                      )}
+                    >
+                      Due{" "}
+                      {new Date(deadline).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Overdue: full-width red bar */}
+              {isOverdue && (
+                <div className="flex-1 min-w-0">
+                  <div className="h-1.5 rounded-full bg-red-500/20 overflow-hidden">
+                    <div className="h-full w-full bg-red-500/60 progress-stripe" />
+                  </div>
+                  <p className="text-[9px] text-red-500/60 font-mono mt-1">
+                    Deadline was{" "}
+                    {deadline
+                      ? new Date(deadline).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                      : "–"}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── ACTIONS ROW — only when not completed ── */}
+          {!isCompleted && (
+            <>
+              {/* Separator */}
+              <div className="h-px bg-zinc-800/60 -mx-1" />
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+
+                {/* Delay buttons — only when not started */}
+                {!startedAt && (
+                  <>
+                    <button
+                      onClick={() => delayTask(15)}
+                      disabled={loading}
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-black tracking-wide uppercase hover:bg-orange-500/15 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      <Plus size={10} />
+                      <span>15m</span>
+                    </button>
+                    <button
+                      onClick={() => delayTask(30)}
+                      disabled={loading}
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black tracking-wide uppercase hover:bg-amber-500/15 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      <Plus size={10} />
+                      <span>30m</span>
+                    </button>
+                  </>
+                )}
+
+                {/* Delay buttons in_progress too
+                {localStatus === "in_progress" && !startedAt && (
+                  <>
+                    <button
+                      onClick={() => delayTask(15)}
+                      disabled={loading}
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-black tracking-wide uppercase hover:bg-orange-500/15 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      <Plus size={10} />
+                      <span>15m</span>
+                    </button>
+                    <button
+                      onClick={() => delayTask(30)}
+                      disabled={loading}
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black tracking-wide uppercase hover:bg-amber-500/15 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      <Plus size={10} />
+                      <span>30m</span>
+                    </button>
+                  </>
+                )} */}
+
+                {/* Start Now — only when not started and not in_progress */}
+                {!startedAt && localStatus !== "in_progress" && (
+                  <button
+                    onClick={startTask}
+                    disabled={loading}
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black tracking-wide uppercase hover:bg-indigo-500/15 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <Play size={10} fill="currentColor" />
+                    <span className="hidden sm:inline">Start Now</span>
+                    <span className="sm:hidden">Start</span>
                   </button>
                 )}
-              </>
-            )}
 
-            {localStatus === "in_progress" && id && (
-              <Link
-                href={`/todos/${id}/sessions`}
-                onClick={() => toast("Entering focus mode ≡ƒºá", { description: task })}
-                className="flex shrink-0 items-center gap-1.5 px-4 py-2 rounded-[0.9rem] bg-indigo-600 text-white text-[10px] font-extrabold tracking-widest uppercase hover:bg-indigo-700 transition-all active:scale-95 shadow-md shadow-indigo-500/20 whitespace-nowrap"
-              >
-                <Play size={11} fill="currentColor" /> Focus
-              </Link>
-            )}
-          </div>
-        )}
+                {/* Focus Mode CTA — when in_progress */}
+                {localStatus === "in_progress" && id && (
+                  isOverdue ? (
+                    <button
+                      onClick={() => toggleComplete()}
+                      className="shrink-0 ml-auto flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500 border border-red-400/50 shadow-[0_0_16px_rgba(239,68,68,0.35)] hover:shadow-[0_0_24px_rgba(239,68,68,0.5)] transition-all active:scale-95 text-white text-[10px] sm:text-[11px] font-black tracking-widest uppercase"
+                    >
+                      <Play size={11} fill="currentColor" />
+                      <span>Finish it!</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/todos/${id}/sessions`}
+                      onClick={() =>
+                        toast("Entering focus mode 🎯", { description: task })
+                      }
+                      className={cn(
+                        "shrink-0 ml-auto flex items-center gap-1.5 px-4 py-2 rounded-xl",
+                        "text-white text-[10px] sm:text-[11px] font-black tracking-widest uppercase",
+                        "transition-all active:scale-95",
+                        "bg-indigo-600 border border-indigo-400/40 shadow-[0_0_16px_rgba(99,102,241,0.3)] hover:bg-indigo-500 hover:shadow-[0_0_24px_rgba(99,102,241,0.5)]"
+                      )}
+                    >
+                      <Play size={11} fill="currentColor" />
+                      <span>Focus</span>
+                    </Link>
+                  )
+                )}
+
+                {/* Overdue without in_progress — still show focus */}
+                {isOverdue && localStatus !== "in_progress" && id && (
+                  <button
+                    onClick={() => toggleComplete()}
+                    className="shrink-0 ml-auto flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500 border border-red-400/50 text-white text-[10px] sm:text-[11px] font-black tracking-widest uppercase shadow-[0_0_16px_rgba(239,68,68,0.35)] hover:shadow-[0_0_24px_rgba(239,68,68,0.5)] transition-all active:scale-95"
+                  >
+                    <Play size={11} fill="currentColor" />
+                    <span>Finish it!</span>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </>
   );

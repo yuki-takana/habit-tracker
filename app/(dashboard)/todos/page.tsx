@@ -28,28 +28,15 @@ function getTreeEmojiString(category: string, index: number) {
 
 // ─── Forest Tree Card ─────────────────────────────────────────────────────────
 
-function TreeMini({
-    category,
-    index,
-    treeTaskCount,
-    activeTree,
-    setActiveTree,
-}: any) {
+function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }: any) {
     const ref = useRef<HTMLDivElement>(null);
     const emoji = getTreeEmojiString(category, index);
-    const scale = 0.6 + treeTaskCount * 0.4; // 0 to 5 -> 0.6 to 2.6
+    const scale = 0.6 + treeTaskCount * 0.4;
 
     const handleOpen = () => {
         if (!ref.current) return;
         const rect = ref.current.getBoundingClientRect();
-        setActiveTree({
-            category,
-            index,
-            treeTaskCount,
-            emoji,
-            x: rect.left + rect.width / 2,
-            y: rect.top,
-        });
+        setActiveTree({ category, index, treeTaskCount, emoji, x: rect.left + rect.width / 2, y: rect.top });
     };
 
     return (
@@ -60,90 +47,54 @@ function TreeMini({
             onClick={handleOpen}
             className="relative flex flex-col items-center justify-center cursor-pointer group h-24 w-20"
         >
-            <div 
-                className={cn(
-                    "relative flex items-center justify-center transition-all duration-300 drop-shadow-lg",
-                    activeTree?.category === category && activeTree?.index === index
-                        ? "scale-140 z-10"
-                        : "group-hover:scale-125"
-                )}
-            >
-                <div 
-                    className="text-4xl transition-all duration-300"
-                    style={{ transform: `scale(${scale})` }}
-                >
+            <div className={cn(
+                "relative flex items-center justify-center transition-all duration-300 drop-shadow-lg",
+                activeTree?.category === category && activeTree?.index === index ? "scale-140 z-10" : "group-hover:scale-125"
+            )}>
+                <div className="text-4xl transition-all duration-300" style={{ transform: `scale(${scale})` }}>
                     {emoji}
                 </div>
             </div>
-
-            <p className="text-[10px] mt-8 text-zinc-400 font-bold uppercase tracking-wide">
-                {category}
-            </p>
+            <p className="text-[10px] mt-8 text-zinc-400 font-bold uppercase tracking-wide">{category}</p>
         </div>
     );
 }
 
 function TreeTooltip({ data }: any) {
     const { category, index, treeTaskCount, emoji, x, y } = data;
-
     return (
         <div
-            className="fixed z-50 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md
-                       bg-white/95 dark:bg-zinc-900/95 border border-zinc-200 dark:border-zinc-800
-                       animate-in fade-in zoom-in-95 pointer-events-none"
-            style={{
-                left: x,
-                top: y - 10,
-                transform: "translate(-50%, -100%)",
-            }}
+            className="fixed z-50 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md bg-white/95 dark:bg-zinc-900/95 border border-zinc-200 dark:border-zinc-800 animate-in fade-in zoom-in-95 pointer-events-none"
+            style={{ left: x, top: y - 10, transform: "translate(-50%, -100%)" }}
         >
             <p className="text-sm font-extrabold uppercase tracking-wide text-center text-emerald-500">
-                {category} {index > 0 ? `Tree ${index + 1}` : ''}
+                {category} {index > 0 ? `Tree ${index + 1}` : ""}
             </p>
-
             <p className="text-xs text-zinc-500 text-center font-semibold mt-1">
                 {treeTaskCount === 5 ? "Fully Grown" : "Growing"}
             </p>
-
             <div className="mt-2 text-center">
                 <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 drop-shadow-sm">
                     {emoji} {treeTaskCount} / 5
                 </p>
-                <p className="text-[11px] text-zinc-400 font-medium mt-1">
-                    tasks completed
-                </p>
+                <p className="text-[11px] text-zinc-400 font-medium mt-1">tasks completed</p>
             </div>
         </div>
     );
 }
-// ─── Forest View ──────────────────────────────────────────────────────────────
 
-interface ForestProps {
-    tasks: any[];
-}
+// ─── Forest View ──────────────────────────────────────────────────────────────
 
 function ForestView({ tasks }: { tasks: any[] }) {
     const [activeTree, setActiveTree] = useState<any>(null);
 
     const categories = useMemo(() => {
-        const map: Record<string, {
-            total: number;
-            completed: number;
-            xp: number;
-        }> = {};
-
+        const map: Record<string, { total: number; completed: number; xp: number }> = {};
         tasks.forEach((t) => {
             const cat = (t.category || "general").toLowerCase();
-
-            if (!map[cat]) {
-                map[cat] = { total: 0, completed: 0, xp: 0 };
-            }
-
+            if (!map[cat]) map[cat] = { total: 0, completed: 0, xp: 0 };
             map[cat].total++;
-
-            if (t.completed) {
-                map[cat].completed++;
-            }
+            if (t.completed) map[cat].completed++;
             map[cat].xp += t.earnedXp || 0;
         });
         return Object.entries(map);
@@ -152,28 +103,21 @@ function ForestView({ tasks }: { tasks: any[] }) {
     if (!categories.length) return null;
 
     return (
-        <div className="mb-12 relative ">
-
-            {/* Header */}
+        <div className="mb-12 relative">
             <div className="flex items-center gap-2 mb-6 px-1">
-                <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400">
-                    Your Forest
-                </p>
+                <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400">Your Forest</p>
                 <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
                 <span className="text-xs text-zinc-400">{categories.length}</span>
             </div>
-
             <Card>
                 <div className="relative flex flex-wrap justify-center py-10 gap-x-6 gap-y-12">
                     {categories.map(([cat, counts]) => {
                         const numTrees = Math.max(1, Math.ceil(counts.completed / 5));
                         const elements = [];
-
                         for (let i = 0; i < numTrees; i++) {
-                            const treeTaskCount = (i === numTrees - 1 && counts.completed > 0 && counts.completed % 5 !== 0) 
-                                ? (counts.completed % 5) 
-                                : (counts.completed === 0 ? 0 : 5);
-                                
+                            const treeTaskCount = (i === numTrees - 1 && counts.completed > 0 && counts.completed % 5 !== 0)
+                                ? counts.completed % 5
+                                : counts.completed === 0 ? 0 : 5;
                             elements.push(
                                 <TreeMini
                                     key={`${cat}-${i}`}
@@ -185,19 +129,11 @@ function ForestView({ tasks }: { tasks: any[] }) {
                                 />
                             );
                         }
-
-                        return (
-                            <div key={cat} className="flex gap-4 items-center">
-                                {elements}
-                            </div>
-                        );
+                        return <div key={cat} className="flex gap-4 items-center">{elements}</div>;
                     })}
                 </div>
             </Card>
-            {/* Tooltip */}
-            {activeTree && (
-                <TreeTooltip data={activeTree} />
-            )}
+            {activeTree && <TreeTooltip data={activeTree} />}
         </div>
     );
 }
@@ -213,22 +149,9 @@ export default function TodosPage() {
     const [isWhatsappEnabled, setIsWhatsappEnabled] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
     const [visibleCounts, setVisibleCounts] = useState({ today: 10, timeUp: 10, completed: 10 });
-    const [stats, setStats] = useState<any>({
-        total: 0,
-        completed: 0,
-        today: 0,
-        timeUps: 0,
-    });
-    const [pagination, setPagination] = useState<any>({
-        page: 1,
-        limit: 10,
-        totalPages: 1,
-    });
-    const [grouped, setGrouped] = useState<any>({
-        today: [],
-        timeUp: [],
-        completed: [],
-    });
+    const [stats, setStats] = useState<any>({ total: 0, completed: 0, today: 0, timeUps: 0 });
+    const [pagination, setPagination] = useState<any>({ page: 1, limit: 10, totalPages: 1 });
+    const [grouped, setGrouped] = useState<any>({ today: [], timeUp: [], completed: [] });
 
     useEffect(() => {
         if (session?.user) {
@@ -248,17 +171,18 @@ export default function TodosPage() {
             await toggleWhatsapp(next);
             setIsWhatsappEnabled(next);
             toast.success(next ? "WhatsApp reminders enabled!" : "WhatsApp reminders disabled.");
-        } catch { toast.error("Failed to update WhatsApp settings."); }
-        finally { setToggleLoading(false); }
+        } catch {
+            toast.error("Failed to update WhatsApp settings.");
+        } finally {
+            setToggleLoading(false);
+        }
     };
 
     const fetchTasks = async (page = 1) => {
         try {
             const res = await fetch(`/api/todos?page=${page}&limit=10`);
-
             if (res.ok) {
                 const result = await res.json();
-
                 setTasks(result.data);
                 setStats(result.stats);
                 setPagination(result.pagination);
@@ -269,10 +193,10 @@ export default function TodosPage() {
             setLoading(false);
         }
     };
+
     const fetchGroupedTasks = async () => {
         try {
             const res = await fetch(`/api/todos/dashboard`);
-
             if (res.ok) {
                 const result = await res.json();
                 setGrouped(result.grouped);
@@ -288,7 +212,6 @@ export default function TodosPage() {
         fetchGroupedTasks();
     }, []);
 
-
     const handleLoadMore = (cat: "today" | "timeUp" | "completed") =>
         setVisibleCounts((p) => ({ ...p, [cat]: p[cat] + 10 }));
 
@@ -301,36 +224,42 @@ export default function TodosPage() {
         if (!list.length) return null;
         const visible = list.slice(0, visibleCounts[cat]);
         const hasMore = list.length > visibleCounts[cat];
-        const accentMap = { today: "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10", timeUp: "text-red-500 bg-red-50 dark:bg-red-500/10", completed: "text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10" };
+        const accentMap = {
+            today: "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10",
+            timeUp: "text-red-500 bg-red-50 dark:bg-red-500/10",
+            completed: "text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10",
+        };
+
         return (
             <div className="mb-12">
                 <div className="flex items-center gap-3 mb-5 px-1">
-                    <div className={cn("p-2 rounded-xl", accentMap[cat])}>
-                        {icon}
-                    </div>
-                    <h2 className="text-lg font-black tracking-tight text-zinc-800 dark:text-zinc-100">
-                        {title}
-                    </h2>
+                    <div className={cn("p-2 rounded-xl", accentMap[cat])}>{icon}</div>
+                    <h2 className="text-lg font-black tracking-tight text-zinc-800 dark:text-zinc-100">{title}</h2>
                     <span className="text-xs font-extrabold text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
                         {list.length}
                     </span>
                     <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
                 </div>
+
                 <div className="flex flex-col gap-3">
                     {visible.map((task) => (
                         <TodoItem
                             key={task.id}
                             id={task.id}
                             task={task.task}
-                            startTime={task.startTime}
-                            reminderTime={task.reminderTime ? new Date(task.reminderTime) : new Date()}
                             category={task.category || "General"}
                             status={task.status}
-                            completed={task.completed}
+                            completed={task.completed ?? false}
+                            startTime={task.startTime ?? null}
+                            deadline={task.deadline ?? null} 
+                            startedAt={task.startedAt ?? null} 
+                            reminderTime={task.reminderTime ? new Date(task.reminderTime) : null}
+                            delayCount={task.delayCount ?? 0}
                             onToggleComplete={handleToggleComplete}
                         />
                     ))}
                 </div>
+
                 {hasMore && (
                     <button
                         onClick={() => handleLoadMore(cat)}
@@ -352,7 +281,7 @@ export default function TodosPage() {
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-24">
 
-                {/* ── Header ──────────────────────────────────────────────── */}
+                {/* Header */}
                 <div className="page-header flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-10 pt-10">
                     <div>
                         <p className="text-[9px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500 mb-2">
@@ -393,10 +322,10 @@ export default function TodosPage() {
                     </div>
                 </div>
 
-                {/* ── Forest ──────────────────────────────────────────────── */}
+                {/* Forest */}
                 {!loading && tasks.length > 0 && <ForestView tasks={tasks} />}
 
-                {/* ── Todo sections ───────────────────────────────────────── */}
+                {/* Todo sections */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                         <div className="relative w-10 h-10">
@@ -436,7 +365,7 @@ export default function TodosPage() {
                 {/* Modals */}
                 <AddTodoModal
                     isOpen={isModalOpen}
-                    onClose={() => { setIsModalOpen(false); fetchTasks(); }}
+                    onClose={() => { setIsModalOpen(false); fetchTasks(); fetchGroupedTasks(); }}
                 />
                 <AiGoalAssistant
                     isOpen={isAiModalOpen}

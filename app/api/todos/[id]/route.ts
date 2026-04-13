@@ -30,9 +30,7 @@ export async function PATCH(
             return NextResponse.json({ error: "Todo not found" }, { status: 404 });
         }
 
-        // Refined logic: If it's completed, it can't be updated EXCEPT to set completed: false
         if (currentTodo.completed && completed !== false) {
-            // Check if any other field is being updated
             if (reminderTime !== undefined || extraTime !== undefined || (completed === undefined)) {
                 return NextResponse.json({ error: "Cannot update a completed todo" }, { status: 400 });
             }
@@ -40,10 +38,10 @@ export async function PATCH(
 
         if (completed !== undefined) {
             updateData.completed = completed;
-            updateData.status = completed ? "completed" : "in_progress"; // fallback logic
+            updateData.status = completed ? "completed" : "in_progress";
 
             if (completed === true && !currentTodo.completed) {
-                console.log("todo is about to complete ")
+
                 const result = await processTodoCompletion({
                     prisma,
                     todoId: id,
@@ -58,8 +56,6 @@ export async function PATCH(
                 updateData.earnedXp = 0;
             }
         } else {
-            console.log("updating todo details")
-            console.log("payload for updating ", completed, reminderTime, startTime, extraTime, status, startedAt, delayCount, lastDelayedAt, deadline )
             if (startedAt !== undefined) {
                 if (currentTodo.status === "in_progress") {
                     return NextResponse.json({ error: "Task is already started" }, { status: 400 });
