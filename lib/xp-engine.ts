@@ -14,7 +14,6 @@ export async function processTodoCompletion({
     where: { id: todoId },
     include: { user: true },
   });
-  console.log("todo found for update with user data ", todo)
 
   if (!todo) throw new Error("Todo not found");
 
