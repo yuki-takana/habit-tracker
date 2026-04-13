@@ -84,6 +84,30 @@ export async function POST(req: NextRequest) {
             from,
             `Understood! 🕒 I've delayed "${todo.task}" by ${addMins} minutes. I'll catch up with you again soon!`
           );
+        } else if (action === 'DONE') {
+          const result = await processTodoCompletion({
+            prisma,
+            todoId: todo.id,
+          });
+          const xp = result.earnedXp;
+          let responseMessage = '';
+          if (xp < 0) {
+              responseMessage = `🔥 Task Marked Done. \n\nAh, we missed our mark and lost ${Math.abs(xp)} XP. It's okay, let's bounce back stronger on the next one!`;
+          } else if (xp > 10) {
+              responseMessage = `🚀 Awesome velocity! \n\nYou crushed it early and earned +${xp} XP. Keep that high energy flowing!`;
+          } else {
+              responseMessage = `✅ Solid job! \n\nCompleted. (+${xp} XP). Keep it up!`;
+          }
+          await sendMetaTextMessage(from, responseMessage);
+        } else if (action === 'FAIL') {
+          await prisma.todo.update({
+            where: { id: todoId },
+            data: { status: 'failed', completed: false }
+          });
+          await sendMetaTextMessage(
+            from,
+            `❌ Acknowledged. "${todo.task}" has been marked as failed. Don't worry, we'll try again next time!`
+          );
         }
 
         return NextResponse.json({ status: 'ok' });

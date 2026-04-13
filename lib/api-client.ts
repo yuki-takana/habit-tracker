@@ -52,6 +52,12 @@ export class ApiClient {
     });
   }
 
+  static async failTodo(id: string) {
+    return this.updateTodo(id, {
+      status: "failed",
+    });
+  }
+
   static async delayTodo(
     id: string,
     startTime: string,

@@ -78,7 +78,7 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
                     }
                     const scheduledStart = new Date(todo.startTime);
                     const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
-                    const deadlineTime = new Date(getTodayEndIST());
+                    const deadlineTime = new Date(scheduledStart.getTime() + todo.plannedTime * 60000);
                     return prisma.todo.create({
                         data: {
                             userId,

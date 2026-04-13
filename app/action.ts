@@ -57,6 +57,8 @@ export async function updateUserProfile(data: {
   currentPassword?: string;
   newPassword?: string;
   dailyGoalsEnabled?: boolean;
+  whatsappDeadlineEnabled?: boolean;
+  wakeUpTime?: string;
 }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) throw new Error("Unauthorized");
@@ -73,6 +75,12 @@ export async function updateUserProfile(data: {
   if (data.email) updateData.email = data.email;
   if (typeof data.dailyGoalsEnabled !== "undefined") {
     updateData.dailyGoalsEnabled = data.dailyGoalsEnabled;
+  }
+  if (typeof data.whatsappDeadlineEnabled !== "undefined") {
+    updateData.whatsappDeadlineEnabled = data.whatsappDeadlineEnabled;
+  }
+  if (data.wakeUpTime) {
+    updateData.wakeUpTime = data.wakeUpTime;
   }
 
   if (data.newPassword) {

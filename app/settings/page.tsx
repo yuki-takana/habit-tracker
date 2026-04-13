@@ -31,6 +31,9 @@ export default function SettingsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false)
   const [isDailyTodoEnabled, setIsDailyTodoEnabled] = useState(true)
+  const [wakeUpTime, setWakeUpTime] = useState('06:30');
+  const [whatsappDeadlineEnabled, setWhatsappDeadlineEnabled] = useState(true);
+  const [isWhatsappSaving, setIsWhatsappSaving] = useState(false);
 
   useEffect(() => {
     const fetchSubStatus = async () => {
@@ -54,6 +57,8 @@ export default function SettingsPage() {
       setGithubKey(session.user.githubApiKey || '');
       setLinkedinKey((session.user as any).linkedinApiKey || '');
       setTwitterKey((session.user as any).twitterApiKey || '');
+      setWakeUpTime((session.user as any).wakeUpTime || '06:30');
+      setWhatsappDeadlineEnabled((session.user as any).whatsappDeadlineEnabled ?? true);
     }
   }, [session]);
 
@@ -95,9 +100,10 @@ export default function SettingsPage() {
         email,
         currentPassword,
         newPassword,
-        dailyGoalsEnabled: isDailyTodoEnabled
+        dailyGoalsEnabled: isDailyTodoEnabled,
+        wakeUpTime
       });
-      await update({ name, email });
+      await update({ name, email, wakeUpTime } as any);
       toast.success("Profile updated successfully!");
     } catch (error) {
       toast.error("Failed to update profile.");
@@ -151,6 +157,22 @@ export default function SettingsPage() {
     }
   }
 
+  const handleToggleDeadline = async (checked: boolean) => {
+    setIsWhatsappSaving(true);
+    try {
+      await updateUserProfile({
+        whatsappDeadlineEnabled: checked
+      });
+      setWhatsappDeadlineEnabled(checked);
+      await update({ whatsappDeadlineEnabled: checked } as any);
+      toast.success(`Deadline notifications ${checked ? 'ENABLED' : 'DISABLED'}`);
+    } catch (error) {
+      toast.error("Failed to update status");
+    } finally {
+      setIsWhatsappSaving(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8 mt-12">
       <header className="mb-8">
@@ -188,6 +210,15 @@ export default function SettingsPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1 block w-full rounded-xl border-slate-200 dark:border-zinc-700 dark:bg-zinc-800 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 transition-all"
                   placeholder="your@email.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Wake-up Time</label>
+                <input
+                  type="time"
+                  value={wakeUpTime}
+                  onChange={(e) => setWakeUpTime(e.target.value)}
+                  className="mt-1 block w-full rounded-xl border-slate-200 dark:border-zinc-700 dark:bg-zinc-800 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 transition-all"
                 />
               </div>
               <div className="border-t pt-6">
@@ -350,6 +381,18 @@ export default function SettingsPage() {
           <div className="max-w-md">
             {/* @ts-ignore */}
             <PhoneVerification initialValue={session?.user?.phone} isEnabled={session?.user?.whatsappEnabled} />
+            
+            <div className="mt-6 flex items-center justify-between p-4 bg-slate-50 dark:bg-zinc-800/50 rounded-xl border border-slate-100 dark:border-zinc-800">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Deadline Notifications</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Receive alerts 5-10 minutes before your tasks reach their deadline.</p>
+              </div>
+              <Switch
+                checked={whatsappDeadlineEnabled}
+                onCheckedChange={handleToggleDeadline}
+                disabled={isWhatsappSaving}
+              />
+            </div>
           </div>
         </section>
 
