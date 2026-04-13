@@ -26,13 +26,11 @@ export async function POST(request: Request) {
     // Find todos approaching deadline
     const todos = await prisma.todo.findMany({
       where: {
-        deadline: { lte: targetLeadTimeEnd, gte: targetLeadTimeStart },
-        whatsappDeadlineNotified: false,
+        deadline: { lte: targetLeadTimeStart, gte: targetLeadTimeEnd },
         completed: false,
         status: { notIn: ['completed', 'failed'] },
         user: {
           whatsappEnabled: true,
-          whatsappDeadlineEnabled: true,
           phone: { not: null },
         }
       },

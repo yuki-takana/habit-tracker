@@ -7,12 +7,10 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request: Request) {
-  console.log("⏰ [Cron] Reminder Check Started at:", new Date().toLocaleTimeString());
 
   // 1.5 Global Toggle Check
   const isGlobalEnabled = await getGlobalWhatsappStatus();
-  console.log("Global Status:", isGlobalEnabled ? "✅ Enabled" : "❌ Disabled");
-  
+
   if (!isGlobalEnabled) {
     return NextResponse.json({ success: true, processed: 0, message: "WhatsApp reminders are globally disabled." });
   }
@@ -20,8 +18,6 @@ export async function POST(request: Request) {
   try {
     const now = new Date();
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
-    
-    console.log(`🔍 Searching for todos between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
 
     // 2. Find todos
     const todos = await prisma.todo.findMany({
@@ -29,7 +25,6 @@ export async function POST(request: Request) {
         reminderTime: { lte: fiveMinsFromNow, gte: now },
         whatsappNotified: false,
         completed: false,
-        startedAt: null,
         status: { notIn: ['in_progress', 'completed', 'failed'] },
         user: {
           whatsappEnabled: true,
