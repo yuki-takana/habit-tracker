@@ -17,16 +17,14 @@ export async function POST(request: Request) {
 
   try {
     const now = new Date();
-    // We want to notify if the deadline is exactly X minutes away (within a small window)
-    const targetLeadTimeStart = new Date(now.getTime() + (DEADLINE_REMINDER_LEAD_TIME_MINS) * 60000);
-    const targetLeadTimeEnd = new Date(now.getTime() + (DEADLINE_REMINDER_LEAD_TIME_MINS + 5) * 60000);
+    const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
     
-    console.log(`🔍 Searching for todos with deadlines between [${targetLeadTimeStart.toISOString()}] and [${targetLeadTimeEnd.toISOString()}]`);
+    console.log(`🔍 Searching for todos with deadlines between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
 
     // Find todos approaching deadline
     const todos = await prisma.todo.findMany({
       where: {
-        deadline: { lte: targetLeadTimeStart, gte: targetLeadTimeEnd },
+        deadline: { lte: fiveMinsFromNow, gte: now },
         completed: false,
         status: { notIn: ['completed', 'failed'] },
         user: {
