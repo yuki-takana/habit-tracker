@@ -197,11 +197,15 @@ model Todo {
   task             String
   category         String?
   startTime        DateTime?
-  plannedTime      Int? // planned duration in minutes
+  plannedTime      Int? 
   deadline         DateTime?
   reminderTime     DateTime?
   earnedXp         Int           @default(0)
   extraTime        Int?
+  status           String        @default("upcoming")
+  startedAt        DateTime?
+  delayCount       Int           @default(0)
+  lastDelayedAt    DateTime?
   whatsappNotified Boolean       @default(false)
   completed        Boolean       @default(false)
   completedAt      DateTime?

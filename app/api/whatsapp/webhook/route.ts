@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import twilio from 'twilio';
 import { getGlobalWhatsappStatus } from '@/app/action';
-import { sendMetaTextMessage } from '@/services/whatsapp';
+import { sendMetaTextMessage, sendInteractiveWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
+import { processTodoCompletion } from '@/lib/xp-engine';
+import { REMINDER_LEAD_TIME_MINS } from '@/lib/constants';
 
 // Twilio signature validation (optional but recommended for production)
 const authToken = process.env.TWILIO_AUTH_TOKEN!;
@@ -122,24 +124,63 @@ export async function POST(request: Request) {
         }
 
         let responseMessage = '';
+        let nextTodoToRemind: any = null;
 
         if (buttonPayload.startsWith('DONE_') || body === '1' || body.includes('DONE') || body.includes('YES')) {
-            await prisma.todo.update({
-                where: { id: todo.id },
-                data: { completed: true, completedAt: new Date() }
+            const completionResult = await processTodoCompletion({ prisma, todoId: todo.id });
+            const xp = completionResult.earnedXp;
+
+            if (xp < 0) {
+                responseMessage = `🔥 Task Marked Done. \n\nAh, we missed our mark and lost ${Math.abs(xp)} XP. It's okay, let's bounce back stronger on the next one!`;
+            } else if (xp > 10) {
+                responseMessage = `🚀 Awesome velocity, ${user.name || 'there'}! \n\nYou crushed "${todo.task}" early and earned a massive +${xp} XP. Keep that high energy flowing!`;
+            } else {
+                responseMessage = `✅ Solid job, ${user.name || 'there'}! \n\nTodo "${todo.task}" completed. (+${xp} XP). Keep it up!`;
+            }
+
+            // --- CHAIN NEXT TODO ---
+            const nextTodo = await prisma.todo.findFirst({
+                where: {
+                    userId: user.id,
+                    completed: false,
+                    id: { not: todo.id },
+                    status: { notIn: ['failed', 'missed', 'completed'] }
+                },
+                orderBy: { startTime: 'asc' }
             });
-            responseMessage = `Awesome job, ${user.name || 'there'}! ✅ Todo "${todo.task}" marked as completed. Keep it up!`;
+
+            if (nextTodo) {
+                const now = new Date();
+                nextTodoToRemind = nextTodo;
+                // Force to 'ready' if start time is in the future
+                if (!nextTodo.startedAt && nextTodo.startTime && nextTodo.startTime > now) {
+                    nextTodoToRemind = await prisma.todo.update({
+                        where: { id: nextTodo.id },
+                        data: {
+                            startTime: now,
+                            reminderTime: new Date(now.getTime() - REMINDER_LEAD_TIME_MINS * 60000)
+                        }
+                    });
+                }
+                responseMessage += `\n\n🎯 Check below for your next task!`;
+            }
         }
         else if (buttonPayload.startsWith('LATER_') || body === '3' || body.includes('LATER')) {
-            const newTime = new Date(Date.now() + 30 * 60000); // 30 mins later
+            const newStartTime = new Date(Date.now() + 30 * 60000); // 30 mins later delay
+            const newReminderTime = new Date(newStartTime.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
+            
             await prisma.todo.update({
                 where: { id: todo.id },
                 data: {
-                    reminderTime: newTime,
+                    startTime: newStartTime,
+                    reminderTime: newReminderTime,
+                    delayCount: (todo.delayCount || 0) + 1,
+                    lastDelayedAt: new Date(),
+                    status: 'upcoming',
                     whatsappNotified: false
                 }
             });
-            responseMessage = `Understood! 🕒 I'll remind you about "${todo.task}" again in 30 minutes.`;
+            responseMessage = `Understood! 🕒 I've delayed "${todo.task}". I'll catch up with you again soon!`;
         }
         else if (body === '2' || body.includes('NO')) {
             responseMessage = `No problem! 👊 Focus on your work, I'm here if you need anything else.`;
@@ -154,6 +195,23 @@ export async function POST(request: Request) {
             try {
                 await sendMetaTextMessage(phone, responseMessage);
                 console.log(`✅ Meta reply sent to ${phone}`);
+
+                if (nextTodoToRemind) {
+                    const provider = await getWhatsAppProvider();
+                    await sendInteractiveWhatsAppReminder(
+                        phone,
+                        nextTodoToRemind.task,
+                        user.name || 'User',
+                        nextTodoToRemind.id,
+                        provider
+                    );
+                    
+                    await prisma.todo.update({
+                        where: { id: nextTodoToRemind.id },
+                        data: { whatsappNotified: true }
+                    });
+                }
+
             } catch (error) {
                 console.error('Failed to send Meta reply:', error);
             }

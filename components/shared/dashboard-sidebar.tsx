@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { getSubscriptionConfig } from '@/app/action';
 import { getDashboardSummary } from '@/lib/utils/api';
 
-const navItems = [
+export const navItems = [
     {
         name: "Dashboard",
         href: "/dashboard",

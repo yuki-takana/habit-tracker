@@ -38,16 +38,25 @@ export function getLevelForXp(xp: number, thresholds: any[] = LEVEL_THRESHOLDS):
   return matchedLevel;
 }
 
-// Rule 04: Base XP calculation per todo
 export function calculateTodoXP(params: {
   isAIGenerated: boolean;
-  isEarly: boolean; // >= 2 hours before deadline
+  isEarly: boolean; // completed >1h before deadline
+  isLate: boolean; // completed after deadline
   isFirstOfDay: boolean;
   userLevel: number;
+  delayCount: number;
+  startedLate: boolean; // true if startedAt > startTime
 }): number {
   let xp = params.isAIGenerated ? 12 : 10;
   if (params.isEarly) xp += 5;
   if (params.isFirstOfDay) xp += 5;
+  
+  // Penalties
+  if (params.startedLate) xp -= 2;
+  if (params.delayCount > 0) xp -= params.delayCount * 2;
+  
+  // Floor check before multipliers
+  xp = Math.max(1, xp);
 
   // Level multipliers for EARNED xp
   if (params.userLevel >= 10) {

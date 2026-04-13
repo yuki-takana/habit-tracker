@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
         const scheduledStart = new Date(startTime);
         const calculatedReminderTime = new Date(scheduledStart.getTime() - REMINDER_LEAD_TIME_MINS * 60000);
-        const deadlineTime = new Date(getTodayEndIST());
+        const deadlineTime = deadline ? new Date(deadline) : new Date(getTodayEndIST());
 
         const todo = await prisma.todo.create({
             data: {
