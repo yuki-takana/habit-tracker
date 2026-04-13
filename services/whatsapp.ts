@@ -243,3 +243,72 @@ export async function sendInteractiveWhatsAppReminder(
     return { success: true, provider: 'local', message: 'Logged locally' };
   }
 }
+
+export async function sendInteractiveDeadlineWhatsAppReminder(
+  to: string,
+  taskName: string,
+  userName: string,
+  todoId: string,
+  provider: 'meta' | 'twilio' | 'local' = 'meta'
+) {
+  const formattedPhone = to.replace('+', '');
+  const messageText = `Hey ${userName}! ⚠️\n\n⏰ "${taskName}" is approaching its deadline.\n\nHave you completed it?`;
+
+  if (provider === 'meta') {
+    try {
+      const response = await axios.post(
+        `https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`,
+        {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: formattedPhone,
+          type: 'interactive',
+          interactive: {
+            type: 'button',
+            body: {
+              text: messageText
+            },
+            action: {
+              buttons: [
+                {
+                  type: 'reply',
+                  reply: {
+                    id: `DONE_${todoId}`,
+                    title: '✅ Done'
+                  }
+                },
+                {
+                  type: 'reply',
+                  reply: {
+                    id: `FAIL_${todoId}`,
+                    title: '❌ No'
+                  }
+                }
+              ]
+            }
+          }
+        },
+        { headers: { Authorization: `Bearer ${META_TOKEN}` } }
+      );
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      console.error('Meta Interactive Deadline Error:', error.response?.data || error.message);
+      return sendWhatsAppReminder(to, `${messageText}\n\nReply with "done" or "no".`, 'meta');
+    }
+  } else if (provider === 'twilio') {
+    try {
+      const result = await client.messages.create({
+        body: `${messageText}\n\nReply:\n- "Done" to complete\n- "No" or "Failed" to mark as incomplete`,
+        from: fromPhone,
+        to: `whatsapp:${to.startsWith('+') ? to : '+' + to}`
+      });
+      return { success: true, sid: result.sid };
+    } catch (error) {
+      console.error('Twilio Interactive Deadline Error:', error);
+      throw error;
+    }
+  } else {
+    console.log(`[WhatsApp: Local] Sending Deadline Alert to ${to}: ${messageText}`);
+    return { success: true, provider: 'local', message: 'Logged locally' };
+  }
+}

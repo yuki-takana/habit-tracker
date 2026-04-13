@@ -53,6 +53,8 @@ model User {
   password          String?
   phone             String? // Store in E.164 format (e.g., "+919876543210")
   whatsappEnabled   Boolean       @default(false)
+  whatsappDeadlineEnabled Boolean @default(true)
+  wakeUpTime        String?       @default("06:30")
   dailyGoalsEnabled Boolean       @default(true)
   emailVerified     DateTime?
   image             String?
@@ -207,6 +209,7 @@ model Todo {
   delayCount       Int           @default(0)
   lastDelayedAt    DateTime?
   whatsappNotified Boolean       @default(false)
+  whatsappDeadlineNotified Boolean @default(false)
   completed        Boolean       @default(false)
   completedAt      DateTime?
   habitId          String?       @db.ObjectId

@@ -62,6 +62,8 @@ export const ForestView = ({ tasks = [] }: { tasks?: any[] }) => {
 
         const emoji = EMOJI_POOL[idSeed % EMOJI_POOL.length];
         
+        const isWeak = treeTasks.some(t => (t.earnedXp || 0) < 0);
+        
         generatedTrees.push({
           id: str,
           categoryId: category,
@@ -69,8 +71,8 @@ export const ForestView = ({ tasks = [] }: { tasks?: any[] }) => {
           emoji: emoji,
           x: (idSeed % 80) + 10,
           y: ((idSeed * 13) % 60) + 20,
-          scale: 1.0 + (taskCount - 1) * 0.4, // grows from 1.0 up to 2.6
-          health: 'healthy',
+          scale: (1.0 + (taskCount - 1) * 0.4) * (isWeak ? 0.6 : 1.0),
+          health: isWeak ? 'weak' : 'healthy',
           createdAt: new Date(treeTasks[treeTasks.length - 1].completedAt || treeTasks[treeTasks.length - 1].createdAt).getTime(),
         });
       }

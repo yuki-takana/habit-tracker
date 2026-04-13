@@ -24,6 +24,7 @@ export enum SessionStatus {
 }
 
 export const REMINDER_LEAD_TIME_MINS = 5;
+export const DEADLINE_REMINDER_LEAD_TIME_MINS = 5;
 export const XP_PER_MINUTE = 2;
 export const XP_PER_HABIT = 10;
 export const XP_PER_TODO = 15;

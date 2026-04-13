@@ -1,38 +1,38 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendInteractiveWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
+import { sendInteractiveDeadlineWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
 import { getGlobalWhatsappStatus } from '@/app/action';
+import { DEADLINE_REMINDER_LEAD_TIME_MINS } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request: Request) {
-  console.log("⏰ [Cron] Reminder Check Started at:", new Date().toLocaleTimeString());
+  console.log("⏰ [Cron] Deadline Reminder Check Started at:", new Date().toLocaleTimeString());
 
-  // 1.5 Global Toggle Check
   const isGlobalEnabled = await getGlobalWhatsappStatus();
-  console.log("Global Status:", isGlobalEnabled ? "✅ Enabled" : "❌ Disabled");
-  
   if (!isGlobalEnabled) {
     return NextResponse.json({ success: true, processed: 0, message: "WhatsApp reminders are globally disabled." });
   }
 
   try {
     const now = new Date();
-    const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
+    // We want to notify if the deadline is exactly X minutes away (within a small window)
+    const targetLeadTimeStart = new Date(now.getTime() + (DEADLINE_REMINDER_LEAD_TIME_MINS) * 60000);
+    const targetLeadTimeEnd = new Date(now.getTime() + (DEADLINE_REMINDER_LEAD_TIME_MINS + 5) * 60000);
     
-    console.log(`🔍 Searching for todos between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
+    console.log(`🔍 Searching for todos with deadlines between [${targetLeadTimeStart.toISOString()}] and [${targetLeadTimeEnd.toISOString()}]`);
 
-    // 2. Find todos
+    // Find todos approaching deadline
     const todos = await prisma.todo.findMany({
       where: {
-        reminderTime: { lte: fiveMinsFromNow, gte: now },
-        whatsappNotified: false,
+        deadline: { lte: targetLeadTimeEnd, gte: targetLeadTimeStart },
+        whatsappDeadlineNotified: false,
         completed: false,
-        startedAt: null,
-        status: { notIn: ['in_progress', 'completed', 'failed'] },
+        status: { notIn: ['completed', 'failed'] },
         user: {
           whatsappEnabled: true,
+          whatsappDeadlineEnabled: true,
           phone: { not: null },
         }
       },
@@ -43,18 +43,15 @@ export async function POST(request: Request) {
       }
     });
 
-    console.log(`Found ${todos.length} pending todos for notification.`);
+    console.log(`Found ${todos.length} todos nearing deadline for notification.`);
 
     const results = [];
     for (const todo of todos) {
-      console.log(`Processing Todo ID: ${todo.id} | Task: ${todo.task} | User: ${todo.user?.name}`);
-
       if (todo?.user?.phone) {
         try {
           const provider = await getWhatsAppProvider();
-          console.log(`Using Provider: ${provider} for ${todo.user.phone}`);
-
-          await sendInteractiveWhatsAppReminder(
+          
+          await sendInteractiveDeadlineWhatsAppReminder(
             todo.user.phone,
             todo.task,
             todo.user.name || 'User',
@@ -64,17 +61,13 @@ export async function POST(request: Request) {
 
           await prisma.todo.update({
             where: { id: todo.id },
-            data: { whatsappNotified: true }
+            data: { whatsappDeadlineNotified: true }
           });
           
-          console.log(`Successfully notified and updated Todo: ${todo.id}`);
           results.push({ id: todo.id, status: 'success' });
         } catch (error: any) {
-          console.error(`Failed to send to ${todo.user.phone}:`, error.message);
-          // results.push({ id: id: todo.id, status: 'error', error: String(error) });
+          console.error(`Failed to send deadline reminder to ${todo.user.phone}:`, error.message);
         }
-      } else {
-        console.warn(`User for Todo ${todo.id} has no phone number.`);
       }
     }
 
@@ -84,7 +77,7 @@ export async function POST(request: Request) {
       results
     });
   } catch (error: any) {
-    console.error('🔥 Heavy Cron error:', error);
+    console.error('🔥 Deadline Cron error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

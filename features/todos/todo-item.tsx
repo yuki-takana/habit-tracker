@@ -203,13 +203,14 @@ export function TodoItem({
   const cat = getCategoryConfig(category);
   const { refreshXp } = useXp();
 
+  const isFailed = localStatus === "failed" || localStatus === "missed";
   const isOverdue =
-    (localStatus === "late" || timeLeft === "Overdue!") && !isCompleted;
-  const isInProgress = localStatus === "in_progress" && !isCompleted;
+    (localStatus === "late" || timeLeft === "Overdue!") && !isCompleted && !isFailed;
+  const isInProgress = localStatus === "in_progress" && !isCompleted && !isFailed;
   const showTimerSection =
     (isInProgress || isOverdue) && (deadline || startedAt);
 
-    console.log("show timer section is ",isInProgress, showTimerSection, deadline , startedAt)
+  console.log("show timer section is ", isInProgress, showTimerSection, deadline, startedAt)
 
   useEffect(() => {
     const unlock = () => {
@@ -304,6 +305,24 @@ export function TodoItem({
     }
   };
 
+  const failTask = async () => {
+    if (!id) return;
+    setLoading(true);
+    setLocalStatus("failed");
+    setIsCompleted(false);
+
+    try {
+      await ApiClient.failTodo(id);
+      toast.error("Task marked as failed");
+      router.refresh();
+    } catch {
+      setLocalStatus(status);
+      toast.error("Failed to update task");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const delayTask = async (minutes: number) => {
     if (!id) return;
     setLoading(true);
@@ -334,8 +353,8 @@ export function TodoItem({
 
   // Live countdown tick
   useEffect(() => {
-    if (isCompleted || localStatus === "completed") {
-      setTimeLeft("Done!");
+    if (isCompleted || localStatus === "completed" || isFailed) {
+      setTimeLeft(isFailed ? "Failed" : "Done!");
       return;
     }
 
@@ -344,7 +363,24 @@ export function TodoItem({
         const d = new Date(deadline).getTime();
         const diff = d - Date.now();
 
-        if (diff <= 0) {
+        if (diff <= 5 * 60000 && diff > 0 && !hasNotified.current) {
+          hasNotified.current = true;
+          toast("Almost out of time! ⏳", {
+            description: `${task} deadline is approaching. Have you completed it?`,
+            duration: 20000,
+            action: {
+              label: "Done",
+              onClick: () => toggleComplete(),
+            },
+            cancel: {
+              label: "No",
+              onClick: () => failTask(),
+            },
+          });
+          setTimeLeft(formatDuration(diff));
+          setOverdueMs(0);
+          setProgressPct(getProgressPercent(startedAt, deadline));
+        } else if (diff <= 0) {
           setTimeLeft("Overdue!");
           setOverdueMs(Math.abs(diff));
           setProgressPct(100);
@@ -380,13 +416,15 @@ export function TodoItem({
   // Card border/bg based on status
   const cardBorderClass = isCompleted
     ? "border-emerald-500/15"
-    : isOverdue
-      ? "border-red-500/30 bg-red-950/10"
-      : isInProgress
-        ? "border-indigo-500/25 bg-indigo-950/[0.06]"
-        : localStatus === "ready"
-          ? "border-amber-500/30 bg-amber-950/10"
-          : "border-zinc-800/80 hover:border-zinc-700/80";
+    : isFailed
+      ? "border-rose-500/30 bg-rose-950/10 grayscale opacity-75"
+      : isOverdue
+        ? "border-red-500/30 bg-red-950/10"
+        : isInProgress
+          ? "border-indigo-500/25 bg-indigo-950/[0.06]"
+          : localStatus === "ready"
+            ? "border-amber-500/30 bg-amber-950/10"
+            : "border-zinc-800/80 hover:border-zinc-700/80";
 
   return (
     <>
@@ -426,7 +464,7 @@ export function TodoItem({
         className={cn(
           "todo-card-enter relative rounded-2xl border transition-all duration-300 overflow-hidden",
           "bg-zinc-900/70 backdrop-blur-sm",
-          isCompleted ? "opacity-60 scale-[0.988]" : "opacity-100 scale-100",
+          isCompleted || isFailed ? "opacity-60 scale-[0.988]" : "opacity-100 scale-100",
           cardBorderClass
         )}
       >
@@ -525,6 +563,11 @@ export function TodoItem({
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black tracking-wide">
                   <Check size={10} strokeWidth={3} />
                   <span className="hidden sm:inline">Done</span>
+                </div>
+              ) : isFailed ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-black tracking-wide">
+                  <AlertCircle size={10} />
+                  <span className="hidden sm:inline">Failed</span>
                 </div>
               ) : isOverdue ? (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black tracking-wide overdue-blink">
@@ -655,16 +698,16 @@ export function TodoItem({
             </div>
           )}
 
-          {/* ── ACTIONS ROW — only when not completed ── */}
-          {!isCompleted && (
+          {/* ── ACTIONS ROW — only when not completed and not failed ── */}
+          {!isCompleted && !isFailed && (
             <>
               {/* Separator */}
               <div className="h-px bg-zinc-800/60 -mx-1" />
 
               <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
 
-                {/* Delay buttons — only when not started */}
-                {!startedAt && (
+                {/* Delay buttons — only when not started and not in progress */}
+                {!startedAt && localStatus !== "in_progress" && (
                   <>
                     <button
                       onClick={() => delayTask(15)}
@@ -684,29 +727,6 @@ export function TodoItem({
                     </button>
                   </>
                 )}
-
-                {/* Delay buttons in_progress too
-                {localStatus === "in_progress" && !startedAt && (
-                  <>
-                    <button
-                      onClick={() => delayTask(15)}
-                      disabled={loading}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-black tracking-wide uppercase hover:bg-orange-500/15 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      <Plus size={10} />
-                      <span>15m</span>
-                    </button>
-                    <button
-                      onClick={() => delayTask(30)}
-                      disabled={loading}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black tracking-wide uppercase hover:bg-amber-500/15 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      <Plus size={10} />
-                      <span>30m</span>
-                    </button>
-                  </>
-                )} */}
-
                 {/* Start Now — only when not started and not in_progress */}
                 {!startedAt && localStatus !== "in_progress" && (
                   <button
