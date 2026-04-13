@@ -572,12 +572,12 @@ export function TodoItem({
               ) : isOverdue ? (
                 <div className="flex items-center gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black tracking-wide overdue-blink">
                   <AlertCircle size={10} />
-                  <span className="">Overdue</span>
+                  <span className="hidden sm:inline">Overdue</span>
                 </div>
               ) : isInProgress ? (
                 <div className="flex items-center gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black tracking-wide">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
-                  <span className="">In Progress</span>
+                  <span className="hidden sm:inline">In Progress</span>
                   <span className="sm:hidden">Active</span>
                 </div>
               ) : localStatus === "ready" ? (
