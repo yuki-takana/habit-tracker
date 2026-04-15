@@ -117,8 +117,8 @@ export default function SettingsPage() {
     setTestLoading(true);
     const todo = {
       user: {
-        phone: "+918417875526",
-        name: "Abhishek"
+        phone: session?.user.phone,
+        name: session?.user.name,
       },
       task: "drink water",
       id: "69db589f87ed191b053f31ba"
