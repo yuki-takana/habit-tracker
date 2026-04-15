@@ -46,25 +46,65 @@ export async function sendWhatsAppReminderTwilio(to: string, taskName: string) {
  * Send a plain text message via Meta WhatsApp Cloud API.
  * Used for replies from webhook and general text messages.
  */
-export async function sendMetaTextMessage(to: string, message: string) {
-  const formattedPhone = to.replace('+', '');
+export async function sendMetaTextMessage(
+  to: string,
+  templateName: string,
+  params: string[] = []
+) {
+  if (!to) {
+    throw new Error("Phone number is required");
+  }
 
+  const formattedPhone = to.replace('+', '');
   try {
     const response = await axios.post(
-      `https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`,
+      `https://graph.facebook.com/v25.0/${META_PHONE_ID}/messages`,
       {
         messaging_product: 'whatsapp',
-        recipient_type: 'individual',
         to: formattedPhone,
-        type: 'text',
-        text: { body: message }
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: 'en' },
+          ...(params.length > 0 && {
+            components: [
+              {
+                type: 'body',
+                parameters: params.map((text) => ({
+                  type: 'text',
+                  text,
+                })),
+              },
+            ],
+          }),
+        },
       },
-      { headers: { Authorization: `Bearer ${META_TOKEN}` } }
+      {
+        headers: {
+          Authorization: `Bearer ${META_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      }
     );
-    return { success: true, data: response.data };
+    return {
+      success: true,
+      messageId: response.data.messages?.[0]?.id,
+      data: response.data,
+    };
+
   } catch (error: any) {
-    console.error('Meta Text Message Error:', error.response?.data || error.message);
-    throw new Error('Failed to send Meta WhatsApp text message');
+    console.error(" WhatsApp Template Error");
+
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", error.response.data);
+    } else {
+      console.error("Error:", error.message);
+    }
+
+    throw new Error(
+      error.response?.data?.error?.message || "Failed to send template message"
+    );
   }
 }
 
