@@ -69,7 +69,7 @@ export default function PhoneVerification({ initialValue, isEnabled }: PhoneVeri
 
                 <button
                     onClick={handleSave}
-                    disabled={loading || !value || (value === initialValue && isEnabled && !saved)}
+                    // disabled={loading || !value || (value === initialValue && isEnabled && !saved)}
                     className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
                         saved
                             ? 'bg-green-100 text-green-700 border border-green-200'

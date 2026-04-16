@@ -20,9 +20,13 @@ export async function saveUserPhone(phoneNumber: string) {
 
   try {
     // Send a welcome message upon setting up the number
+    if (!session?.user.name) {
+      return
+    }
     await sendMetaTextMessage(
       phoneNumber,
-      "Welcome to UFL the real tracking system! 👋\n\nI'll be sending you reminders for your tasks here. Reply with '1' or 'Done' when you complete a task!"
+      "welcome_reminder",
+      [session?.user.name]
     );
   } catch (error) {
     console.error("Failed to send WhatsApp welcome message:", error);
@@ -143,7 +147,7 @@ export async function sendTestWhatsapp() {
   //   "85%"
   // );
   await sendWhatsAppReminder(user.phone, "Abhishek", "Test Message from Habit Tracker!", provider);
-  // await sendMetaTextMessage(user.phone, "hello this is test message from UFL!")
+  // await sendMetaTextMessage(user.phone, "Your Phone number is synced with UFL! 🫡")
 
   return { success: true };
 }

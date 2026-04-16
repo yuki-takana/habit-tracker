@@ -7,7 +7,7 @@ import { fetchProgressData, runDailyGoalArchitect } from "@/lib/agents/daily-goa
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        
+
         if (!session?.user?.id) {
             return NextResponse.json(
                 { error: "Unauthorized" },
@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error("[Daily Goals API] Error:", error);
         return NextResponse.json(
-            { 
-                error: "Internal server error", 
+            {
+                error: "Internal server error",
                 details: error instanceof Error ? error.message : String(error)
             },
             { status: 500 }
@@ -85,20 +85,20 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        
+
         if (!session?.user?.id) {
             return NextResponse.json(
                 { error: "Unauthorized" },
                 { status: 401 }
             );
         }
-
         const userId = session.user.id;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const localDate = today.toLocaleDateString('en-CA');
 
         // Get today's analysis from agent memory
-        const analysisMemoryKey = `daily_analysis_${today.toISOString().split('T')[0]}`;
+        const analysisMemoryKey = `daily_analysis_${localDate}`;
         const analysisMemory = await prisma.agentMemory.findFirst({
             where: {
                 userId,
@@ -130,6 +130,7 @@ export async function GET(req: NextRequest) {
                 success: false,
                 message: "No goals generated for today yet. Please generate your daily goals first.",
                 todayTodos: todayTodos.length,
+                name: session?.user.name,
                 wakeUpTime: userProfile?.wakeUpTime || "06:30"
             });
         }
@@ -161,7 +162,7 @@ export async function GET(req: NextRequest) {
                     totalScheduled: analysis.totalTodosScheduled,
                     completed: todayTodos.filter(t => t.completed).length,
                     pending: todayTodos.filter(t => !t.completed).length,
-                    completionRate: todayTodos.length > 0 
+                    completionRate: todayTodos.length > 0
                         ? ((todayTodos.filter(t => t.completed).length / todayTodos.length) * 100).toFixed(1) + '%'
                         : '0%',
                     priorityBreakdown: analysis.priorityBreakdown
@@ -172,8 +173,8 @@ export async function GET(req: NextRequest) {
     } catch (error) {
         console.error("[Daily Goals API] Error retrieving today's goals:", error);
         return NextResponse.json(
-            { 
-                error: "Internal server error", 
+            {
+                error: "Internal server error",
                 details: error instanceof Error ? error.message : String(error)
             },
             { status: 500 }

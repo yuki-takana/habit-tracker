@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
           let responseMessage = '';
           if (xp < 0) {
               responseMessage = `🔥 Task Marked Done. \n\nAh, we missed our mark and lost ${Math.abs(xp)} XP. It's okay, let's bounce back stronger on the next one!`;
-          } else if (xp > 10) {
+          } else if (xp > 15) {
               responseMessage = `🚀 Awesome velocity! \n\nYou crushed it early and earned +${xp} XP. Keep that high energy flowing!`;
           } else {
               responseMessage = `✅ Solid job! \n\nCompleted. (+${xp} XP). Keep it up!`;

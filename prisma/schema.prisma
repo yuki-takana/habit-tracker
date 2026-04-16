@@ -71,6 +71,7 @@ model User {
   wakaTimeStats     WakaTime[]
   workoutPlans      WorkoutPlan[]
   chatMessages      ChatMessage[]
+  routines          Routine[]
 
   height      Float?
   weight      Float?
@@ -932,4 +933,44 @@ model AgentRecord {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, agentId])
+}
+
+// ─── ROUTINE BUILDER ──────────────────────────────────────────────────────────
+// A Routine is a reusable daily schedule template. Users can create multiple
+// routines but only ONE can be active at a time. The active routine is used
+// by the Daily Goals AI architect as scheduling context.
+
+model Routine {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String        @db.ObjectId
+  name        String        // e.g., "Weekday Hustle", "Weekend Recovery"
+  description String?
+  isActive    Boolean       @default(false) // Only one per user should be true
+  wakeUpTime  String        @default("06:00") // "HH:MM" 24h format
+  color       String?       // Hex accent color, e.g., "#6366f1"
+  emoji       String?       // e.g., "💪", "📚", "🌅"
+  tasks       RoutineTask[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model RoutineTask {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  routineId String   @db.ObjectId
+  title     String
+  category  String?  // fitness | work | health | coding | learning | personal | break
+  startTime String   // "HH:MM" 24h format, e.g., "07:30"
+  duration  Int      // planned duration in minutes
+  notes     String?
+  order     Int      @default(0) // for display ordering
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@index([routineId])
 }
