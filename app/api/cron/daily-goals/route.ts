@@ -25,14 +25,15 @@ export async function POST(request: Request) {
         userProfile: true
       }
     });
+    const localDate = today.toLocaleDateString('en-CA');
 
-    console.log(`[Cron: Daily Goals] Processing ${users.length} users...`);
+    console.log(`[Cron: Daily Goals] Processing ${users.length} users..., ${JSON.stringify(users)}`);
 
     const results = [];
     for (const user of users) {
       try {
         // Skip if goals already created today
-        const analysisMemoryKey = `daily_analysis_${today.toISOString().split('T')[0]}`;
+        const analysisMemoryKey = `daily_analysis_${localDate}`;
         const existingAnalysis = await prisma.agentMemory.findFirst({
           where: {
             userId: user.id,

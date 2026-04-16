@@ -467,7 +467,7 @@ export function TodoItem({
           isCompleted || isFailed ? "opacity-60 scale-[0.988]" : "opacity-100 scale-100",
           cardBorderClass
         )}
-      >
+    >
         {/* Category accent bar */}
         <div
           className={cn(

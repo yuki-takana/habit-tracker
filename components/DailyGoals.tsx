@@ -468,11 +468,11 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
         setTodayGoals(data.data);
         setStats(data.data.stats);
         if (data.data.wakeUpTime) setWakeUpTime(data.data.wakeUpTime);
-        if (data.data.userName) setUserName(data.data.userName.split(" ")[0]);
+        if (data.data.name) setUserName(data.data.name.split(" ")[0]);
       } else if (data.wakeUpTime) {
         setWakeUpTime(data.wakeUpTime);
       }
-      if (data.userName) setUserName(data.userName.split(" ")[0]);
+      if (data.name) setUserName(data.name.split(" ")[0]);
     } catch (err) {
       console.error("Error fetching today's goals:", err);
     } finally {
@@ -627,7 +627,7 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
           <div className="mb-5">
             <div className="flex items-center gap-2 mb-0.5">
               <GreetingIcon className="w-5 h-5 text-amber-500" />
-              <span className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">
+              <span className="text-zinc-500 dark:text-zinc-400 text-5xl font-medium">
                 {greetingText},
               </span>
             </div>

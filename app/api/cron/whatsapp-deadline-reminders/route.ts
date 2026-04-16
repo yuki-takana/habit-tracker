@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request: Request) {
-  console.log("⏰ [Cron] Deadline Reminder Check Started at:", new Date().toLocaleTimeString());
+  // console.log("⏰ [Cron] Deadline Reminder Check Started at:", new Date().toLocaleTimeString());
 
   const isGlobalEnabled = await getGlobalWhatsappStatus();
   if (!isGlobalEnabled) {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const now = new Date();
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
     
-    console.log(`🔍 Searching for todos with deadlines between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
+    // console.log(`🔍 Searching for todos with deadlines between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
 
     // Find todos approaching deadline
     const todos = await prisma.todo.findMany({
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       }
     });
 
-    console.log(`Found ${todos.length} todos nearing deadline for notification.`);
+    // console.log(`Found ${todos.length} todos nearing deadline for notification.`);
 
     const results = [];
     for (const todo of todos) {
