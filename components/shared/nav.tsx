@@ -47,6 +47,11 @@ const Nav = () => {
         fetchPlanAndXp()
     }, [isLoggedIn])
 
+  // Hide nav on public profile pages (/[username])
+  const KNOWN_ROUTES = ["/", "/dashboard", "/settings", "/signin", "/signup", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/leaderboard", "/privacy", "/terms"];
+  const isUsername = pathname.split("/").length === 2 && !KNOWN_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) && !pathname.startsWith("/api");
+  if (isUsername) return null;
+
     return (
         <>
             <nav className="fixed top-0 z-50 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
