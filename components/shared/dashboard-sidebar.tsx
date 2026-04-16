@@ -1,6 +1,6 @@
 "use client"
 
-import { Code2, Dumbbell, Flame, InfoIcon, LayoutDashboard, List, Bot, CreditCard, Target } from 'lucide-react';
+import { Code2, Dumbbell, Flame, InfoIcon, LayoutDashboard, List, Bot, CreditCard, Target, CalendarDays } from 'lucide-react';
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import clsx from 'clsx'
@@ -44,6 +44,12 @@ export const navItems = [
         href: "/daily-goals",
         icon: Bot,
         key: "feature_daily_goals"
+    },
+    {
+        name: "Routines",
+        href: "/routines",
+        icon: CalendarDays,
+        key: "feature_daily_goals" // same gate as daily goals
     },
     {
         name: "Insights",

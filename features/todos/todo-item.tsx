@@ -463,7 +463,7 @@ export function TodoItem({
       <div
         className={cn(
           "todo-card-enter relative rounded-2xl border transition-all duration-300 overflow-hidden",
-          "bg-zinc-900/70 backdrop-blur-sm",
+          "bg-background/70 backdrop-blur-sm",
           isCompleted || isFailed ? "opacity-60 scale-[0.988]" : "opacity-100 scale-100",
           cardBorderClass
         )}

@@ -146,8 +146,8 @@ export async function sendTestWhatsapp() {
   //   3,
   //   "85%"
   // );
-  // await sendWhatsAppReminder(user.phone, "Abhishek", "Test Message from Habit Tracker!", provider);
-  await sendMetaTextMessage(user.phone, "Your Phone number is synced with UFL! 🫡")
+  await sendWhatsAppReminder(user.phone, "Abhishek", "Test Message from Habit Tracker!", provider);
+  // await sendMetaTextMessage(user.phone, "Your Phone number is synced with UFL! 🫡")
 
   return { success: true };
 }
