@@ -96,9 +96,8 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
                     });
                 })
             );
-
             // Store daily analysis in agent memory for tracking
-            const analysisMemoryKey = `daily_analysis_${new Date().toISOString().split('T')[0]}`;
+            const analysisMemoryKey = `daily_analysis_${new Date().toLocaleDateString('en-CA')}`;
             await prisma.agentMemory.create({
                 data: {
                     userId,
