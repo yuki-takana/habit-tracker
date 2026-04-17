@@ -41,7 +41,7 @@ export async function POST(request: Request) {
             domain: "daily_goals"
           }
         });
-        console.log("===========================================================================")
+
         if (existingAnalysis) {
           results.push({ email: user.email, status: 'skipped', reason: 'already_generated' });
           continue;

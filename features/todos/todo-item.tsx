@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
@@ -413,18 +413,17 @@ export function TodoItem({
     return () => clearInterval(t);
   }, [deadline, isCompleted, localStatus, task, startedAt]);
 
-  // Card border/bg based on status
   const cardBorderClass = isCompleted
-    ? "border-emerald-500/15"
+    ? "border-emerald-500/20 bg-emerald-50/30 dark:bg-transparent"
     : isFailed
-      ? "border-rose-500/30 bg-rose-950/10 grayscale opacity-75"
+      ? "border-rose-500/30 bg-rose-50 dark:bg-rose-950/10 grayscale opacity-75"
       : isOverdue
-        ? "border-red-500/30 bg-red-950/10"
+        ? "border-red-500/30 bg-red-50 dark:bg-red-950/10"
         : isInProgress
-          ? "border-indigo-500/25 bg-indigo-950/[0.06]"
+          ? "border-indigo-500/25 bg-indigo-50 dark:bg-indigo-950/[0.06]"
           : localStatus === "ready"
-            ? "border-amber-500/30 bg-amber-950/10"
-            : "border-zinc-800/80 hover:border-zinc-700/80";
+            ? "border-amber-500/30 bg-amber-50 dark:bg-amber-950/10"
+            : "border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700/80";
 
   return (
     <>
@@ -463,7 +462,7 @@ export function TodoItem({
       <div
         className={cn(
           "todo-card-enter relative rounded-2xl border transition-all duration-300 overflow-hidden",
-          "bg-background/70 backdrop-blur-sm",
+          "bg-white/70 dark:bg-background/70 backdrop-blur-sm",
           isCompleted || isFailed ? "opacity-60 scale-[0.988]" : "opacity-100 scale-100",
           cardBorderClass
         )}
@@ -509,7 +508,7 @@ export function TodoItem({
                 "transition-all duration-200 active:scale-90 disabled:opacity-50",
                 isCompleted
                   ? "bg-emerald-500/20 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
-                  : `border-zinc-700 bg-zinc-800/60 hover:border-opacity-80 hover:${cat.dot.replace("bg-", "border-")}`
+                  : `border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 hover:border-opacity-80 hover:${cat.dot.replace("bg-", "border-")}`
               )}
             >
               {loading ? (
@@ -534,7 +533,7 @@ export function TodoItem({
                   "text-sm font-bold leading-snug tracking-tight break-words whitespace-normal transition-all duration-300",
                   isCompleted
                     ? "line-through text-zinc-500"
-                    : "text-zinc-100"
+                    : "text-zinc-800 dark:text-zinc-100"
                 )}
               >
                 {task}
@@ -586,7 +585,7 @@ export function TodoItem({
                   <span className="hidden sm:inline">Ready</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-xl bg-zinc-800/80 border border-zinc-700/60 text-zinc-400 text-[10px] font-black tracking-wide">
+                <div className="flex items-center gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-zinc-500 dark:text-zinc-400 text-[10px] font-black tracking-wide">
                   <Clock size={10} />
                   <span className="">
                     {startTime
@@ -607,8 +606,8 @@ export function TodoItem({
               className={cn(
                 "flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all duration-300",
                 isOverdue
-                  ? "bg-red-950/20 border-red-500/20"
-                  : "bg-[#0d0d1a] border-zinc-800/80"
+                  ? "bg-red-50 dark:bg-red-950/20 border-red-500/20"
+                  : "bg-zinc-50 dark:bg-[#0d0d1a] border-zinc-200 dark:border-zinc-800/80"
               )}
             >
               {/* Timer icon + value */}
@@ -702,7 +701,7 @@ export function TodoItem({
           {!isCompleted && !isFailed && (
             <>
               {/* Separator */}
-              <div className="h-px bg-zinc-800/60 -mx-1" />
+              <div className="h-px bg-zinc-200 dark:bg-zinc-800/60 -mx-1" />
 
               <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
 
