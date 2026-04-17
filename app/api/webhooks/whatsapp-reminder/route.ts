@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendMetaTextMessage, sendInteractiveWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
+import { getWhatsAppProvider } from '@/services/whatsapp';
+import { 
+  sendTaskStartedReply, 
+  sendTaskCompletedReply, 
+  sendTaskFailedReply, 
+  sendSnoozeConfirmationReply, 
+  sendUnknownMessageReply, 
+  sendTodoStartReminderTemplate 
+} from '@/services/whatsapp-templates';
 import { processTodoCompletion } from '@/lib/xp-engine';
 import { REMINDER_LEAD_TIME_MINS } from '@/lib/constants';
 
@@ -47,23 +55,22 @@ export async function POST(req: NextRequest) {
         todoId = parts.slice(1).join('_');
 
         const todo = await prisma.todo.findUnique({
-          where: { id: todoId }
+          where: { id: todoId },
+          include: { user: true }
         });
 
-        if (!todo) {
-          await sendMetaTextMessage(from, "Task not found.");
+        if (!todo || !todo.user) {
           return NextResponse.json({ status: 'ok' });
         }
+
+        const userName = todo.user.name || 'User';
 
         if (action === 'START') {
           await prisma.todo.update({
              where: { id: todoId },
              data: { startedAt: new Date(), status: 'in_progress' }
           });
-          await sendMetaTextMessage(
-            from,
-            `🚀 Awesome! "${todo.task}" is now in progress.\n\nReply 'Done' when you've finished to earn your XP!`
-          );
+          await sendTaskStartedReply(from, userName, todo.task);
         } else if (action === '15MIN' || action === '30MIN') {
           const addMins = action === '15MIN' ? 15 : 30;
           const newStartTime = new Date(Date.now() + addMins * 60000); 
@@ -80,34 +87,19 @@ export async function POST(req: NextRequest) {
                   whatsappNotified: false
               }
           });
-          await sendMetaTextMessage(
-            from,
-            `Understood! 🕒 I've delayed "${todo.task}" by ${addMins} minutes. I'll catch up with you again soon!`
-          );
+          await sendSnoozeConfirmationReply(from, todo.task, addMins);
         } else if (action === 'DONE') {
           const result = await processTodoCompletion({
             prisma,
             todoId: todo.id,
           });
-          const xp = result.earnedXp;
-          let responseMessage = '';
-          if (xp < 0) {
-              responseMessage = `🔥 Task Marked Done. \n\nAh, we missed our mark and lost ${Math.abs(xp)} XP. It's okay, let's bounce back stronger on the next one!`;
-          } else if (xp > 15) {
-              responseMessage = `🚀 Awesome velocity! \n\nYou crushed it early and earned +${xp} XP. Keep that high energy flowing!`;
-          } else {
-              responseMessage = `✅ Solid job! \n\nCompleted. (+${xp} XP). Keep it up!`;
-          }
-          await sendMetaTextMessage(from, responseMessage);
+          await sendTaskCompletedReply(from, userName, todo.task, result.earnedXp);
         } else if (action === 'FAIL') {
           await prisma.todo.update({
             where: { id: todoId },
             data: { status: 'failed', completed: false }
           });
-          await sendMetaTextMessage(
-            from,
-            `❌ Acknowledged. "${todo.task}" has been marked as failed. Don't worry, we'll try again next time!`
-          );
+          await sendTaskFailedReply(from, userName, todo.task);
         }
 
         return NextResponse.json({ status: 'ok' });
@@ -129,10 +121,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!pendingTodo) {
-        await sendMetaTextMessage(
-          from,
-          "You don't have any pending tasks right now. ☕"
-        );
+        await sendUnknownMessageReply(from, user.name || 'User');
         return NextResponse.json({ status: 'ok' });
       }
 
@@ -146,15 +135,7 @@ export async function POST(req: NextRequest) {
             todoId: pendingTodo.id,
         });
 
-        const xp = result.earnedXp;
-        let responseMessage = '';
-        if (xp < 0) {
-            responseMessage = `🔥 Task Marked Done. \n\nAh, we missed our mark and lost ${Math.abs(xp)} XP. It's okay, let's bounce back stronger on the next one!`;
-        } else if (xp > 10) {
-            responseMessage = `🚀 Awesome velocity! \n\nYou crushed it early and earned +${xp} XP. Keep that high energy flowing!`;
-        } else {
-            responseMessage = `✅ Solid job! \n\nCompleted. (+${xp} XP). Keep it up!`;
-        }
+        await sendTaskCompletedReply(from, user.name || 'User', pendingTodo.task, result.earnedXp);
 
         let nextTodoToRemind: any = null;
 
@@ -182,20 +163,19 @@ export async function POST(req: NextRequest) {
                     }
                 });
             }
-            responseMessage += `\n\n🎯 Check below for your next task!`;
         }
-
-        await sendMetaTextMessage(from, responseMessage);
 
         if (nextTodoToRemind) {
             const provider = await getWhatsAppProvider();
-            await sendInteractiveWhatsAppReminder(
-                from,
-                nextTodoToRemind.task,
-                user.name || 'User',
-                nextTodoToRemind.id,
-                provider
-            );
+            if (provider === 'meta') {
+                await sendTodoStartReminderTemplate(
+                    from,
+                    user.name || 'User',
+                    nextTodoToRemind.task,
+                    '30',
+                    nextTodoToRemind.id
+                );
+            }
             
             await prisma.todo.update({
                 where: { id: nextTodoToRemind.id },
@@ -203,10 +183,13 @@ export async function POST(req: NextRequest) {
             });
         }
       } else if (intent.includes('skip') || intent.includes('later')) {
-        await sendMetaTextMessage(
-          from,
-          `⏩ Skipped: ${pendingTodo.task}`
-        );
+        await prisma.todo.update({
+          where: { id: pendingTodo.id },
+          data: { status: 'failed', completed: false }
+        });
+        await sendTaskFailedReply(from, user.name || 'User', pendingTodo.task);
+      } else {
+        await sendUnknownMessageReply(from, user.name || 'User');
       }
     }
 

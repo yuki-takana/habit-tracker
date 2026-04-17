@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendInteractiveWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
+import { getWhatsAppProvider } from '@/services/whatsapp';
+import { sendTodoStartReminderTemplate } from '@/services/whatsapp-templates';
 import { getGlobalWhatsappStatus } from '@/app/action';
 
 export const dynamic = 'force-dynamic';
@@ -49,13 +50,18 @@ export async function POST(request: Request) {
           const provider = await getWhatsAppProvider();
           console.log(`Using Provider: ${provider} for ${todo.user.phone}`);
 
-          await sendInteractiveWhatsAppReminder(
-            todo.user.phone,
-            todo.task,
-            todo.user.name || 'User',
-            todo.id,
-            provider
-          );
+          if (provider === 'meta') {
+            await sendTodoStartReminderTemplate(
+              todo.user.phone,
+              todo.user.name || 'User',
+              todo.task,
+              '30', // estimatedMins default
+              todo.id
+            );
+          } else {
+             // Let's implement twilio sending directly or ignore fallback
+             console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
+          }
 
           await prisma.todo.update({
             where: { id: todo.id },

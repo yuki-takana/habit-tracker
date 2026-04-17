@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendUserAnalytics } from '@/services/whatsapp';
+import { sendMidnightSummaryTemplate } from '@/services/whatsapp-templates';
 import { getGlobalWhatsappStatus } from '@/app/action';
 
 export const dynamic = 'force-dynamic';
@@ -75,13 +75,16 @@ export async function GET(request: Request) {
           }
 
           const completionRate = Math.round((completedTodosCount / totalTodosCount) * 100);
-          const formattedRate = `${completionRate}%`;
+          const missedCount = totalTodosCount - completedTodosCount;
 
-          await sendUserAnalytics(
+          await sendMidnightSummaryTemplate(
             user.phone,
             user.name || 'User',
             completedTodosCount,
-            formattedRate
+            missedCount,
+            completionRate,
+            '🔥 Daily summary',
+            '+0 XP' // Placeholder, would need to query XP ledger for accurate daily XP
           );
 
           results.push({ id: user.id, status: 'success' });

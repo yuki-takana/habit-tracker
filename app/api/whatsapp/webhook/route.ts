@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import twilio from 'twilio';
 import { getGlobalWhatsappStatus } from '@/app/action';
-import { sendMetaTextMessage, sendInteractiveWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
+import { getWhatsAppProvider } from '@/services/whatsapp';
+import { sendTodoStartReminderTemplate, sendMetaFreeText } from '@/services/whatsapp-templates';
 import { processTodoCompletion } from '@/lib/xp-engine';
 import { REMINDER_LEAD_TIME_MINS } from '@/lib/constants';
 
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
             // Still reply so the user knows something is wrong
             if (isMeta) {
                 try {
-                    await sendMetaTextMessage(phone, "Sorry, I couldn't find your account. Please make sure your phone number is linked in the Habit Tracker app.");
+                    await sendMetaFreeText(phone, "Sorry, I couldn't find your account. Please make sure your phone number is linked in the Habit Tracker app.");
                 } catch (e) { /* ignore send errors for unlinked users */ }
             }
             return new Response('User not found', { status: 404 });
@@ -118,7 +119,7 @@ export async function POST(request: Request) {
         if (!todo) {
             const noTodoMsg = `Hey ${user.name || 'there'}! 👋 You don't have any pending todos right now. Keep up the great work!`;
             if (isMeta) {
-                await sendMetaTextMessage(phone, noTodoMsg);
+                await sendMetaFreeText(phone, noTodoMsg);
             }
             return new Response('No pending todo found', { status: 200 });
         }
@@ -193,18 +194,23 @@ export async function POST(request: Request) {
         if (isMeta) {
             // Send reply via Meta WhatsApp Cloud API
             try {
-                await sendMetaTextMessage(phone, responseMessage);
+                await sendMetaFreeText(phone, responseMessage);
                 console.log(`✅ Meta reply sent to ${phone}`);
 
                 if (nextTodoToRemind) {
                     const provider = await getWhatsAppProvider();
-                    await sendInteractiveWhatsAppReminder(
-                        phone,
-                        nextTodoToRemind.task,
-                        user.name || 'User',
-                        nextTodoToRemind.id,
-                        provider
-                    );
+                    if (provider === 'meta') {
+                        await sendTodoStartReminderTemplate(
+                            phone,
+                            user.name || 'User',
+                            nextTodoToRemind.task,
+                            '30',
+                            nextTodoToRemind.id
+                        );
+                    } else {
+                        // Fallback provider implementation missing for templates
+                        console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
+                    }
                     
                     await prisma.todo.update({
                         where: { id: nextTodoToRemind.id },

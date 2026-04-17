@@ -1,19 +1,3 @@
-/**
- * whatsapp-templates.ts
- *
- * NEW: Approved Meta WhatsApp Template Message Senders
- * ─────────────────────────────────────────────────────
- * These are SEPARATE from the existing whatsapp.ts functions.
- * Use these ONLY after your templates are approved in Meta Business Manager.
- *
- * WHY TEMPLATES?
- * Meta's 24-hour window rule: If the user hasn't messaged in >24 hours,
- * you CANNOT send free-form text. Cron jobs MUST always use approved templates.
- *
- * Template names must exactly match what you submitted in Meta Business Manager.
- *
- * UTILITY templates (not MARKETING) — lower cost, no daily limit per user.
- */
 
 import axios from 'axios';
 
@@ -21,14 +5,12 @@ const META_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WA_TOKEN;
 const META_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID;
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://yourapp.com';
 
-// ─── Shared Meta API caller ────────────────────────────────────────────────────
-
 async function sendMetaTemplate(
   to: string,
   templateName: string,
   components: object[]
 ) {
-  const formattedPhone = to.replace(/\D/g, ''); // strip all non-numeric
+  const formattedPhone = to.replace(/\D/g, '');
 
   try {
     const response = await axios.post(
@@ -70,10 +52,7 @@ async function sendMetaTemplate(
   }
 }
 
-// ─── Shared Meta API caller for FREE-FORM session messages ────────────────────
-// Use ONLY when user has messaged within the last 24 hours (e.g., webhook replies)
-
-async function sendMetaFreeText(to: string, text: string) {
+export async function sendMetaFreeText(to: string, text: string) {
   const formattedPhone = to.replace(/\D/g, '');
 
   try {
@@ -105,18 +84,6 @@ async function sendMetaFreeText(to: string, text: string) {
     throw new Error(error.response?.data?.error?.message || 'Failed to send free-form message');
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 1. 🌅 MORNING BRIEFING
-//    Template name: morning_briefing_v2
-//    Trigger: 7:00 AM cron daily
-//    Body params:
-//      {{1}} = userName (e.g., "Abhishek")
-//      {{2}} = missedYesterday (e.g., "Deep Work, Read Book")
-//      {{3}} = todayTopTasks (e.g., "1. Workout\n2. Client Report\n3. Study")
-//      {{4}} = appLink (e.g., "https://yourapp.com/daily-goals")
-// ═══════════════════════════════════════════════════════════════════════════════
-
 export async function sendMorningBriefingTemplate(
   to: string,
   userName: string,
@@ -136,17 +103,6 @@ export async function sendMorningBriefingTemplate(
     },
   ]);
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 2. ⏰ TODO START REMINDER (Interactive: Start / Snooze 15min / Snooze 30min)
-//    Template name: todo_start_reminder
-//    Trigger: Cron every 5 min, when reminderTime is approaching
-//    Body params:
-//      {{1}} = userName
-//      {{2}} = taskName
-//      {{3}} = estimatedMins (e.g., "30")
-//    Buttons: Quick reply — START_{todoId}, SNOOZE15_{todoId}, SNOOZE30_{todoId}
-// ═══════════════════════════════════════════════════════════════════════════════
 
 export async function sendTodoStartReminderTemplate(
   to: string,
@@ -188,17 +144,6 @@ export async function sendTodoStartReminderTemplate(
   ]);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 3. ⚠️ DEADLINE APPROACHING (Interactive: Mark Done / Mark Failed)
-//    Template name: todo_deadline_alert
-//    Trigger: Cron every 5 min, when deadline is within lead time
-//    Body params:
-//      {{1}} = userName
-//      {{2}} = taskName
-//      {{3}} = minutesLeft (e.g., "15")
-//    Buttons: Quick reply — DONE_{todoId}, FAIL_{todoId}
-// ═══════════════════════════════════════════════════════════════════════════════
-
 export async function sendDeadlineAlertTemplate(
   to: string,
   userName: string,
@@ -232,22 +177,6 @@ export async function sendDeadlineAlertTemplate(
   ]);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 4. 🌙 MIDNIGHT / EOD SUMMARY
-//    Template name: midnight_summary
-//    Trigger: Cron at 11:30 PM daily
-//    Body params:
-//      {{1}} = userName
-//      {{2}} = completedCount (e.g., "7")
-//      {{3}} = missedCount (e.g., "3")
-//      {{4}} = completionRate (e.g., "70%")
-//      {{5}} = streakStatus (e.g., "🔥 5 days strong!")
-//      {{6}} = xpToday (e.g., "+45 XP" or "-30 XP")
-//      {{7}} = motivationalLine (e.g., "Tomorrow is a new chance. Keep going. 💪")
-//      {{8}} = appLink
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/** Rotate through motivational closers each night */
 export function getMotivationalLine(completionRate: number): string {
   if (completionRate >= 100) {
     return `🏆 Perfect day! You crushed every task. Absolutely elite. Keep this energy tomorrow!`;
@@ -291,15 +220,6 @@ export async function sendMidnightSummaryTemplate(
   ]);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 5. 📱 PHONE NUMBER ADDED / UPDATED
-//    Template name: phone_number_confirmed
-//    Trigger: User saves or updates phone number in settings
-//    Body params:
-//      {{1}} = userName
-//      {{2}} = appLink (to start first session)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 export async function sendPhoneConfirmedTemplate(
   to: string,
   userName: string,
@@ -315,15 +235,6 @@ export async function sendPhoneConfirmedTemplate(
     },
   ]);
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 6. 🧪 TEST WHATSAPP MESSAGE
-//    Template name: whatsapp_test_message
-//    Trigger: User clicks "Test WhatsApp" in settings
-//    Body params:
-//      {{1}} = userName
-//      {{2}} = appLink (preferences page)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 export async function sendTestWhatsAppTemplate(
   to: string,
@@ -341,12 +252,6 @@ export async function sendTestWhatsAppTemplate(
   ]);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// FREE-FORM SESSION MESSAGES (use ONLY within 24h of user's last message)
-// These are responses sent after user taps a button in WhatsApp (webhook replies)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/** Sent when user taps "▶️ Start" on a reminder */
 export async function sendTaskStartedReply(
   to: string,
   userName: string,

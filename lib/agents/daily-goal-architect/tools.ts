@@ -98,8 +98,53 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
             );
             // Store daily analysis in agent memory for tracking
             const analysisMemoryKey = `daily_analysis_${new Date().toLocaleDateString('en-CA')}`;
-            await prisma.agentMemory.create({
-                data: {
+            // await prisma.agentMemory.create({
+            //     data: {
+            //         userId,
+            //         key: analysisMemoryKey,
+            //         value: JSON.stringify({
+            //             dailySummary,
+            //             analysisInsights,
+            //             morningRoutine,
+            //             afternoonBlock,
+            //             eveningWrapup,
+            //             successMetrics,
+            //             totalTodosScheduled: scheduledTodos.length,
+            //             priorityBreakdown: {
+            //                 critical: scheduledTodos.filter(t => t.priority === 0).length,
+            //                 high: scheduledTodos.filter(t => t.priority === 1).length,
+            //                 medium: scheduledTodos.filter(t => t.priority === 2).length,
+            //                 low: scheduledTodos.filter(t => t.priority === 3).length
+            //             }
+            //         }),
+            //         domain: "daily_goals"
+            //     }
+            // });
+            await prisma.agentMemory.upsert({
+                where: {
+                    userId_key: {
+                        userId,
+                        key: analysisMemoryKey,
+                    },
+                },
+                update: {
+                    value: JSON.stringify({
+                        dailySummary,
+                        analysisInsights,
+                        morningRoutine,
+                        afternoonBlock,
+                        eveningWrapup,
+                        successMetrics,
+                        totalTodosScheduled: scheduledTodos.length,
+                        priorityBreakdown: {
+                            critical: scheduledTodos.filter(t => t.priority === 0).length,
+                            high: scheduledTodos.filter(t => t.priority === 1).length,
+                            medium: scheduledTodos.filter(t => t.priority === 2).length,
+                            low: scheduledTodos.filter(t => t.priority === 3).length
+                        }
+                    }),
+                },
+                create: {
                     userId,
                     key: analysisMemoryKey,
                     value: JSON.stringify({
@@ -117,8 +162,8 @@ export const saveDailyGoalsTool = (userId: string) => new DynamicStructuredTool(
                             low: scheduledTodos.filter(t => t.priority === 3).length
                         }
                     }),
-                    domain: "daily_goals"
-                }
+                    domain: "daily_goals",
+                },
             });
 
             // Create agent conversation log

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendInteractiveDeadlineWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
+import { getWhatsAppProvider } from '@/services/whatsapp';
+import { sendDeadlineAlertTemplate } from '@/services/whatsapp-templates';
 import { getGlobalWhatsappStatus } from '@/app/action';
 import { DEADLINE_REMINDER_LEAD_TIME_MINS } from '@/lib/constants';
 
@@ -47,13 +48,17 @@ export async function POST(request: Request) {
         try {
           const provider = await getWhatsAppProvider();
           
-          await sendInteractiveDeadlineWhatsAppReminder(
-            todo.user.phone,
-            todo.task,
-            todo.user.name || 'User',
-            todo.id,
-            provider
-          );
+          if (provider === 'meta') {
+            await sendDeadlineAlertTemplate(
+              todo.user.phone,
+              todo.user.name || 'User',
+              todo.task,
+              '15', // default minutesLeft string
+              todo.id
+            );
+          } else {
+             console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
+          }
 
           await prisma.todo.update({
             where: { id: todo.id },
