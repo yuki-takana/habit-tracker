@@ -1060,3 +1060,12 @@ model NotificationLog {
 
   @@unique([userId, type, channel, date])
 }
+model FcmToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}

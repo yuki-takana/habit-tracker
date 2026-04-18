@@ -1,15 +1,3 @@
-// self.addEventListener("push", function (event) {
-//   if (!event.data) return;
-
-//   const data = event.data.json();
-
-//   self.registration.showNotification(data.title, {
-//     body: data.body,
-//     icon: "/icon.png",
-//     badge: "/icon.png",
-//     vibrate: [200, 100, 200],
-//   });
-// });
 importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js");
 

@@ -24,7 +24,6 @@ const Dashboard = () => {
         const fetchDashboardData = async () => {
             try {
                 const result = await getDashboardSummary();
-                console.log("Dashboard summary data:", result);
                 setData(result);
             } catch (err) {
                 console.error("Failed to load dashboard data", err);
