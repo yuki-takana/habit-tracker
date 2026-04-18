@@ -1,7 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 
-const KNOWN_ROUTES = ["/", "/dashboard", "/settings", "/signin", "/signup", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/leaderboard", "/privacy", "/terms"];
+export const KNOWN_ROUTES = ["/", "/coding", "/blueprint", "/dashboard", "/settings", "/signin", "/signup", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/leaderboard", "/privacy", "/terms"];
 
 const DashboardFooter = () => {
     const pathname = usePathname();
