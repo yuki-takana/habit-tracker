@@ -3,20 +3,11 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Shield, Sparkles, Trophy, TreeDeciduous, Zap } from 'lucide-react'
-
-const EMOJI_POOL = ["🌱", "🌿", "🌷", "🌻", "🌳", "🌲", "🌼", "🍀"];
-
-function getTreeEmojiString(category: string, index: number) {
-    let str = category + "_" + index;
-    let hash = 0;
-    for (let j = 0; j < str.length; j++) hash = Math.imul(31, hash) + str.charCodeAt(j) | 0;
-    const idSeed = Math.abs(hash);
-    return EMOJI_POOL[idSeed % EMOJI_POOL.length];
-}
+import { getTreeEmojiString, calculateTreeScale } from '@/lib/utils/forest'
 
 function TreeMini({ category, index, treeTaskCount, totalIndex }: any) {
     const emoji = getTreeEmojiString(category, index);
-    const scale = 0.55 + (treeTaskCount / 5) * 0.45;
+    const scale = calculateTreeScale(treeTaskCount);
     
     // Swaying animation variables
     const animationDelay = (totalIndex % 5) * 0.4;

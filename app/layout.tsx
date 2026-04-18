@@ -25,8 +25,9 @@ const myCustomFont = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "UFL",
-  description: "An AI featured Plateform for you productivity",
+  title: "Habit AI | UFL",
+  description: "An AI featured Platform for your productivity",
+  manifest: "/manifest.json",
 };
 
 import { Providers } from "@/components/providers/Providers";

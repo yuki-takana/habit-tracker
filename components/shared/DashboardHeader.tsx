@@ -192,10 +192,10 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
                                             "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all",
                                             active
                                                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                                                : "text-slate-600 hover:bg-slate-50 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-zinc-900 dark:hover:text-white"
+                                                : "text-slate-600 hover:bg-slate-50 hover:text-indigo-600 dark:text-slate-300 dark:hover:bg-zinc-900 dark:hover:text-white"
                                         )}
                                     >
-                                        <Icon size={20} className={active ? "text-white" : "opacity-70"} />
+                                        <Icon size={20} className={clsx(active ? "text-white" : item.color || "opacity-70")} />
                                         <span>{item.name}</span>
                                     </Link>
                                 )

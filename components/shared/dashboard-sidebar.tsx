@@ -13,58 +13,61 @@ export const navItems = [
         name: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
+        color: "text-blue-500 dark:text-blue-400",
         key: "feature_dashboard"
     },
-    // {
-    //     name: "Workouts",
-    //     href: "/workouts",
-    //     icon: Dumbbell,
-    //     key: "feature_workouts"
-    // },
     {
         name: "Todos",
         href: "/todos",
-        icon: List, key:
-            "feature_todos"
+        icon: List,
+        color: "text-purple-500 dark:text-purple-400",
+        key: "feature_todos"
     },
     {
         name: "Habits",
         href: "/habits",
         icon: Flame,
+        color: "text-orange-500 dark:text-orange-400",
         key: "feature_habits"
     },
     {
         name: "Challenges",
         href: "/challenges",
         icon: Target,
+        color: "text-rose-500 dark:text-rose-400",
         key: "feature_challenges"
     },
     {
         name: "Daily Goals",
         href: "/daily-goals",
         icon: Bot,
+        color: "text-emerald-500 dark:text-emerald-400",
         key: "feature_daily_goals"
     },
     {
         name: "Routines",
         href: "/routines",
         icon: CalendarDays,
+        color: "text-amber-500 dark:text-amber-400",
         key: "feature_daily_goals" // same gate as daily goals
     },
     {
         name: "Insights",
         href: "/insights",
         icon: InfoIcon,
+        color: "text-cyan-500 dark:text-cyan-400",
         key: "feature_insights"
     },
     {
         name: "Coding",
         href: "/coding",
+        color: "text-indigo-500 dark:text-indigo-400",
         icon: Code2
     },
     {
         name: "Blueprint",
         href: "/blueprint",
+        color: "text-pink-500 dark:text-pink-400",
         icon: Bot
     },
 ];
@@ -112,10 +115,10 @@ const DashboardSidebar = ({isPro}:{ isPro: boolean}) => {
                                     "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
                                     active
                                         ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
-                                        : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-900"
+                                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-zinc-900"
                                 )}
                             >
-                                <Icon size={20} className="shrink-0" />
+                                <Icon size={20} className={clsx("shrink-0", !active && item.color)} />
                                 <span>{item.name}</span>
                             </Link>
                         )

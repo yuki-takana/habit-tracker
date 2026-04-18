@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Plus, Save, Trash2, Clock,
   Dumbbell, BookOpen, Briefcase, Heart, Code, Star, Coffee,
-  Moon, X, Check,
+  Moon, X, Check, Edit2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Routine, RoutineTask } from "@/types/routine";
@@ -111,8 +111,8 @@ function TaskForm({ initial, onSave, onCancel }: TaskFormProps) {
                   type="button"
                   onClick={() => setCategory(cat.key)}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${active
-                      ? "text-white shadow-sm"
-                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                    ? "text-white shadow-sm"
+                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                     }`}
                   style={active ? { backgroundColor: cat.color } : {}}
                 >
@@ -274,19 +274,31 @@ export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuil
   }
 
   // ── Delete task ────────────────────────────────────────────────────────────
-  async function handleDeleteTask(taskId: string) {
-    try {
-      const res = await fetch(`/api/routines/${routine.id}/tasks/${taskId}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) {
-        setTasks(prev => prev.filter(t => t.id !== taskId));
-        toast.success("Task removed");
-      } else {
-        toast.error(data.error || "Failed to delete");
+  function handleDeleteTask(taskId: string) {
+    toast("Delete this task?", {
+      description: "It will be removed from your routine plan.",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const res = await fetch(`/api/routines/${routine.id}/tasks/${taskId}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+              setTasks(prev => prev.filter(t => t.id !== taskId));
+              toast.success("Task removed");
+            } else {
+              toast.error(data.error || "Failed to delete");
+            }
+          } catch {
+            toast.error("Something went wrong");
+          }
+        }
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {}
       }
-    } catch {
-      toast.error("Something went wrong");
-    }
+    });
   }
 
   // ── Reorder tasks (drag-end) ───────────────────────────────────────────────
@@ -387,7 +399,7 @@ export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuil
           </div>
 
           {/* Color palette */}
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">Accent Color</p>
             <div className="flex gap-2 flex-wrap">
               {PALETTE_COLORS.map(c => (
@@ -403,7 +415,7 @@ export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuil
                 />
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Wake-up time */}
           <div>
@@ -507,39 +519,48 @@ export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuil
 
                           {/* Task card */}
                           <div className="flex-1">
-                            <div className="flex items-start justify-between gap-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 px-3 py-2.5 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 transition-colors">
-                              <div className="min-w-0 ">
-                                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+                            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 px-3 py-2.5 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 transition-colors">
+
+                              {/* Row 1: Title + Actions */}
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 break-words flex-1">
                                   {task.title}
                                 </p>
-                                <div className="flex items-center gap-2 mt-0.5 ">
-                                  <span className="text-[10px] font-bold text-zinc-400">
-                                    {task.startTime} → {endTime(task.startTime, task.duration)}
-                                  </span>
-                                  <span className="text-[10px] text-zinc-300 dark:text-zinc-700">·</span>
-                                  <span className="text-[10px] font-bold text-zinc-400">{formatDuration(task.duration)}</span>
+
+                                <div className="flex items-center gap-1 opacity-100 transition-opacity shrink-0">
+                                  <button
+                                    onClick={() => { setEditingTask(task); setShowAdd(false); }}
+                                    className="w-8 h-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleDeleteTask(task.id)}
+                                    className="w-8 h-8 rounded-md flex items-center justify-center text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
                                 </div>
-                                {task.notes && (
-                                  <p className="text-[11px] text-zinc-400 mt-0.5 italic word-break">{task.notes}</p>
-                                )}
                               </div>
-                              {/* Actions */}
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                <button
-                                  onClick={() => { setEditingTask(task); setShowAdd(false); }}
-                                  className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
-                                >
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTask(task.id)}
-                                  className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
+
+                              {/* Row 2: Meta */}
+                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                <span className="text-[10px] font-bold text-zinc-400">
+                                  {task.startTime} → {endTime(task.startTime, task.duration)}
+                                </span>
+                                <span className="text-[10px] text-zinc-300 dark:text-zinc-700">·</span>
+                                <span className="text-[10px] font-bold text-zinc-400">
+                                  {formatDuration(task.duration)}
+                                </span>
                               </div>
+
+                              {/* Row 3: Notes (FULL WIDTH) */}
+                              {task.notes && (
+                                <p className="text-[11px] text-zinc-400 mt-1 italic break-words w-full">
+                                  {task.notes}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </motion.div>

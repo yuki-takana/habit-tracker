@@ -17,16 +17,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { TodoItem } from "@/features/todos/todo-item";
 import UFLProgressCard from "@/features/analytics/shareable-card";
-
-const EMOJI_POOL = ["🌱", "🌿", "🌷", "🌻", "🌳", "🌲", "🌼", "🍀"];
-
-function getTreeEmojiString(category: string, index: number) {
-    let str = category + "_" + index;
-    let hash = 0;
-    for (let j = 0; j < str.length; j++) hash = Math.imul(31, hash) + str.charCodeAt(j) | 0;
-    const idSeed = Math.abs(hash);
-    return EMOJI_POOL[idSeed % EMOJI_POOL.length];
-}
+import { getTreeEmojiString, calculateTreeScale } from '@/lib/utils/forest';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -63,7 +54,7 @@ function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }:
     const emoji = getTreeEmojiString(category, index);
     
     // Smooth size mapping: 0 to 5 -> 0.55 to 1.0 scale
-    const scale = 0.55 + (treeTaskCount / 5) * 0.45;
+    const scale = calculateTreeScale(treeTaskCount);
 
     const handleOpen = () => {
         if (!ref.current) return;

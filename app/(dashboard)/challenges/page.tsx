@@ -27,23 +27,30 @@ export default function ChallengesPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this challenge? This action cannot be undone.")) return;
-
-        try {
-            const res = await fetch(`/api/challenges/${id}`, {
-                method: "DELETE",
-            });
-            if (res.ok) {
-                toast.success("Challenge deleted");
-                fetchChallenges();
-            } else {
-                toast.error("Failed to delete challenge");
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Something went wrong");
-        }
+    const handleDelete = (id: string) => {
+        toast("Delete this challenge?", {
+            description: "This action cannot be undone.",
+            action: {
+                label: "Delete",
+                onClick: async () => {
+                    try {
+                        const res = await fetch(`/api/challenges/${id}`, {
+                            method: "DELETE",
+                        });
+                        if (res.ok) {
+                            toast.success("Challenge deleted");
+                            fetchChallenges();
+                        } else {
+                            toast.error("Failed to delete challenge");
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        toast.error("Something went wrong");
+                    }
+                }
+            },
+            cancel: { label: "Cancel", onClick: () => {} }
+        });
     };
 
     useEffect(() => {

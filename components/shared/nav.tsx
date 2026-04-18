@@ -16,7 +16,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { KNOWN_ROUTES } from './dashboard-footer'
+import { KNOWN_ROUTES, DASHBOARD_ROUTES } from "@/lib/constants"
 
 const Nav = () => {
     const pathname = usePathname()
@@ -54,7 +54,6 @@ const Nav = () => {
     const isUsername = pathname.split("/").length === 2 && !KNOWN_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) && !pathname.startsWith("/api");
     if (isUsername) return null;
 
-    const DASHBOARD_ROUTES = ["/dashboard", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/coding", "/journey", "/workouts", "/tasks", "/blueprint", "/billing"];
     const isDashboardRoute = DASHBOARD_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"));
     const { theme, setTheme } = useTheme();
 

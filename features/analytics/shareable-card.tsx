@@ -41,98 +41,7 @@ const DEFAULT_VIS: Visibility = {
     heroXp: true, streakShield: true, treesTodo: true, categories: true, footer: true,
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-function buildPaths(raw: number[], W = 320, H = 52, pad = 5) {
-    const data = raw.length >= 2 ? raw : [0, ...raw, 0];
-    const mn = Math.min(...data);
-    const mx = Math.max(...data);
-    const range = mx - mn || 1;
-    const pts = data.map((v, i) => ({
-        x: pad + (i / (data.length - 1)) * (W - pad * 2),
-        y: H - pad - ((v - mn) / range) * (H - pad * 2),
-    }));
-    const line = pts.reduce((acc, p, i) => {
-        if (i === 0) return `M${p.x.toFixed(1)},${p.y.toFixed(1)}`;
-        const prev = pts[i - 1];
-        const cpx = (prev.x + p.x) / 2;
-        return acc + ` C${cpx.toFixed(1)},${prev.y.toFixed(1)} ${cpx.toFixed(1)},${p.y.toFixed(1)} ${p.x.toFixed(1)},${p.y.toFixed(1)}`;
-    }, "");
-    const area = `${line} L${pts[pts.length - 1].x.toFixed(1)},${H - pad} L${pts[0].x.toFixed(1)},${H - pad} Z`;
-    return { line, area, last: pts[pts.length - 1] };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Sparkline
-// ─────────────────────────────────────────────────────────────────────────────
-
-function Sparkline({ data, t, gradId }: { data: number[]; t: CardTheme; gradId: string }) {
-    const { line, area, last } = buildPaths(data);
-    return (
-        <svg width="100%" height="52" viewBox="0 0 320 52" preserveAspectRatio="none" style={{ display: "block" }}>
-            <defs>
-                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={t.main} stopOpacity={0.32} />
-                    <stop offset="100%" stopColor={t.main} stopOpacity={0} />
-                </linearGradient>
-            </defs>
-            <path d={area} fill={`url(#${gradId})`} />
-            <path d={line} fill="none" stroke={t.main} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx={last.x} cy={last.y} r={4} fill={t.mainAlt} opacity={0.45} />
-            <circle cx={last.x} cy={last.y} r={2.5} fill={t.main} />
-        </svg>
-    );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Level Arc
-// ─────────────────────────────────────────────────────────────────────────────
-
-function LevelArc({ pct, level, t }: { pct: number; level: number; t: CardTheme }) {
-    const r = 26;
-    const circ = 2 * Math.PI * r;
-    const clamped = Math.min(Math.max(pct, 0), 1);
-    const arcId = `arc-${t.id}`;
-    return (
-        <div style={{ position: "relative", flexShrink: 0, width: 64, height: 64 }}>
-            <svg width="64" height="64" style={{ transform: "rotate(-90deg)" }}>
-                <defs>
-                    <linearGradient id={arcId} x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor={t.main} />
-                        <stop offset="100%" stopColor={t.mainAlt} />
-                    </linearGradient>
-                </defs>
-                <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={3} />
-                <circle cx="32" cy="32" r={r} fill="none" stroke={`url(#${arcId})`} strokeWidth={3}
-                    strokeDasharray={`${circ * clamped} ${circ}`} strokeLinecap="round" />
-            </svg>
-            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ color: t.main, fontSize: 15, fontWeight: 900, lineHeight: 1 }}>{level}</span>
-                <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 7, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase" }}>LVL</span>
-            </div>
-        </div>
-    );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// StatCell
-// ─────────────────────────────────────────────────────────────────────────────
-
-function StatCell({ icon, value, label, t }: { icon: string; value: string; label: string; t: CardTheme }) {
-    return (
-        <div style={{
-            background: t.statBg, borderRadius: 12, padding: "10px 6px 8px",
-            border: `1px solid ${t.dim}`, textAlign: "center",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-        }}>
-            <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
-            <span style={{ color: "#ede9fe", fontSize: 16, fontWeight: 900, lineHeight: 1, fontFamily: "'JetBrains Mono', monospace" }}>{value}</span>
-            <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 8, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</span>
-        </div>
-    );
-}
+// Unused previous UI components removed to save space
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle
@@ -317,178 +226,138 @@ interface ProgressCardProps {
 }
 
 export function ProgressCard({ stats, durKey, vis, theme: t, cardRef }: ProgressCardProps) {
-    const gradId = `sg-${t.id}-${durKey}`;
-    const safeData = stats.sparkData?.length >= 2
-        ? stats.sparkData
-        : [0, 100, 80, 140, 110, 180, stats.xpEarned || 200];
+    const safeData = stats.sparkData?.length >= 7 
+        ? stats.sparkData.slice(0, 7) 
+        : [2, 4, 3, 5, 4, 3, Math.max(1, stats.tasksCompleted % 10)];
+        
+    const maxVal = Math.max(...safeData, 1);
+    
+    // Bottom progress bar segment percentages
+    const total = Math.max(1, stats.tasksCompleted + stats.treesGrown + stats.userLevel);
+    const focusPct = Math.min(100, (stats.tasksCompleted / total) * 100).toFixed(0);
+    const breakPct = Math.min(100, (stats.userLevel / total) * 100).toFixed(0);
+    const otherPct = Math.min(100, (stats.treesGrown / total) * 100).toFixed(0);
 
     return (
         <div ref={cardRef} style={{
-            width: 360, borderRadius: 22, padding: "0 0 18px",
-            position: "relative", overflow: "hidden",
-            border: `1px solid ${t.border}`,
-            background: t.bg,
-            boxShadow: `0 32px 72px -16px ${t.shadow}, 0 0 0 1px ${t.border}`,
-            fontFamily: "'Syne','DM Sans',sans-serif",
+            width: 360, borderRadius: 32, padding: "32px",
+            background: "#18181b", // zinc-900 / dark grey almost black like the image
+            color: "white",
+            fontFamily: "system-ui, -apple-system, sans-serif",
             flexShrink: 0,
+            boxShadow: `0 32px 64px -16px rgba(0,0,0,0.5)`,
         }}>
-            {/* Accent bar */}
-            <div style={{ height: 2, background: t.accentBar, opacity: 0.75 }} />
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+                <div style={{ fontSize: 22, fontWeight: 600, letterSpacing: "-0.5px" }}>Activity</div>
+                <a 
+                    href={BASE_URL} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:scale-110 transition-transform active:scale-95"
+                    style={{ 
+                        width: 36, height: 36, borderRadius: "50%", background: "#27272a", // zinc-800
+                        display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none"
+                    }}
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+            </div>
 
-            {/* Orbs */}
-            <div style={{ position: "absolute", top: -60, right: -40, width: 220, height: 220, borderRadius: "50%", background: `radial-gradient(circle,${t.dimmer} 0%,transparent 70%)`, pointerEvents: "none", zIndex: 0 }} />
-            <div style={{ position: "absolute", bottom: -50, left: -40, width: 180, height: 180, borderRadius: "50%", background: `radial-gradient(circle,${t.dimmer} 0%,transparent 70%)`, pointerEvents: "none", zIndex: 0 }} />
-
-            <div style={{ position: "relative", zIndex: 1, padding: "0 18px" }}>
-
-                {/* Header */}
-                {vis.header && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 11, paddingTop: 17, paddingBottom: 13, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        <div style={{ position: "relative", flexShrink: 0 }}>
-                            <div style={{
-                                width: 46, height: 46, borderRadius: 13,
-                                border: `1.5px solid ${t.border}`, background: t.dim,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 18, fontWeight: 900, color: t.main, overflow: "hidden",
-                            }}>
-                                {stats.avatarUrl
-                                    ? <img src={stats.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                    : (stats.userName?.charAt(0).toUpperCase() ?? "U")}
-                            </div>
-                            <div style={{
-                                position: "absolute", bottom: -4, right: -4, width: 18, height: 18,
-                                borderRadius: 6, background: t.main, border: "2px solid #060910",
-                                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9,
-                            }}>🌳</div>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ color: "#ede9fe", fontSize: 14, fontWeight: 800, letterSpacing: "-0.3px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                {stats.userName}
-                            </div>
-                            <div style={{ color: "rgba(255,255,255,0.32)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>
-                                {DUR_LABELS[durKey]} · {new Date().getFullYear()}
-                            </div>
-                        </div>
-                        <div style={{
-                            padding: "4px 10px", borderRadius: 20, background: t.dim,
-                            fontSize: 9, fontWeight: 800, color: t.main,
-                            textTransform: "uppercase", letterSpacing: "0.12em",
-                            border: `1px solid ${t.border}`, flexShrink: 0,
-                        }}>
-                            {stats.isPro ? "✦ PRO" : `Lv. ${stats.userLevel}`}
-                        </div>
+            {/* Top Stats */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 40, paddingRight: 8 }}>
+                <div>
+                    <div style={{ color: t.main, fontSize: 26, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, letterSpacing: "-0.5px" }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2 }}>
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="16 12 12 8 8 12"></polyline>
+                            <line x1="12" y1="16" x2="12" y2="8"></line>
+                        </svg>
+                        {stats.streak} <span style={{ fontSize: 16 }}>Days</span>
                     </div>
-                )}
-
-                {/* Period tabs */}
-                {vis.periodTabs && (
-                    <div style={{ display: "flex", gap: 3, paddingTop: 10, paddingBottom: 2 }}>
-                        {(["1d", "1w", "1m", "1y"] as DurKey[]).map((d) => (
-                            <div key={d} style={{
-                                flex: 1, padding: "4px 0", borderRadius: 7, textAlign: "center",
-                                background: durKey === d ? "rgba(255,255,255,0.09)" : "transparent",
-                                border: durKey === d ? "1px solid rgba(255,255,255,0.12)" : "1px solid transparent",
-                                color: durKey === d ? "#ede9fe" : "rgba(255,255,255,0.22)",
-                                fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase",
-                            }}>{DUR_TAB[d]}</div>
-                        ))}
+                    <div style={{ color: "#a1a1aa", fontSize: 12, marginTop: 4 }}>Current Streak</div>
+                </div>
+                <div>
+                    <div style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.5px" }}>
+                        {(stats.userTotalXp || 0).toLocaleString()} <span style={{ fontSize: 14, color: "#a1a1aa", fontWeight: 400 }}>XP</span>
                     </div>
-                )}
-
-                {/* Hero XP */}
-                {vis.heroXp && (
-                    <div style={{ textAlign: "center", padding: "15px 0 4px" }}>
-                        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 5 }}>
-                            {DUR_LABELS[durKey]}&apos;s XP Earned
-                        </div>
-                        <div style={{ color: t.heroColor, fontSize: 52, fontWeight: 900, letterSpacing: -3, lineHeight: 1, textShadow: `0 0 48px ${t.heroColor}44` }}>
-                            {(stats.xpEarned || 0).toLocaleString()}
-                        </div>
+                    <div style={{ color: "#a1a1aa", fontSize: 12, marginTop: 4 }}>Total Earned</div>
+                </div>
+                <div>
+                    <div style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.5px" }}>
+                        {stats.treesGrown} <span style={{ fontSize: 14, color: "#a1a1aa", fontWeight: 400 }}>🌳</span>
                     </div>
-                )}
-
-                {/* Graph */}
-                {vis.graph && (
-                    <div style={{ marginTop: 13, padding: "10px 12px 6px", background: t.blockBg, borderRadius: 14, border: `1px solid ${t.dim}` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                            <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>7-Day Activity</span>
-                            <span style={{ color: t.main, fontSize: 8, fontWeight: 800 }}>{(stats.userTotalXp || 0).toLocaleString()} XP total</span>
-                        </div>
-                        <Sparkline data={safeData} t={t} gradId={gradId} />
-                    </div>
-                )}
-
-                {/* Level / Role block */}
-                {vis.levelBlock && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 13, padding: "12px 13px", background: t.blockBg, borderRadius: 15, border: `1px solid ${t.dim}`, marginTop: 11 }}>
-                        <LevelArc pct={stats.xpPct ?? 0} level={stats.userLevel} t={t} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ color: t.main, fontSize: 17, fontWeight: 900, letterSpacing: "-0.4px", lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {stats.roleTitle ?? "Seedling"}
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-                                <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em" }}>Role Lv.</span>
-                                <span style={{ color: t.mainAlt, fontSize: 10, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace" }}>{stats.roleLevel ?? 1}</span>
-                            </div>
-                            <div style={{ height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 4, marginTop: 9, overflow: "hidden" }}>
-                                <div style={{ height: "100%", width: `${Math.min((stats.xpPct ?? 0) * 100, 100)}%`, borderRadius: 4, background: `linear-gradient(90deg,${t.main},${t.mainAlt})` }} />
-                            </div>
-                            <div style={{ color: "rgba(255,255,255,0.22)", fontSize: 8, fontWeight: 600, marginTop: 3 }}>{(stats.userTotalXp || 0).toLocaleString()} XP</div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Streak & Shields */}
-                {vis.streakShield && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7, marginTop: 11 }}>
-                        <StatCell icon="🔥" value={String(stats.streak ?? 0)} label="Streak" t={t} />
-                        <StatCell icon="⚡" value={String(stats.longestStreak ?? 0)} label="Longest" t={t} />
-                        <StatCell icon="🛡️" value={String(stats.shields ?? 0)} label="Shields" t={t} />
-                    </div>
-                )}
-
-                {/* Trees & Todos */}
-                {vis.treesTodo && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginTop: 7 }}>
-                        <StatCell icon="🌳" value={String(stats.treesGrown ?? 0)} label="Trees" t={t} />
-                        <StatCell icon="✅" value={String(stats.tasksCompleted ?? 0)} label="Todos Done" t={t} />
-                    </div>
-                )}
-
-                {/* Top Category */}
-                {vis.categories && (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: t.blockBg, borderRadius: 11, border: `1px solid ${t.dim}`, marginTop: 7 }}>
-                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Top Habit</span>
-                        <span style={{ color: t.main, fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stats.mostWorkedCategory || "General"}</span>
-                    </div>
-                )}
-
-                {/* Footer */}
-                {vis.footer && (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                        <div>
-                            <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 8, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Member since</div>
-                            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700, marginTop: 1 }}>{stats.memberSince ?? "2024"}</div>
-                        </div>
-                        <a href={`${BASE_URL}`} target="_blank" rel="noopener noreferrer" style={{
-                            display: "inline-flex", alignItems: "center", gap: 5,
-                            background: t.main, color: "#060910",
-                            fontSize: 9, fontWeight: 900, letterSpacing: "0.07em", textTransform: "uppercase",
-                            padding: "7px 13px", borderRadius: 9, textDecoration: "none",
-                        }}>
-                            JOIN UFL
-                            <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M2 8L8 2M8 2H4M8 2v4" />
-                            </svg>
-                        </a>
-                    </div>
-                )}
-
-                {/* Watermark */}
-                <div style={{ textAlign: "center", marginTop: 10 }}>
-                    <span style={{ color: "rgba(255,255,255,0.1)", fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>habits.hellocoders.in</span>
+                    <div style={{ color: "#a1a1aa", fontSize: 12, marginTop: 4 }}>Trees Grown</div>
                 </div>
             </div>
+
+            {/* Bar Chart */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", height: 120, marginBottom: 40 }}>
+                {safeData.map((val, i) => {
+                    const pct = Math.max(15, (val / maxVal) * 100);
+                    // Approximate daily XP using standard UFL ratio where 1 todo is approx 15xp plus base multiplier
+                    const dailyXp = val > 0 ? (val * 15) + 12 : 0; 
+                    
+                    return (
+                        <div key={i} className="group relative" style={{ width: 14, height: "100%", background: "#27272a", borderRadius: 12 }}>
+                            {/* Hover Tooltip */}
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-1 pointer-events-none z-10 flex flex-col items-center">
+                                <div style={{ background: "#27272a", padding: "6px 8px", borderRadius: 8, border: "1px solid #3f3f46", textAlign: "center", minWidth: 70, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.5)" }}>
+                                    <div style={{ color: "white", fontSize: 10, fontWeight: 700 }}>{val} Todos</div>
+                                    <div style={{ color: t.main, fontSize: 10, fontWeight: 500 }}>{dailyXp} XP</div>
+                                </div>
+                            </div>
+                            
+                            <div style={{ 
+                                position: "absolute", bottom: 0, left: 0, right: 0, height: `${pct}%`, 
+                                background: t.main, borderRadius: 12, transition: "height 0.4s ease-out"
+                            }} />
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Compound Progress Bar */}
+            <div style={{ width: "100%", height: 14, background: "#27272a", borderRadius: 12, display: "flex", overflow: "hidden", marginBottom: 32 }}>
+                <div style={{ width: `${focusPct}%`, background: t.main, borderRadius: "12px 0 0 12px" }} />
+                <div style={{ width: `${breakPct}%`, background: t.mainAlt }} />
+                <div style={{ width: `${otherPct}%`, background: t.heroColor, borderRadius: "0 12px 12px 0" }} />
+            </div>
+
+            {/* Bottom Stats Overview */}
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div>
+                    <div style={{ fontSize: 22, fontWeight: 500, letterSpacing: "-0.5px", marginBottom: 6 }}>
+                        {stats.tasksCompleted} <span style={{ fontSize: 13, color: "#a1a1aa", fontWeight: 400 }}>Done</span>
+                    </div>
+                    <div style={{ color: "#a1a1aa", fontSize: 11, display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: t.main }} />
+                        Todos · {focusPct}%
+                    </div>
+                </div>
+                <div>
+                    <div style={{ fontSize: 22, fontWeight: 500, letterSpacing: "-0.5px", marginBottom: 6 }}>
+                        {stats.userLevel} <span style={{ fontSize: 13, color: "#a1a1aa", fontWeight: 400 }}>LVL</span>
+                    </div>
+                    <div style={{ color: "#a1a1aa", fontSize: 11, display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: t.mainAlt }} />
+                        Rank · {breakPct}%
+                    </div>
+                </div>
+                <div>
+                    <div style={{ fontSize: 22, fontWeight: 500, letterSpacing: "-0.5px", marginBottom: 6 }}>
+                        {stats.shields} <span style={{ fontSize: 13, color: "#a1a1aa", fontWeight: 400 }}>🛡️</span>
+                    </div>
+                    <div style={{ color: "#a1a1aa", fontSize: 11, display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: t.heroColor }} />
+                        Shields · {otherPct}%
+                    </div>
+                </div>
+            </div>
+            
         </div>
     );
 }

@@ -67,20 +67,31 @@ export default function RoutineCard({ routine, onEdit, onDelete, onActivate, ind
     }
   }
 
-  async function handleDelete() {
-    if (!confirm(`Delete "${routine.name}"? This cannot be undone.`)) return;
-    try {
-      const res = await fetch(`/api/routines/${routine.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Routine deleted");
-        onDelete(routine.id);
-      } else {
-        toast.error(data.error || "Failed to delete");
+  function handleDelete() {
+    toast(`Delete "${routine.name}"?`, {
+      description: "This cannot be undone.",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const res = await fetch(`/api/routines/${routine.id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+              toast.success("Routine deleted");
+              onDelete(routine.id);
+            } else {
+              toast.error(data.error || "Failed to delete");
+            }
+          } catch {
+            toast.error("Something went wrong");
+          }
+        }
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {}
       }
-    } catch {
-      toast.error("Something went wrong");
-    }
+    });
   }
 
   return (

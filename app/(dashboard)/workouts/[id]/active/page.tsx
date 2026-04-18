@@ -134,9 +134,11 @@ export default function ActiveWorkout() {
                         size="icon"
                         onClick={() => {
                             if (isDirty) {
-                                if (confirm("Your progress for this workout isn't finished. Are you sure you want to leave?")) {
-                                    router.back()
-                                }
+                                toast("Leave Workout?", {
+                                    description: "Your progress isn't finished. Are you sure?",
+                                    action: { label: "Leave", onClick: () => router.back() },
+                                    cancel: { label: "Cancel", onClick: () => {} }
+                                })
                             } else {
                                 router.back()
                             }
@@ -156,7 +158,10 @@ export default function ActiveWorkout() {
                     variant="ghost"
                     className="text-green-600 hover:text-green-700 hover:bg-green-50"
                     onClick={() => {
-                        if (confirm("Finish workout early?")) handleFinish()
+                        toast("Finish workout early?", {
+                            action: { label: "Finish", onClick: () => handleFinish() },
+                            cancel: { label: "Cancel", onClick: () => {} }
+                        })
                     }}
                 >
                     Quick End
@@ -266,7 +271,12 @@ export default function ActiveWorkout() {
                                         }`}
                                     onClick={() => {
                                         if (currentExercise.completedSets < currentExercise.sets) {
-                                            if (!confirm("You haven't finished all sets. Continue anyway?")) return
+                                            toast("Move to next exercise?", {
+                                                description: "You haven't finished all sets.",
+                                                action: { label: "Continue", onClick: () => setCurrentIndex(c => c + 1) },
+                                                cancel: { label: "Cancel", onClick: () => {} }
+                                            })
+                                            return;
                                         }
                                         setCurrentIndex(c => c + 1)
                                     }}

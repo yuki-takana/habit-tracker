@@ -53,23 +53,30 @@ export default function HabitsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this ritual? All progress will be lost.")) return;
-
-    try {
-      const res = await fetch(`/api/habits/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        toast.success("Ritual removed");
-        fetchHabits();
-      } else {
-        toast.error("Failed to delete");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Something went wrong");
-    }
+  const handleDelete = (id: string) => {
+    toast("Delete this ritual?", {
+      description: "All progress will be lost forever.",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const res = await fetch(`/api/habits/${id}`, {
+              method: "DELETE",
+            });
+            if (res.ok) {
+              toast.success("Ritual removed");
+              fetchHabits();
+            } else {
+              toast.error("Failed to delete");
+            }
+          } catch (error) {
+            console.error(error);
+            toast.error("Something went wrong");
+          }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   const handleLog = async (habitId: string) => {
