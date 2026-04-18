@@ -95,36 +95,42 @@ const Dashboard = () => {
                 )}
 
                 {/* Top Stats Row */}
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    {[
-                        { label: "Habit Score", value: stats.habitScore.value, sub: stats.habitScore.change, icon: Trophy, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-                        { label: "Daily Streak", value: stats.streak.value, sub: "Consecutive Days", icon: Flame, color: "text-orange-500", bg: "bg-orange-500/10" },
-                        { label: "Avg Energy", value: stats.energy.value, sub: "/ 100 Flow", icon: Zap, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-                        { label: "Code Output", value: stats.commits.value, sub: "Units Produced", icon: Github, color: "text-slate-900 dark:text-white", bg: "bg-slate-500/10" }
-                    ].map((stat, i) => (
-                        <motion.div
-                            key={stat.label}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            className="group relative rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 hover:border-indigo-500/50 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/5"
-                        >
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 font-mono">{stat.label}</h3>
-                                <div className={`p-2 rounded-xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
-                                    <stat.icon size={18} />
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-4 sm:p-6 shadow-sm"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">
+                            Core Vitals
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 divide-x divide-zinc-100 dark:divide-zinc-800/50">
+                        {[
+                            { label: "Habit Score", value: stats.habitScore.value, sub: stats.habitScore.change, icon: Trophy, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+                            { label: "Daily Streak", value: stats.streak.value, sub: "Consecutive Days", icon: Flame, color: "text-orange-500", bg: "bg-orange-500/10" },
+                            { label: "Avg Energy", value: stats.energy.value, sub: "/ 100 Flow", icon: Zap, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+                            { label: "Code Output", value: stats.commits.value, sub: "Units Produced", icon: Github, color: "text-zinc-900 dark:text-zinc-100", bg: "bg-zinc-500/10" }
+                        ].map((stat, i) => (
+                            <div key={stat.label} className={clsx("flex flex-col first:pl-0 pl-4 sm:pl-6")}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={clsx("p-1.5 rounded-lg", stat.bg, stat.color)}>
+                                        <stat.icon size={14} />
+                                    </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">{stat.label}</span>
                                 </div>
-                            </div>
-                            <div className="mt-4 flex flex-col">
-                                <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.value}</span>
-                                <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tighter">{stat.value}</span>
+                                </div>
+                                <div className="flex items-center gap-1 mt-1 text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">
                                     <TrendingUp size={10} />
                                     {stat.sub}
                                 </div>
                             </div>
-                        </motion.div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                </motion.div>
 
                 {/* AI Blueprints Section */}
                 <div className="grid grid-cols-1 gap-6">
@@ -141,32 +147,31 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
                     {/* Coding Activity */}
-                    {data?.keys?.coding && (
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 overflow-hidden"
-                        >
-                            {data?.keys && !data.keys.coding && (
-                                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
-                                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
-                                        <Lock className="h-8 w-8 text-indigo-500 mb-3" />
-                                        <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Coding Locked</h4>
-                                        <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">WakaTime / GitHub Integration Required</p>
-                                        <Button onClick={() => window.location.href = '/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14} /> Integrate Now</Button>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="mb-8 flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Engineering Velocity</h3>
-                                    <p className="text-xs text-slate-500 font-medium">Daily Git Commits & Project Time</p>
-                                </div>
-                                <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
-                                    <Activity className="h-5 w-5 text-indigo-500" />
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 shadow-sm overflow-hidden"
+                    >
+                        {!data?.keys?.coding && (
+                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 dark:bg-zinc-950/60 backdrop-blur-sm">
+                                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 flex flex-col items-center justify-center border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm max-w-xs text-center mx-4">
+                                    <Lock className="h-6 w-6 text-indigo-500 mb-2" />
+                                    <h4 className="text-sm font-black tracking-widest uppercase text-zinc-900 dark:text-white mb-2">Eng Velocity Locked</h4>
+                                    <p className="text-[10px] text-zinc-500 font-medium mb-4 uppercase tracking-widest">WakaTime / GitHub Required</p>
+                                    <Button onClick={() => window.location.href = '/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={12} /> Integrate Now</Button>
                                 </div>
                             </div>
+                        )}
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-black tracking-widest text-zinc-900 dark:text-white uppercase">Engine Velocity</h3>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Git Commits & Active Code Time</p>
+                            </div>
+                            <div className="h-8 w-8 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                                <Activity className="h-4 w-4" />
+                            </div>
+                        </div>
                             <div className="h-75 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={data?.githubActivityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -182,26 +187,22 @@ const Dashboard = () => {
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
-                        </motion.div>
-                    )}
+                    </motion.div>
 
                     {/* Bio-Rhythms (Energy vs Gym) */}
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.6 }}
-                        className={clsx(
-                            "rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50",
-                            !data?.keys?.coding && "lg:col-span-2"
-                        )}
+                        className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 shadow-sm overflow-hidden"
                     >
-                        <div className="mb-8 flex items-center justify-between">
+                        <div className="mb-6 flex items-center justify-between">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Bio-Rhythm Feedback</h3>
-                                <p className="text-xs text-slate-500 font-medium">Daily Energy Resonance & Workout Load</p>
+                                <h3 className="text-sm font-black tracking-widest text-zinc-900 dark:text-white uppercase">Bio-Rhythm Peak</h3>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Energy Resonance & Gym Load</p>
                             </div>
-                            <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
-                                <TrendingUp className="h-5 w-5 text-yellow-500" />
+                            <div className="h-8 w-8 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                                <TrendingUp className="h-4 w-4" />
                             </div>
                         </div>
                         <div className="h-75 w-full">
@@ -225,32 +226,31 @@ const Dashboard = () => {
                     </motion.div>
 
                     {/* Social Proof & Connections */}
-                    {data?.keys?.social && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.7 }}
-                            className="relative rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 lg:col-span-2 overflow-hidden"
-                        >
-                            {data?.keys && !data.keys.social && (
-                                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md">
-                                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 flex flex-col items-center justify-center border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-sm text-center">
-                                        <Lock className="h-8 w-8 text-indigo-500 mb-3" />
-                                        <h4 className="text-lg font-black tracking-tighter text-slate-900 dark:text-white uppercase mb-2">Social Locked</h4>
-                                        <p className="text-[10px] text-slate-500 font-medium mb-4 uppercase tracking-widest">LinkedIn / Twitter Integration Required</p>
-                                        <Button onClick={() => window.location.href = '/settings'} className="rounded-xl w-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"><Settings2 size={14} /> Integrate Now</Button>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="mb-8 flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Authority Building</h3>
-                                    <p className="text-xs text-slate-500 font-medium">LinkedIn/Twitter Outreach & Content Sync</p>
-                                </div>
-                                <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
-                                    <Users className="h-5 w-5 text-emerald-500" />
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7 }}
+                        className="relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 shadow-sm overflow-hidden lg:col-span-2"
+                    >
+                        {!data?.keys?.social && (
+                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 dark:bg-zinc-950/60 backdrop-blur-sm">
+                                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 flex flex-col items-center justify-center border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm max-w-sm text-center mx-4">
+                                    <Lock className="h-6 w-6 text-emerald-500 mb-2" />
+                                    <h4 className="text-sm font-black tracking-widest text-zinc-900 dark:text-white uppercase mb-2">Authority Locked</h4>
+                                    <p className="text-[10px] text-zinc-500 font-medium mb-4 uppercase tracking-widest">LinkedIn / Twitter Integration Required</p>
+                                    <Button onClick={() => window.location.href = '/settings'} className="rounded-xl w-full text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-2"><Settings2 size={12} /> Sync Socials</Button>
                                 </div>
                             </div>
+                        )}
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-black tracking-widest text-zinc-900 dark:text-white uppercase">Authority Engine</h3>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Social Velocity & Content Resonance</p>
+                            </div>
+                            <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                <Users className="h-4 w-4" />
+                            </div>
+                        </div>
                             <div className="h-75 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={data?.networkingData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -263,8 +263,7 @@ const Dashboard = () => {
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
-                        </motion.div>
-                    )}
+                    </motion.div>
 
                 </div>
             </motion.div>

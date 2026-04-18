@@ -57,7 +57,7 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
 
     return (
         <header className="fixed top-4 left-4 right-4 z-40 lg:hidden">
-            <div className="flex h-[64px] items-center px-2 py-2 shadow-2xl justify-between rounded-2xl bg-background border border-white/5">
+            <div className="flex h-[64px] items-center px-2 py-2 shadow justify-between rounded-2xl bg-background/20 backdrop-blur-sm border border-white/5">
                 {/* Left: Menu */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
@@ -71,20 +71,20 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
                     <span className="font-extrabold text-forground text-[15px] leading-tight font-sans tracking-tight">Habit AI</span>
                     <div className="flex items-center gap-1.5 mt-[2px]">
                         <span className="w-[5px] h-[5px] rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] opacity-90" />
-                        <span className="text-[10px] text-slate-400 font-medium">Session active</span>
+                        <span className="text-xs text-slate-400 font-medium">Session active</span>
                     </div>
                 </Link>
 
                 {/* Right: Badges and User */}
                 <div className="flex items-center gap-2 pr-1">
                     {isPro && (
-                        <div className="flex flex-col items-center px-3 py-[3px] rounded-xl bg-indigo-500/15 border border-indigo-500/20 max-w-[80px]">
-                            <span className="text-[10px] font-black tracking-widest uppercase text-indigo-300 leading-tight">PRO</span>
-                            {periodEnd && (
+                        <div className="flex flex-col items-center px-3 py-[3px] rounded-xl bg-indigo-500/10 border border-indigo-500/50 max-w-[80px]">
+                            <span className="text-xs font-black tracking-widest uppercase text-indigo-500 leading-tight">PRO</span>
+                            {/* {periodEnd && (
                                 <span className="text-[9px] text-[#5C5C70] font-medium leading-none mt-[2px]">
                                     {Math.max(0, Math.ceil((new Date(periodEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))}d left
                                 </span>
-                            )}
+                            )} */}
                         </div>
                     )}
 
@@ -104,13 +104,13 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
                                 <div className="flex flex-col space-y-1">
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name}</p>
-                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                        <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                             Lvl {level} ({xp} XP)
                                         </span>
                                     </div>
                                     <p className="text-xs leading-none text-slate-500 dark:text-slate-400 mt-1">{session?.user?.email}</p>
                                     {session?.user?.phone && (
-                                        <p className="text-[10px] leading-none text-indigo-500 font-medium pt-0.5">{session.user.phone}</p>
+                                        <p className="text-xs leading-none text-indigo-500 font-medium pt-0.5">{session.user.phone}</p>
                                     )}
                                 </div>
                             </DropdownMenuLabel>
