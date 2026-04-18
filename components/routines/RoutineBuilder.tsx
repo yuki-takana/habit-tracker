@@ -19,14 +19,14 @@ interface RoutineBuilderProps {
 
 // ─── Category config ────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { key: "fitness",  label: "Fitness",  icon: Dumbbell,  color: "#22c55e" },
-  { key: "work",     label: "Work",     icon: Briefcase, color: "#3b82f6" },
-  { key: "health",   label: "Health",   icon: Heart,     color: "#ef4444" },
-  { key: "coding",   label: "Coding",   icon: Code,      color: "#8b5cf6" },
-  { key: "learning", label: "Learning", icon: BookOpen,  color: "#f59e0b" },
-  { key: "personal", label: "Personal", icon: Star,      color: "#ec4899" },
-  { key: "break",    label: "Break",    icon: Coffee,    color: "#f97316" },
-  { key: "sleep",    label: "Sleep",    icon: Moon,      color: "#64748b" },
+  { key: "fitness", label: "Fitness", icon: Dumbbell, color: "#22c55e" },
+  { key: "work", label: "Work", icon: Briefcase, color: "#3b82f6" },
+  { key: "health", label: "Health", icon: Heart, color: "#ef4444" },
+  { key: "coding", label: "Coding", icon: Code, color: "#8b5cf6" },
+  { key: "learning", label: "Learning", icon: BookOpen, color: "#f59e0b" },
+  { key: "personal", label: "Personal", icon: Star, color: "#ec4899" },
+  { key: "break", label: "Break", icon: Coffee, color: "#f97316" },
+  { key: "sleep", label: "Sleep", icon: Moon, color: "#64748b" },
 ];
 
 const PALETTE_COLORS = [
@@ -66,11 +66,11 @@ interface TaskFormProps {
 }
 
 function TaskForm({ initial, onSave, onCancel }: TaskFormProps) {
-  const [title, setTitle]       = useState(initial?.title || "");
+  const [title, setTitle] = useState(initial?.title || "");
   const [category, setCategory] = useState(initial?.category || "work");
-  const [startTime, setStart]   = useState(initial?.startTime || "08:00");
+  const [startTime, setStart] = useState(initial?.startTime || "08:00");
   const [duration, setDuration] = useState(initial?.duration || 60);
-  const [notes, setNotes]       = useState(initial?.notes || "");
+  const [notes, setNotes] = useState(initial?.notes || "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -110,11 +110,10 @@ function TaskForm({ initial, onSave, onCancel }: TaskFormProps) {
                   key={cat.key}
                   type="button"
                   onClick={() => setCategory(cat.key)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
-                    active
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${active
                       ? "text-white shadow-sm"
                       : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-                  }`}
+                    }`}
                   style={active ? { backgroundColor: cat.color } : {}}
                 >
                   <Icon className="w-3 h-3" />
@@ -194,18 +193,18 @@ function TaskForm({ initial, onSave, onCancel }: TaskFormProps) {
 
 // ─── Main Builder ────────────────────────────────────────────────────────────
 export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuilderProps) {
-  const [name, setName]               = useState(routine.name);
-  const [description, setDesc]        = useState(routine.description || "");
-  const [wakeUpTime, setWakeUp]       = useState(routine.wakeUpTime);
-  const [color, setColor]             = useState(routine.color || "#6366f1");
-  const [emoji, setEmoji]             = useState(routine.emoji || "📋");
-  const [tasks, setTasks]             = useState<RoutineTask[]>(
+  const [name, setName] = useState(routine.name);
+  const [description, setDesc] = useState(routine.description || "");
+  const [wakeUpTime, setWakeUp] = useState(routine.wakeUpTime);
+  const [color, setColor] = useState(routine.color || "#6366f1");
+  const [emoji, setEmoji] = useState(routine.emoji || "📋");
+  const [tasks, setTasks] = useState<RoutineTask[]>(
     [...routine.tasks].sort((a, b) => a.order - b.order)
   );
-  const [showAddForm, setShowAdd]     = useState(false);
+  const [showAddForm, setShowAdd] = useState(false);
   const [editingTask, setEditingTask] = useState<RoutineTask | null>(null);
-  const [saving, setSaving]           = useState(false);
-  const [showEmojiPicker, setEmojiP]  = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showEmojiPicker, setEmojiP] = useState(false);
 
   // ── Save metadata ──────────────────────────────────────────────────────────
   async function handleSaveMetadata() {
@@ -377,11 +376,12 @@ export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuil
                 placeholder="Routine name"
                 className="w-full bg-transparent text-xl font-black text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 border-none focus:outline-none focus:ring-0 mb-1"
               />
-              <input
+              <textarea
                 value={description}
                 onChange={e => setDesc(e.target.value)}
                 placeholder="Short description (optional)"
-                className="w-full bg-transparent text-sm text-zinc-500 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 border-none focus:outline-none focus:ring-0"
+                rows={2}
+                className="w-full bg-transparent text-sm text-zinc-500 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 border-none focus:outline-none focus:ring-0 resize-none break-words"
               />
             </div>
           </div>
@@ -506,13 +506,13 @@ export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuil
                           </div>
 
                           {/* Task card */}
-                          <div className="flex-1 pb-3">
+                          <div className="flex-1">
                             <div className="flex items-start justify-between gap-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 px-3 py-2.5 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 transition-colors">
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">
+                              <div className="min-w-0 ">
+                                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
                                   {task.title}
                                 </p>
-                                <div className="flex items-center gap-2 mt-0.5">
+                                <div className="flex items-center gap-2 mt-0.5 ">
                                   <span className="text-[10px] font-bold text-zinc-400">
                                     {task.startTime} → {endTime(task.startTime, task.duration)}
                                   </span>
@@ -520,7 +520,7 @@ export default function RoutineBuilder({ routine, onBack, onSaved }: RoutineBuil
                                   <span className="text-[10px] font-bold text-zinc-400">{formatDuration(task.duration)}</span>
                                 </div>
                                 {task.notes && (
-                                  <p className="text-[11px] text-zinc-400 mt-0.5 italic truncate">{task.notes}</p>
+                                  <p className="text-[11px] text-zinc-400 mt-0.5 italic word-break">{task.notes}</p>
                                 )}
                               </div>
                               {/* Actions */}

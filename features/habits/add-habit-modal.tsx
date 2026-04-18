@@ -24,6 +24,9 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
     const [category, setCategory] = useState("Growth");
     const [frequency, setFrequency] = useState("daily");
     const [autoCreateTodos, setAutoCreateTodos] = useState(true);
+    const [targetType, setTargetType] = useState("binary");
+    const [targetValue, setTargetValue] = useState("");
+    const [targetUnit, setTargetUnit] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent | null, force = false) => {
@@ -41,6 +44,9 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
                     category,
                     frequency,
                     autoCreateTodos,
+                    targetType,
+                    targetValue: targetValue ? parseFloat(targetValue) : null,
+                    targetUnit,
                     force
                 }),
             });
@@ -51,6 +57,9 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
                 setDescription("");
                 setCategory("Growth");
                 setFrequency("daily");
+                setTargetType("binary");
+                setTargetValue("");
+                setTargetUnit("");
                 onClose();
                 router.refresh();
             } else if (res.status === 409) {
@@ -168,6 +177,61 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                </div>
+
+                                {/* NEW: TARGET TYPE */}
+                                <div className="space-y-4 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Measurement Target</label>
+                                        <Select value={targetType} onValueChange={setTargetType}>
+                                            <SelectTrigger className="h-12 rounded-2xl border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 dark:text-white">
+                                                <SelectValue placeholder="Target Type" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-2xl border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                                                <SelectItem value="binary">Binary (Done / Not Done)</SelectItem>
+                                                <SelectItem value="count">Count (e.g. 3 applications)</SelectItem>
+                                                <SelectItem value="duration">Duration (e.g. 45 minutes)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {targetType === "count" && (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase text-slate-400 block">Target Value</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="e.g. 3"
+                                                    value={targetValue}
+                                                    onChange={(e) => setTargetValue(e.target.value)}
+                                                    className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-xl p-3 outline-none text-sm focus:border-indigo-500 transition-all dark:text-white"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase text-slate-400 block">Unit</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. applications"
+                                                    value={targetUnit}
+                                                    onChange={(e) => setTargetUnit(e.target.value)}
+                                                    className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-xl p-3 outline-none text-sm focus:border-indigo-500 transition-all dark:text-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {targetType === "duration" && (
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase text-slate-400 block">Minutes per day</label>
+                                            <input
+                                                type="number"
+                                                placeholder="e.g. 45"
+                                                value={targetValue}
+                                                onChange={(e) => { setTargetValue(e.target.value); setTargetUnit("minutes"); }}
+                                                className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-xl p-3 outline-none text-sm focus:border-indigo-500 transition-all dark:text-white"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 mb-6">

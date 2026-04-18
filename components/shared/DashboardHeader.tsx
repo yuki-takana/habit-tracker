@@ -9,12 +9,25 @@ import clsx from 'clsx'
 import { getSubscriptionConfig } from '@/app/action'
 import { getDashboardSummary } from '@/lib/utils/api'
 import { navItems } from './dashboard-sidebar'
+import { useSession, signOut } from 'next-auth/react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useXp } from '@/components/providers/xp-provider'
+import { LogOut, Settings, Sun, Moon } from 'lucide-react'
+import { useTheme } from "next-themes"
 
 export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, periodEnd?: Date | null }) {
     const [isOpen, setIsOpen] = useState(false)
-    const pathname = usePathname()
     const [config, setConfig] = React.useState<any>(null)
     const [dashboardData, setDashboardData] = useState<any>(null)
+    const pathname = usePathname()
+    const [userMenuOpen, setUserMenuOpen] = useState(false)
+    const { data: session } = useSession()
+    const { xp, level } = useXp()
+    const { theme, setTheme } = useTheme()
+
+    const userInitials = session?.user?.name
+        ? session.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase()
+        : session?.user?.email?.[0].toUpperCase() || "U"
 
 
     // Fetch config for feature gating
@@ -43,35 +56,108 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
     }, [pathname])
 
     return (
-        <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
-            <div className="flex h-16 items-center px-4 justify-between md:hidden">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                    >
-                        {isOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
-                    <Link href="/dashboard" className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg">
-                            H
-                        </div>
-                        <span className="font-bold text-slate-900 dark:text-white lg:hidden">Habit AI</span>
-                    </Link>
-                </div>
+        <header className="fixed top-4 left-4 right-4 z-40 lg:hidden">
+            <div className="flex h-[64px] items-center px-2 py-2 shadow-2xl justify-between rounded-2xl bg-background border border-white/5">
+                {/* Left: Menu */}
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="h-10 w-11 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors rounded-xl flex items-center justify-center text-foreground ml-1 border border-indigo-500/50"
+                >
+                    {isOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
 
-                <div className="flex items-center gap-4">
+                {/* Center: Title */}
+                <Link href="/" className="flex flex-col items-center justify-center hover:opacity-80 transition-opacity">
+                    <span className="font-extrabold text-forground text-[15px] leading-tight font-sans tracking-tight">Habit AI</span>
+                    <div className="flex items-center gap-1.5 mt-[2px]">
+                        <span className="w-[5px] h-[5px] rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] opacity-90" />
+                        <span className="text-[10px] text-slate-400 font-medium">Session active</span>
+                    </div>
+                </Link>
+
+                {/* Right: Badges and User */}
+                <div className="flex items-center gap-2 pr-1">
                     {isPro && (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold tracking-wide uppercase">
-                            <Shield size={14} />
-                            <span>Pro Max</span>
+                        <div className="flex flex-col items-center px-3 py-[3px] rounded-xl bg-indigo-500/15 border border-indigo-500/20 max-w-[80px]">
+                            <span className="text-[10px] font-black tracking-widest uppercase text-indigo-300 leading-tight">PRO</span>
                             {periodEnd && (
-                                <span className="ml-1 opacity-70 normal-case font-medium text-[10px]">
-                                    ({Math.max(0, Math.ceil((new Date(periodEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))}d left)
+                                <span className="text-[9px] text-[#5C5C70] font-medium leading-none mt-[2px]">
+                                    {Math.max(0, Math.ceil((new Date(periodEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))}d left
                                 </span>
                             )}
                         </div>
                     )}
+
+                    {/* User Profile */}
+                    <DropdownMenu open={userMenuOpen} onOpenChange={setUserMenuOpen}>
+                        <DropdownMenuTrigger asChild>
+                            <div className="h-10 w-10 shrink-0 rounded-full bg-[#8B7CFF] flex items-center justify-center cursor-pointer hover:bg-[#7261EB] transition-all text-white font-black text-sm shadow-lg overflow-hidden">
+                                {session?.user?.image ? (
+                                    <img src={session.user.image} alt="Profile" className="h-full w-full object-cover" />
+                                ) : (
+                                    userInitials
+                                )}
+                            </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 mt-2 ml-4">
+                            <DropdownMenuLabel>
+                                <div className="flex flex-col space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name}</p>
+                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                            Lvl {level} ({xp} XP)
+                                        </span>
+                                    </div>
+                                    <p className="text-xs leading-none text-slate-500 dark:text-slate-400 mt-1">{session?.user?.email}</p>
+                                    {session?.user?.phone && (
+                                        <p className="text-[10px] leading-none text-indigo-500 font-medium pt-0.5">{session.user.phone}</p>
+                                    )}
+                                </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setUserMenuOpen(false)}>
+                                <Link
+                                    href="/dashboard"
+                                    className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/dashboard' ? 'text-indigo-500' : ''}`}
+                                >
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    <span>Dashboard</span>
+                                </Link>
+                            </DropdownMenuItem>
+                            {session?.user?.email === "abhisheaurya@gmail.com" && (
+                                <DropdownMenuItem onClick={() => setUserMenuOpen(false)}>
+                                    <Link
+                                        href="/admin"
+                                        className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/admin' ? 'text-indigo-500' : ''}`}
+                                    >
+                                        <Shield className="mr-2 h-4 w-4" />
+                                        <span>Admin Panel</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => setUserMenuOpen(false)}>
+                                <Link
+                                    href="/settings"
+                                    className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/settings' ? 'text-indigo-500' : ''}`}
+                                >
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    <span>Profile Settings</span>
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={(e) => {
+                                e.preventDefault();
+                                setTheme(theme === "dark" ? "light" : "dark");
+                            }} className="cursor-pointer">
+                                {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                                <span>Toggle Switch Theme</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })} className="text-red-600 dark:text-red-400 cursor-pointer">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Log out</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
@@ -81,7 +167,7 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
                     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
                     <div className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col pt-6 pb-20 overflow-y-auto min-h-screen">
                         <div className="px-6 mb-8 flex items-center justify-between ">
-                            <Link href="/dashboard" className="flex items-center gap-3">
+                            <Link href="/" className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                                     H
                                 </div>

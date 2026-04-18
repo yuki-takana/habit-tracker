@@ -269,8 +269,8 @@ function TimelineBlock({ item, isLast, index }: TimelineBlockProps) {
                 {/* Task name */}
                 <h4
                   className={`font-semibold text-sm leading-snug ${item.completed || item.status === "completed"
-                      ? "line-through text-zinc-400 dark:text-zinc-600"
-                      : "text-zinc-800 dark:text-zinc-100"
+                    ? "line-through text-zinc-400 dark:text-zinc-600"
+                    : "text-zinc-800 dark:text-zinc-100"
                     }`}
                 >
                   {item.task}
@@ -659,10 +659,10 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
                 </div>
                 <span
                   className={`text-xs font-black px-3 py-1.5 rounded-full ${progressPct >= 80
-                      ? "bg-emerald-500/15 text-emerald-500"
-                      : progressPct >= 50
-                        ? "bg-amber-500/15 text-amber-500"
-                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                    ? "bg-emerald-500/15 text-emerald-500"
+                    : progressPct >= 50
+                      ? "bg-amber-500/15 text-amber-500"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
                     }`}
                 >
                   {progressPct}% complete
@@ -676,10 +676,10 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
                   animate={{ width: `${progressPct}%` }}
                   transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
                   className={`h-full rounded-full ${progressPct >= 80
-                      ? "bg-emerald-500"
-                      : progressPct >= 50
-                        ? "bg-amber-500"
-                        : "bg-indigo-500"
+                    ? "bg-emerald-500"
+                    : progressPct >= 50
+                      ? "bg-amber-500"
+                      : "bg-indigo-500"
                     }`}
                 />
               </div>
@@ -719,7 +719,7 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
           )}
 
           {/* Controls Row */}
-          <div className="flex items-center gap-3 mt-4">
+          <div className="flex items-center gap-3 mt-4 ">
             <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 flex-1 shadow-sm">
               <Sunrise className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 shrink-0">
@@ -733,23 +733,25 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
               />
             </div>
 
-            <Button
-              onClick={generateDailyGoals}
-              disabled={generating}
-              className="rounded-xl h-10 px-5 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95"
-            >
-              {generating ? (
-                <span className="flex items-center gap-2">
-                  <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Planning...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Zap className="w-3.5 h-3.5 fill-white" />
-                  {todayGoals ? "Refresh" : "Generate"}
-                </span>
-              )}
-            </Button>
+            {!todayGoals && (
+              <Button
+                onClick={generateDailyGoals}
+                disabled={generating}
+                className="rounded-xl h-9 px-5 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 "
+              >
+                {generating ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Planning...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 fill-white" />
+                    Generate
+                  </span>
+                )}
+              </Button>
+            )}
 
             {todayGoals && (
               <Button
@@ -770,8 +772,8 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
             <button
               onClick={() => setShowRoutinePanel(true)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all flex-1 min-w-0 ${activeRoutine
-                  ? "bg-indigo-500/8 border-indigo-500/25 text-indigo-500 hover:bg-indigo-500/15"
-                  : "bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
+                ? "bg-indigo-500/8 border-indigo-500/25 text-indigo-500 hover:bg-indigo-500/15"
+                : "bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                 }`}
             >
               <LayoutList className="w-3.5 h-3.5 shrink-0" />
@@ -785,8 +787,8 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
             <button
               onClick={() => setShowChallengeModal(true)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all flex-1 min-w-0 ${activeChallenges.length > 0
-                  ? "bg-amber-500/8 border-amber-500/25 text-amber-600 dark:text-amber-400 hover:bg-amber-500/15"
-                  : "bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
+                ? "bg-amber-500/8 border-amber-500/25 text-amber-600 dark:text-amber-400 hover:bg-amber-500/15"
+                : "bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                 }`}
             >
               <Target className="w-3.5 h-3.5 shrink-0" />

@@ -241,7 +241,7 @@ export default function RoutineManager() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-100">My Routines</h1>
-              <p className="text-sm text-zinc-500 mt-1">
+              <p className="text-sm text-zinc-500 mt-1 wrap-break-word">
                 Daily schedule templates. Activate one to guide your AI daily planner.
               </p>
             </div>

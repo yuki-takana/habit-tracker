@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { LogIn, LogOut, User as UserIcon, Settings, Phone, LayoutDashboard, Shield, Sun, Moon } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
+import { useTheme } from 'next-themes'
 import { AuthModal } from '../auth/auth-modal'
 import { useXp } from '../providers/xp-provider'
 import {
@@ -52,9 +53,13 @@ const Nav = () => {
   const isUsername = pathname.split("/").length === 2 && !KNOWN_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) && !pathname.startsWith("/api");
   if (isUsername) return null;
 
+  const DASHBOARD_ROUTES = ["/dashboard", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/coding", "/journey", "/workouts", "/tasks", "/blueprint", "/billing"];
+  const isDashboardRoute = DASHBOARD_ROUTES.some(r => pathname === r || pathname.startsWith(r + "/"));
+  const { theme, setTheme } = useTheme();
+
     return (
         <>
-            <nav className="fixed top-0 z-50 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
+            <nav className={`fixed top-0 z-50 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md ${isDashboardRoute ? 'hidden lg:block' : ''}`}>
                 <div className="container mx-auto flex h-16 items-center justify-between px-6">
                     <Link href="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-white">
                         UFL<span className="text-indigo-500">.</span>
@@ -124,6 +129,14 @@ const Nav = () => {
                                             <span>Profile Settings</span>
                                         </Link>
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={(e) => {
+                                        e.preventDefault();
+                                        setTheme(theme === "dark" ? "light" : "dark");
+                                    }} className="cursor-pointer">
+                                        {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                                        <span>Toggle Switch Theme</span>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })} className="text-red-600 dark:text-red-400 cursor-pointer">
                                         <LogOut className="mr-2 h-4 w-4" />
                                         <span>Log out</span>
@@ -139,7 +152,6 @@ const Nav = () => {
                                 <span>Login</span>
                             </button>
                         )}
-                        <ThemeToggle />
                     </div>
                 </div>
             </nav>

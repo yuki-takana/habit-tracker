@@ -122,7 +122,7 @@ export default function RoutineCard({ routine, onEdit, onDelete, onActivate, ind
                 )}
               </div>
               {routine.description && (
-                <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5 truncate">
+                <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5 word-break">
                   {routine.description}
                 </p>
               )}

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { name, description, category, frequency, autoCreateTodos, force } = await req.json();
+        const { name, description, category, frequency, autoCreateTodos, force, targetType, targetValue, targetUnit } = await req.json();
 
         if (!name) {
             return NextResponse.json(
@@ -59,6 +59,9 @@ export async function POST(req: NextRequest) {
                 category,
                 frequency,
                 autoCreateTodos: !!autoCreateTodos,
+                targetType,
+                targetValue,
+                targetUnit,
                 userId: user.id,
             },
         });

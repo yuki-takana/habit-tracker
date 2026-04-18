@@ -47,31 +47,31 @@ model Session {
 }
 
 model User {
-  id                String        @id @default(auto()) @map("_id") @db.ObjectId
-  name              String?
-  email             String?       @unique
-  password          String?
-  phone             String? // Store in E.164 format (e.g., "+919876543210")
-  whatsappEnabled   Boolean       @default(false)
-  whatsappDeadlineEnabled Boolean @default(true)
-  wakeUpTime        String?       @default("06:30")
-  dailyGoalsEnabled Boolean       @default(true)
-  emailVerified     DateTime?
-  image             String?
-  wakatimeApiKey    String?
-  githubApiKey      String?
-  linkedinApiKey    String?
-  twitterApiKey     String?
-  accounts          Account[]
-  sessions          Session[]
+  id                      String        @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String?
+  email                   String?       @unique
+  password                String?
+  phone                   String? // Store in E.164 format (e.g., "+919876543210")
+  whatsappEnabled         Boolean       @default(false)
+  whatsappDeadlineEnabled Boolean       @default(true)
+  wakeUpTime              String?       @default("06:30")
+  dailyGoalsEnabled       Boolean       @default(true)
+  emailVerified           DateTime?
+  image                   String?
+  wakatimeApiKey          String?
+  githubApiKey            String?
+  linkedinApiKey          String?
+  twitterApiKey           String?
+  accounts                Account[]
+  sessions                Session[]
   // Add your app-specific fields here
-  habits            Habit[]
-  tasks             Task[]
-  todos             Todo[]
-  wakaTimeStats     WakaTime[]
-  workoutPlans      WorkoutPlan[]
-  chatMessages      ChatMessage[]
-  routines          Routine[]
+  habits                  Habit[]
+  tasks                   Task[]
+  todos                   Todo[]
+  wakaTimeStats           WakaTime[]
+  workoutPlans            WorkoutPlan[]
+  chatMessages            ChatMessage[]
+  routines                Routine[]
 
   height      Float?
   weight      Float?
@@ -107,10 +107,10 @@ model User {
   autoShieldEnabled      Boolean             @default(true)
   lastGraceActivation    DateTime?
 
-  agentUsageCount        Int                 @default(0)
-  streakRestoreCount     Int                 @default(0)
-  agentPurchases         AgentPurchase[]
-  agentRecords           AgentRecord[]
+  agentUsageCount    Int             @default(0)
+  streakRestoreCount Int             @default(0)
+  agentPurchases     AgentPurchase[]
+  agentRecords       AgentRecord[]
 
   roleLevel          Int       @default(0)
   roleTitle          String    @default("Beginner")
@@ -118,8 +118,10 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  progressTrees ProgressTree[]
-  userRoles     UserRole[]
+  progressTrees     ProgressTree[]
+  userRoles         UserRole[]
+  pushSubscriptions PushSubscription[]
+  notificationLogs  NotificationLog[]
 }
 
 model UserRole {
@@ -167,14 +169,27 @@ model Habit {
   streakCount       Int       @default(0)
   longestStreak     Int       @default(0)
   lastCompletedDate DateTime?
+
+  targetType     String? // "count" | "duration" | "binary"
+  targetValue    Float? // e.g., 3 (applications), 45 (minutes), 1 (yes/no)
+  targetUnit     String? // "applications" | "minutes" | "sessions" | "pages"
+  healthScore    Float     @default(100) // 0-100, computed field
+  healthStatus   String    @default("thriving") // "thriving" | "at-risk" | "neglected"
+  lastHealthCalc DateTime?
+  isArchived     Boolean   @default(false)
+  archivedAt     DateTime?
+  routineId      String?   @db.ObjectId // linked routine (optional)
 }
 
 model HabitLog {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  habitId   String   @db.ObjectId
-  date      DateTime
-  completed Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  habitId       String   @db.ObjectId
+  date          DateTime
+  completed     Boolean  @default(true)
+  actualValue   Float? // e.g., 2 out of 3 applications done
+  completionPct Float    @default(100) // 0-100%
+  note          String? // user can add context
+  createdAt     DateTime @default(now())
 
   habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
 }
@@ -195,30 +210,33 @@ model Task {
 }
 
 model Todo {
-  id               String        @id @default(auto()) @map("_id") @db.ObjectId
-  userId           String        @db.ObjectId
-  task             String
-  category         String?
-  startTime        DateTime?
-  plannedTime      Int? 
-  deadline         DateTime?
-  reminderTime     DateTime?
-  earnedXp         Int           @default(0)
-  extraTime        Int?
-  status           String        @default("upcoming")
-  startedAt        DateTime?
-  delayCount       Int           @default(0)
-  lastDelayedAt    DateTime?
-  whatsappNotified Boolean       @default(false)
-  whatsappDeadlineNotified Boolean @default(false)
-  completed        Boolean       @default(false)
-  completedAt      DateTime?
-  habitId          String?       @db.ObjectId
-  challengeId      String?       @db.ObjectId
-  isAIGenerated    Boolean       @default(false)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  sessions         TodoSession[]
+  id                       String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId                   String        @db.ObjectId
+  task                     String
+  category                 String?
+  startTime                DateTime?
+  plannedTime              Int?
+  deadline                 DateTime?
+  reminderTime             DateTime?
+  earnedXp                 Int           @default(0)
+  extraTime                Int?
+  status                   String        @default("upcoming")
+  startedAt                DateTime?
+  delayCount               Int           @default(0)
+  lastDelayedAt            DateTime?
+  whatsappNotified         Boolean       @default(false)
+  whatsappDeadlineNotified Boolean       @default(false)
+  completed                Boolean       @default(false)
+  completedAt              DateTime?
+  actualValue              Float? // for habit todos: how much was actually done
+  completionPct            Float? // 0-100, can be partial
+  partialXp                Int           @default(0) // XP awarded for partial completion
+  habitId                  String?       @db.ObjectId
+  challengeId              String?       @db.ObjectId
+  isAIGenerated            Boolean       @default(false)
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+  sessions                 TodoSession[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -509,6 +527,7 @@ model AgentMemory {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, key])
 }
 
@@ -893,11 +912,47 @@ model Challenge {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  streakCount    Int   @default(0)
-  longestStreak  Int   @default(0)
-  completionRate Float @default(0)
+  streakCount           Int     @default(0)
+  longestStreak         Int     @default(0)
+  completionRate        Float   @default(0)
+  category              String? // "career" | "health" | "finance" | "skill" | "personal"
+  targetMetric          String? // e.g., "₹20L+ CTC", "Run 5km", "Ship SaaS"
+  progressPct           Float   @default(0)
+  currentMilestoneIndex Int     @default(0)
+  aiPlanGenerated       Boolean @default(false)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones ChallengeMilestone[]
+}
+
+model ChallengeMilestone {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  challengeId   String    @db.ObjectId
+  order         Int
+  title         String
+  description   String?
+  weekStart     Int // e.g., week 1
+  weekEnd       Int // e.g., week 2
+  exitCondition String? // measurable: "Applied to 30 companies"
+  isCompleted   Boolean   @default(false)
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  challenge       Challenge                  @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  suggestedHabits MilestoneHabitSuggestion[]
+}
+
+model MilestoneHabitSuggestion {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  milestoneId String  @db.ObjectId
+  title       String
+  targetType  String // "count" | "duration" | "binary"
+  targetValue Float?
+  targetUnit  String?
+  accepted    Boolean @default(false)
+  habitId     String? @db.ObjectId // set when user accepts suggestion
+
+  milestone ChallengeMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
 }
 
 model ChatMessage {
@@ -922,12 +977,12 @@ model AgentPurchase {
 }
 
 model AgentRecord {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
   agentId     String
-  isPurchased Boolean  @default(false)
-  promptsUsed Int      @default(0)
-  promptLimit Int      @default(5)
+  isPurchased Boolean   @default(false)
+  promptsUsed Int       @default(0)
+  promptLimit Int       @default(5)
   purchasedAt DateTime?
   amountPaid  Int?
 
@@ -942,17 +997,22 @@ model AgentRecord {
 // by the Daily Goals AI architect as scheduling context.
 
 model Routine {
-  id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String        @db.ObjectId
-  name        String        // e.g., "Weekday Hustle", "Weekend Recovery"
-  description String?
-  isActive    Boolean       @default(false) // Only one per user should be true
-  wakeUpTime  String        @default("06:00") // "HH:MM" 24h format
-  color       String?       // Hex accent color, e.g., "#6366f1"
-  emoji       String?       // e.g., "💪", "📚", "🌅"
-  tasks       RoutineTask[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String        @db.ObjectId
+  name            String // e.g., "Weekday Hustle", "Weekend Recovery"
+  description     String?
+  isActive        Boolean       @default(false) // Only one per user should be true
+  wakeUpTime      String        @default("06:00") // "HH:MM" 24h format
+  color           String? // Hex accent color, e.g., "#6366f1"
+  emoji           String? // e.g., "💪", "📚", "🌅"
+  energyProfile   String        @default("balanced") // "high-focus" | "balanced" | "light"
+  activeDays      String[]      @default(["mon", "tue", "wed", "thu", "fri"])
+  isDefault       Boolean       @default(false) // runs on days with no other active routine
+  linkedChallenge String?       @db.ObjectId
+  linkedHabits    String[]      @db.ObjectId // habit IDs this routine generates todos for
+  tasks           RoutineTask[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -963,9 +1023,9 @@ model RoutineTask {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   routineId String   @db.ObjectId
   title     String
-  category  String?  // fitness | work | health | coding | learning | personal | break
-  startTime String   // "HH:MM" 24h format, e.g., "07:30"
-  duration  Int      // planned duration in minutes
+  category  String? // fitness | work | health | coding | learning | personal | break
+  startTime String // "HH:MM" 24h format, e.g., "07:30"
+  duration  Int // planned duration in minutes
   notes     String?
   order     Int      @default(0) // for display ordering
   createdAt DateTime @default(now())
@@ -974,4 +1034,29 @@ model RoutineTask {
   routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
 
   @@index([routineId])
+}
+
+model PushSubscription {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  endpoint  String   @unique
+  p256dh    String // encryption key
+  auth      String // auth secret
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationLog {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId  String   @db.ObjectId
+  type    String // "morning_brief" | "eod_checkin" | "streak_danger" | "todo_reminder"
+  channel String // "push" | "whatsapp" | "email"
+  sentAt  DateTime @default(now())
+  date    String // YYYY-MM-DD, for daily dedup
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, channel, date])
 }

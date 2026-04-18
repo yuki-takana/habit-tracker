@@ -113,6 +113,12 @@ ANALYSIS FRAMEWORK:
    - P2 (Medium): Skill development, networking, system improvement
    - P3 (Low): Optional optimization, exploration, buffer tasks
 
+5. ACTIVE ROUTINE INTEGRATION:
+   - If an 'activeRoutine' is present in progress data, YOU MUST align the daily schedule with it.
+   - Respect 'energyProfile' (high-focus: hard tasks early; balanced; light: maintenance only).
+   - Inject the routine's scheduled tasks if present.
+   - Carry over target measurements (targetType, targetValue, targetUnit) if generating tasks for habits.
+
 CRITICAL TIME CALCULATION RULES:
 
 YOU MUST CALCULATE EXACT REMINDER TIMES USING THIS ALGORITHM:
@@ -351,7 +357,8 @@ export async function fetchProgressData(userId: string, prisma: any) {
             activePlans,
             userProfile,
             todaySessions,
-            recentWorkouts
+            recentWorkouts,
+            activeRoutine
         ] = await Promise.all([
             // Active habits
             prisma.habit.findMany({
@@ -463,6 +470,12 @@ export async function fetchProgressData(userId: string, prisma: any) {
                 },
                 orderBy: { completedAt: 'desc' },
                 take: 7
+            }),
+            
+            // Active routine
+            prisma.routine.findFirst({
+                where: { userId, isActive: true },
+                include: { tasks: true }
             })
         ]);
 
@@ -478,6 +491,10 @@ export async function fetchProgressData(userId: string, prisma: any) {
                 name: h.name,
                 category: h.category,
                 frequency: h.frequency,
+                targetType: h.targetType,
+                targetValue: h.targetValue,
+                targetUnit: h.targetUnit,
+                healthScore: h.healthScore,
                 streakCount: h.streakCount,
                 longestStreak: h.longestStreak,
                 lastCompleted: h.lastCompletedDate,
@@ -527,7 +544,20 @@ export async function fetchProgressData(userId: string, prisma: any) {
                 roleTitle: userProfile?.roleTitle || 'Beginner',
                 fitnessGoal: userProfile?.fitnessGoal,
                 experience: userProfile?.experience
-            }
+            },
+            routine: activeRoutine ? {
+                id: activeRoutine.id,
+                name: activeRoutine.name,
+                wakeUpTime: activeRoutine.wakeUpTime,
+                energyProfile: activeRoutine.energyProfile,
+                activeDays: activeRoutine.activeDays,
+                tasks: activeRoutine.tasks.map((t:any) => ({
+                    title: t.title,
+                    category: t.category,
+                    startTime: t.startTime,
+                    duration: t.duration
+                }))
+            } : null
         };
     } catch (error) {
         console.error("[Daily Goal Architect] Error fetching progress data:", error);

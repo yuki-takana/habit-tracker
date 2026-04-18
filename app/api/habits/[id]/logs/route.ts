@@ -40,11 +40,17 @@ export async function POST(
             return NextResponse.json({ message: "Already logged for today" });
         }
 
+        const body = await req.json().catch(() => ({}));
+        const { actualValue, completionPct, note } = body;
+
         const log = await prisma.habitLog.create({
             data: {
                 habitId,
                 date: new Date(),
-                completed: true
+                completed: completionPct !== undefined ? completionPct >= 100 : true,
+                actualValue: actualValue ?? null,
+                completionPct: completionPct ?? 100,
+                note: note ?? null
             }
         });
 
