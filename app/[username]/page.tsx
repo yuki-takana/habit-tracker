@@ -125,7 +125,7 @@ export default async function UserPublicPage({ params }: Props) {
     const theme = THEMES.find(t => t.id === themeId) || THEMES.find(t => t.id === "forest") || THEMES[0];
 
     return (
-        <div className="min-h-screen bg-[#05050d] flex items-center justify-center p-4">
+        <div className="h-auto flex items-center justify-center p-4">
             <ProgressCard
                 stats={stats}
                 durKey="1w"
