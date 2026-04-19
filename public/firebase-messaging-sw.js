@@ -12,10 +12,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+    console.log("[SW] Full payload:", JSON.stringify(payload));
     const title = payload.data?.title ?? "UFL Habit Tracker";
     const body = payload.data?.body ?? "";
-    self.registration.showNotification(payload.notification.title, {
-        body: payload.notification.body,
+    self.registration.showNotification(title, {
+        body: body,
         icon: "https://habits.hellocoders.in/UFLLogo.png",
         badge: "https://habits.hellocoders.in/UFLLogo.png",
         vibrate: [200, 100, 200],
@@ -25,5 +26,5 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
-    event.waitUntil(clients.openWindow("/"));
+    event.waitUntil(clients.openWindow("/todos"));
 });
