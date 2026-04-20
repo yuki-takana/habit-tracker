@@ -76,6 +76,7 @@ export async function processTodoCompletion({
   await prisma.todo.update({
     where: { id: todoId },
     data: {
+      status: 'completed',
       completed: true,
       completedAt: new Date(),
       earnedXp,

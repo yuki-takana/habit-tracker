@@ -466,7 +466,7 @@ export function TodoItem({
           isCompleted || isFailed ? "opacity-60 scale-[0.988]" : "opacity-100 scale-100",
           cardBorderClass
         )}
-    >
+      >
         {/* Category accent bar */}
         <div
           className={cn(
@@ -500,31 +500,36 @@ export function TodoItem({
           <div className="flex items-center gap-3">
 
             {/* Checkbox */}
-            <button
-              onClick={toggleComplete}
-              disabled={loading}
-              className={cn(
-                "shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 flex items-center justify-center",
-                "transition-all duration-200 active:scale-90 disabled:opacity-50",
-                isCompleted
-                  ? "bg-emerald-500/20 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
-                  : `border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 hover:border-opacity-80 hover:${cat.dot.replace("bg-", "border-")}`
-              )}
-            >
-              {loading ? (
-                <Loader2 size={13} className="animate-spin text-indigo-400" />
-              ) : isCompleted ? (
-                <Check size={14} className="text-emerald-400" strokeWidth={3} />
-              ) : (
-                <div
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all duration-200",
-                    cat.dot,
-                    "opacity-40 group-hover:opacity-90"
-                  )}
-                />
-              )}
-            </button>
+            {isCompleted ? (
+              <></>
+            ) : (
+              <button
+                onClick={toggleComplete}
+                disabled={loading}
+                className={cn(
+                  "shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 flex items-center justify-center",
+                  "transition-all duration-200 active:scale-90 disabled:opacity-50",
+                  isCompleted
+                    ? "bg-emerald-500/20 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                    : `border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 hover:border-opacity-80 hover:${cat.dot.replace("bg-", "border-")}`
+                )}
+              >
+                {loading ? (
+                  <Loader2 size={13} className="animate-spin text-indigo-400" />
+                ) : isCompleted ? (
+                  <Check size={14} className="text-emerald-400" strokeWidth={3} />
+                ) : (
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all duration-200",
+                      cat.dot,
+                      "opacity-40 group-hover:opacity-90"
+                    )}
+                  />
+                )}
+              </button>
+            )
+            }
 
             {/* Task name + category */}
             <div className="flex-1 min-w-0">

@@ -5,6 +5,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendWhatsAppReminder, getWhatsAppProvider, sendMetaTextMessage, sendUserAnalytics } from '@/services/whatsapp';
 import bcrypt from 'bcryptjs';
+import { DEFAULT_SUBSCRIPTION_CONFIG } from '@/lib/constants';
+import { sendTodoStartReminderTemplate } from '@/services/whatsapp-templates';
+
 
 export async function saveUserPhone(phoneNumber: string) {
   const session = await getServerSession(authOptions);
@@ -146,7 +149,8 @@ export async function sendTestWhatsapp() {
   //   3,
   //   "85%"
   // );
-  await sendWhatsAppReminder(user.phone, "Abhishek", "Test Message from Habit Tracker!", provider);
+  await sendTodoStartReminderTemplate(user.phone, user.name || 'User', "Test Task from Habit Tracker", '30', "69e66065e1dddb847631d1d0");
+  // await sendWhatsAppReminder(user.phone, "Abhishek", "Test Message from Habit Tracker!", provider);
   // await sendMetaTextMessage(user.phone, "Your Phone number is synced with UFL! 🫡")
 
   return { success: true };
@@ -189,8 +193,6 @@ export async function toggleDailyTodo(enabled: boolean) {
     }
   });
 }
-
-import { DEFAULT_SUBSCRIPTION_CONFIG } from '@/lib/constants';
 
 export async function getSubscriptionConfig() {
   const keys = Object.keys(DEFAULT_SUBSCRIPTION_CONFIG);

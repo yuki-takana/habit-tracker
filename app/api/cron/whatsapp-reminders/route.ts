@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   try {
     const now = new Date();
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
-
+console.log(`⏰ [Cron] WhatsApp Reminder Check Started at: ${now.toISOString()} and ${fiveMinsFromNow.toISOString()}`);
     // 2. Find todos
     const todos = await prisma.todo.findMany({
       where: {

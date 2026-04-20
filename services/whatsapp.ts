@@ -111,7 +111,7 @@ export async function sendMetaTextMessage(
 export async function sendWhatsAppReminder(to: string, userName: string, taskName: string, provider: 'meta' | 'twilio' | 'local' = 'meta') {
 
   if (provider === 'meta') {
-    const todoId = "69ab2957db047c4a38894c8d"
+    const todoId = "69e66065e1dddb847631d1d0"
     try {
       // Meta requires a specific format: 91XXXXXXXXXX (no +)
       const formattedPhone = to.replace('+', '');
