@@ -172,6 +172,17 @@ export default function CodingPage() {
                     )}
                 </section>
 
+                <div >
+                    {loadingStats ? (
+                        <div className="flex justify-center py-20">
+                            <UflLoaderInline style="flip" />
+                        </div>
+                    ) : (
+                        <DevStatsSection stats={stats} />
+                    )}
+                </div>
+                <Separator className="my-10 bg-red-600" />
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* 2. Main Assets / Repositories Section */}
                     <div className="lg:col-span-3">
@@ -184,59 +195,94 @@ export default function CodingPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {repos.length > 0 ? (
                                     repos.map((repo) => (
-                                        <Card key={repo.id} className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
-                                            <CardHeader className="pb-4">
-                                                <div className="flex justify-between items-start mb-2 text-slate-400 group-hover:text-indigo-500 transition-colors">
-                                                    <FolderCode size={24} />
-                                                    <a href={repo.url} target="_blank" rel="noopener noreferrer">
-                                                        <ExternalLink size={18} className="hover:text-slate-900 dark:hover:text-white transition-colors" />
-                                                    </a>
+                                        <Card
+                                            key={repo.id}
+                                            className="
+    group border border-slate-200 dark:border-zinc-800 
+    bg-white dark:bg-zinc-900/60 
+    hover:border-indigo-500/40 
+    transition-all duration-200 
+    rounded-2xl p-4
+  "
+                                        >
+                                            {/* TOP */}
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <FolderCode size={18} className="text-slate-400 group-hover:text-indigo-500 transition" />
+
+                                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                                        {repo.name}
+                                                    </h3>
                                                 </div>
-                                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
-                                                    {repo.name}
-                                                </CardTitle>
-                                                <CardDescription className="line-clamp-2 mt-2 leading-relaxed">
+
+                                                <a href={repo.url} target="_blank">
+                                                    <ExternalLink
+                                                        size={16}
+                                                        className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
+                                                    />
+                                                </a>
+                                            </div>
+
+                                            {/* DESC */}
+                                            {repo.description && (
+                                                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 line-clamp-2">
                                                     {repo.description}
-                                                </CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="grid grid-cols-2 gap-4 text-xs mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
-                                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                                        <Star size={14} className="text-amber-500" />
-                                                        <span>{repo.stars} stars</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                                        <GitFork size={14} className="text-blue-500" />
-                                                        <span>{repo.forks} forks</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                                        <CircleDot size={14} className="text-red-500" />
-                                                        <span>{repo.openIssues} issues</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                                        <GitCommit size={14} className="text-emerald-500" />
-                                                        <div className="flex flex-col">
-                                                            <div className="flex items-center gap-1">
-                                                                <span>{repo.weeklyCommits} wkly</span>
-                                                                {repo.commitTrend === 'up' && <TrendingUp size={12} className="text-green-500" />}
-                                                                {repo.commitTrend === 'down' && <TrendingDown size={12} className="text-red-500" />}
-                                                                {repo.commitTrend === 'stable' && <Minus size={12} className="text-slate-400" />}
-                                                            </div>
-                                                            <span className="text-[9px] opacity-70">{repo.totalCommits} total</span>
-                                                        </div>
-                                                    </div>
+                                                </p>
+                                            )}
+
+                                            {/* STATS ROW (single line now) */}
+                                            <div className="flex items-center flex-wrap gap-3 mt-3 text-[11px] text-slate-500 dark:text-zinc-400">
+
+                                                <div className="flex items-center gap-1">
+                                                    <Star size={12} className="text-amber-500" />
+                                                    {repo.stars}
                                                 </div>
-                                                <div className="flex items-center gap-2 mt-4">
-                                                    <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider">
-                                                        {repo.language}
-                                                    </span>
-                                                    {repo.isPrivate && (
-                                                        <span className="px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">
-                                                            Private
-                                                        </span>
+
+                                                <div className="flex items-center gap-1">
+                                                    <GitFork size={12} className="text-indigo-500" />
+                                                    {repo.forks}
+                                                </div>
+
+                                                <div className="flex items-center gap-1">
+                                                    <CircleDot size={12} className="text-rose-500" />
+                                                    {repo.openIssues}
+                                                </div>
+
+                                                <div className="flex items-center gap-1">
+                                                    <GitCommit size={12} className="text-emerald-500" />
+                                                    {repo.weeklyCommits}
+
+                                                    {repo.commitTrend === 'up' && (
+                                                        <TrendingUp size={10} className="text-emerald-500" />
+                                                    )}
+                                                    {repo.commitTrend === 'down' && (
+                                                        <TrendingDown size={10} className="text-rose-500" />
                                                     )}
                                                 </div>
-                                            </CardContent>
+
+                                            </div>
+
+                                            {/* BOTTOM */}
+                                            <div className="flex items-center justify-between mt-3">
+
+                                                <span className="
+      px-2 py-0.5 rounded-md 
+      bg-slate-100 dark:bg-zinc-800 
+      text-slate-600 dark:text-zinc-300 
+      text-[10px] font-medium
+    ">
+                                                    {repo.language}
+                                                </span>
+
+                                                {repo.isPrivate && (
+                                                    <span className="
+        text-[10px] text-indigo-600 dark:text-indigo-400 font-medium
+      ">
+                                                        Private
+                                                    </span>
+                                                )}
+
+                                            </div>
                                         </Card>
                                     ))
                                 ) : (
@@ -275,16 +321,6 @@ export default function CodingPage() {
                 </div>
             </div>
 
-            <Separator className="my-10 bg-red-600" />
-            <div >
-                {loadingStats ? (
-                    <div className="flex justify-center py-20">
-                        <UflLoaderInline style="flip" />
-                    </div>
-                ) : (
-                    <DevStatsSection stats={stats} />
-                )}
-            </div>
         </div>
     );
 }

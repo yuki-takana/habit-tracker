@@ -61,8 +61,13 @@ function BarChart({ xp }: { xp: number[] }) {
   );
 }
 
-const DOT_SHADES = ['bg-zinc-800', 'bg-[#1a2e00]', 'bg-[#2d4a00]', 'bg-[#4a7a00]', 'bg-[#c9ff47]'];
-
+const DOT_SHADES = [
+  'bg-zinc-800 dark:bg-zinc-800',
+  'bg-lime-200 dark:bg-lime-900',
+  'bg-lime-400 dark:bg-lime-700',
+  'bg-lime-500 dark:bg-lime-500',
+  'bg-lime-600 dark:bg-lime-300',
+];
 function ConsistencyGrid({ data }: { data: number[] }) {
   return (
     <div className="grid gap-1 mt-3" style={{ gridTemplateColumns: 'repeat(15, 1fr)' }}>
@@ -131,7 +136,7 @@ function Card({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       className={`
-        bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden
+        bg-background/50 border border-zinc-600 rounded-2xl overflow-hidden
         hover:border-zinc-700 transition-colors
         ${noPad ? '' : 'p-5'}
         ${className}
@@ -151,7 +156,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 );
 
 const BigNum = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-4xl font-black text-white leading-none" style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+  <p className="text-4xl font-black text-forground leading-none" style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
     {children}
   </p>
 );
@@ -163,7 +168,7 @@ function EmptyState() {
       <div className="w-20 h-20 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-6">
         <Calendar className="text-zinc-600" size={36} />
       </div>
-      <h2 className="text-2xl font-black text-white mb-3" style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+      <h2 className="text-2xl font-black text-forground mb-3" style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
         Your journey starts now
       </h2>
       <p className="text-zinc-500 text-sm leading-relaxed max-w-sm mx-auto mb-8">
@@ -226,7 +231,7 @@ export default function JourneyPage() {
         : 'text-red-400';
 
   const perfBadgeBg =
-    bento.completionRate >= 80 ? 'bg-[#1a2e00] text-[#c9ff47]'
+    bento.completionRate >= 80 ? 'bg-lime-500/10 text-lime-700 dark:text-lime-400 border border-lime-500/20'
       : bento.completionRate >= 50 ? 'bg-amber-950/60 text-amber-400'
         : 'bg-red-950/60 text-red-400';
 
@@ -239,7 +244,7 @@ export default function JourneyPage() {
         className="mb-8"
       >
         <h1
-          className="text-4xl font-black tracking-tight text-white"
+          className="text-4xl font-black tracking-tight text-forground"
           style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
         >
           Your Journey
@@ -282,7 +287,7 @@ export default function JourneyPage() {
           <Label>Todos done</Label>
           <BigNum>{bento.completedTodos}</BigNum>
           <p className="text-xs text-zinc-500 mt-1">of {bento.totalTodos} total</p>
-          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-[#1a2e00] text-[#c9ff47] font-medium">
+          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400font-medium">
             +{bento.weeklyCompleted.reduce((a, b) => a + b, 0)} this week
           </span>
         </Card>
@@ -304,7 +309,7 @@ export default function JourneyPage() {
           <Label>Failed todos</Label>
           <BigNum>{bento.failedTodos}</BigNum>
           <p className="text-xs text-zinc-500 mt-1">missed deadline</p>
-          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-red-950/60 text-red-400 font-medium">
+          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 font-medium">
             {bento.weeklyFailed.reduce((a, b) => a + b, 0)} this week
           </span>
         </Card>
@@ -314,7 +319,7 @@ export default function JourneyPage() {
           <Label>Pending</Label>
           <BigNum>{pendingTodos}</BigNum>
           <p className="text-xs text-zinc-500 mt-1">still in progress</p>
-          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-amber-950/60 text-amber-400 font-medium">
+          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-medium">
             Not overdue
           </span>
         </Card>
@@ -352,24 +357,33 @@ export default function JourneyPage() {
                   className="flex items-start gap-3 py-3 group"
                 >
                   {/* icon */}
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${iconBg[ev.icon] ?? 'bg-zinc-800'}`}>
-                    {iconMap[ev.icon] ?? <CheckCircle size={16} className="text-zinc-400" />}
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 
+            ${iconBg[ev.icon] ?? 'bg-zinc-200 dark:bg-zinc-800'}`}>
+                    {iconMap[ev.icon] ?? (
+                      <CheckCircle size={16} className="text-zinc-500 dark:text-zinc-400" />
+                    )}
                   </div>
+
                   {/* text */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[9px] uppercase tracking-widest text-indigo-400">{ev.type}</span>
-                      <span className="text-[10px] text-zinc-600 shrink-0">
+                      <span className="text-[9px] uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                        {ev.type}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0">
                         {formatDistanceToNow(new Date(ev.date), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-sm font-medium text-zinc-200 truncate mt-0.5 group-hover:text-white transition-colors">
+
+                    <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate mt-0.5 
+              group-hover:text-black dark:group-hover:text-white transition-colors">
                       {ev.title}
                     </p>
                   </div>
                 </motion.div>
+
                 {i < recentEvents.length - 1 && (
-                  <div className="h-px bg-zinc-800 mx-0" />
+                  <div className="h-px bg-zinc-200 dark:bg-zinc-800 mx-0" />
                 )}
               </React.Fragment>
             ))}
@@ -379,13 +393,25 @@ export default function JourneyPage() {
         {/* ── Performance ring ── */}
         <Card colSpan={2}>
           <Label>Overall performance</Label>
+
           <div className="flex items-center gap-5 mt-3">
             <PerfRing pct={bento.completionRate} />
+
             <div>
-              <p className={`text-xl font-black ${perfColor}`} style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+              <p
+                className={`text-xl font-black 
+        ${bento.completionRate >= 80
+                    ? "text-lime-700 dark:text-lime-400"
+                    : bento.completionRate >= 50
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
+              >
                 {bento.overallPerformance}
               </p>
-              <p className="text-xs text-zinc-500 mt-1 leading-relaxed max-w-[180px]">
+
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed max-w-[180px]">
                 {bento.completionRate >= 80
                   ? "You're crushing it. Maintain the momentum!"
                   : bento.completionRate >= 50
@@ -401,11 +427,23 @@ export default function JourneyPage() {
           <Label>Quick stats</Label>
           <div className="grid grid-cols-3 gap-2 mt-2">
             {[
-              { label: 'Completed', value: bento.completedTodos, color: 'text-[#c9ff47]' },
-              { label: 'Failed', value: bento.failedTodos, color: 'text-red-400' },
-              { label: 'Pending', value: pendingTodos, color: 'text-amber-400' },
+              {
+                label: 'Completed',
+                value: bento.completedTodos,
+                color: 'text-lime-700 dark:text-lime-400',
+              },
+              {
+                label: 'Failed',
+                value: bento.failedTodos,
+                color: 'text-red-600 dark:text-red-400',
+              },
+              {
+                label: 'Pending',
+                value: pendingTodos,
+                color: 'text-amber-600 dark:text-amber-400',
+              }
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-zinc-950 rounded-xl p-3">
+              <div key={label} className="bg-background border rounded-xl p-3">
                 <p className="text-[9px] uppercase tracking-wider text-zinc-600">{label}</p>
                 <p className={`text-2xl font-black mt-1 ${color}`} style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
                   {value}

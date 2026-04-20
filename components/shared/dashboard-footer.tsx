@@ -44,7 +44,7 @@ const DashboardFooter = () => {
                     {/* CENTER: PROJECTS */}
                     <div>
                         <h4 className="text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-3">
-                            Projects
+                           More Projects By <span className="text-indigo-500 underline underline-offset-4">Abhishek</span>
                         </h4>
 
                         <ul className="space-y-2">
@@ -74,9 +74,9 @@ const DashboardFooter = () => {
 
                     {/* RIGHT: CREDIT */}
                     <div className="sm:col-span-2 lg:col-span-1">
-                        <h4 className="text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-3">
+                        {/* <h4 className="text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-3">
                             About
-                        </h4>
+                        </h4> */}
 
                         <p className="text-xs text-slate-500 dark:text-zinc-500 mb-3">
                             © 2026 UFL. All rights reserved.
