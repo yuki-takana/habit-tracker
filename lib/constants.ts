@@ -40,5 +40,5 @@ export const MAX_LEVEL = 50;
 export const XP_FOR_LEVEL_UP = (level: number) => Math.floor(100 * Math.pow(XP_MULTIPLIER_PER_LEVEL, level - 1));
 
 // === ROUTES ===
-export const KNOWN_ROUTES = ["/", "/coding", "/blueprint", "/dashboard", "/settings", "/signin", "/signup", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/leaderboard", "/privacy", "/terms"];
-export const DASHBOARD_ROUTES = ["/dashboard", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/coding", "/journey", "/workouts", "/tasks", "/blueprint", "/billing"];
+export const KNOWN_ROUTES = ["/", "/coding", "/blueprint", "/dashboard", "/settings", "/signin", "/signup", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/leaderboard", "/privacy", "/terms", "/journey", "/workouts", "/tasks", "/billing"];
+export const DASHBOARD_ROUTES = ["/dashboard", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/coding", "/journey", "/workouts", "/tasks", "/blueprint", "/billing"];

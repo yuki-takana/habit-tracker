@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import { Heatmap } from "@/components/github/Hitmap";
+import { DevStatsSection } from "@/components/shared/DevStatsSection";
 
 export default function CodingPage() {
     const [repos, setRepos] = useState<any[]>([]);
@@ -276,135 +277,12 @@ export default function CodingPage() {
 
             <Separator className="my-10 bg-red-600" />
             <div >
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-8">
-                    Discipline Architect: Dev Stats
-                </h1>
-
                 {loadingStats ? (
-                    <div className="flex justify-center py-20 text-indigo-500">
+                    <div className="flex justify-center py-20">
                         <UflLoaderInline style="flip" />
                     </div>
-                ) : stats ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* multi project card */}
-                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
-                            <CardHeader>
-                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
-                                    Projects — Time Spent (Minutes)
-                                </CardTitle>
-                                <CardDescription>
-                                    Today’s active projects
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="h-65">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={projectChartData}>
-                                        <XAxis hide />
-                                        <YAxis />
-                                        <Tooltip formatter={(v) => v !== undefined ? `${v} min` : ''} />
-
-                                        {stats?.projects?.map((p: any, i: number) => (
-                                            <Area
-                                                key={p.name}
-                                                type="monotone"
-                                                dataKey={p.name}
-                                                strokeWidth={2}
-                                                fillOpacity={0.15}
-                                            />
-                                        ))}
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-                        {/* multi language card */}
-                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
-                            <CardHeader>
-                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
-                                    Language — Time Spent (Minutes)
-                                </CardTitle>
-                                <CardDescription>
-                                    Today’s active Languages
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="h-65">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={languageChartData}>
-                                        <XAxis hide />
-                                        <YAxis />
-                                        <Tooltip formatter={(v) => v !== undefined ? `${v} min` : ''} />
-
-                                        {stats?.languages?.map((p: any, i: number) => (
-                                            <Area
-                                                key={p.name}
-                                                type="monotone"
-                                                dataKey={p.name}
-                                                strokeWidth={2}
-                                                fillOpacity={0.15}
-                                            />
-                                        ))}
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-                        {/* Projects Card */}
-                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
-                            <CardHeader>
-                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
-                                    Projects — Time Spent
-                                </CardTitle>
-                                <CardDescription>
-                                    Time invested across active projects
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="h-65">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={stats.projects}>
-                                        <XAxis dataKey="name" hide />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Bar
-                                            dataKey="total_seconds"
-                                            radius={[6, 6, 0, 0]}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-
-                        {/* Languages Card */}
-                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
-                            <CardHeader>
-                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
-                                    Languages Usage
-                                </CardTitle>
-                                <CardDescription>
-                                    Coding time by language
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="h-65">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={stats.languages}>
-                                        <XAxis dataKey="name" hide />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="total_seconds"
-                                            strokeWidth={2}
-                                            fillOpacity={0.15}
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-
-                    </div>
                 ) : (
-                    <p className="text-slate-500">No stats available</p>
+                    <DevStatsSection stats={stats} />
                 )}
             </div>
         </div>
