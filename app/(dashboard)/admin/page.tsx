@@ -35,8 +35,8 @@ const AdminDashboard = () => {
     const [newPassword, setNewPassword] = useState('')
     const [isSavingPassword, setIsSavingPassword] = useState(false)
 
-    const [notifTitle, setNotifTitle] = useState("")
-    const [notifBody, setNotifBody] = useState("")
+    const [notifTitle, setNotifTitle] = useState("Test Todo Reminder")
+    const [notifBody, setNotifBody] = useState("test: Your task 'Buy groceries' is starting now. Let's get it done!")
     const [notifUrl, setNotifUrl] = useState("/todos")
     const [isSendingNotif, setIsSendingNotif] = useState(false)
 
@@ -211,8 +211,9 @@ const AdminDashboard = () => {
             </div>
 
             {/* TAB NAVIGATION */}
-            <div className="flex bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl w-fit">
-                <button
+            <div className="flex flex-wrap gap-2 bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl w-fit">
+                <Button
+                    variant={"outline"}
                     onClick={() => setActiveTab('dashboard')}
                     className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'dashboard'
                         ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
@@ -221,8 +222,9 @@ const AdminDashboard = () => {
                 >
                     <Smartphone size={16} />
                     Overview & Gateway
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant={"outline"}
                     onClick={() => setActiveTab('gamification')}
                     className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'gamification'
                         ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
@@ -231,8 +233,9 @@ const AdminDashboard = () => {
                 >
                     <Gamepad2 size={16} />
                     Gamification
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant={"outline"}
                     onClick={() => setActiveTab('security')}
                     className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'security'
                         ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
@@ -241,8 +244,9 @@ const AdminDashboard = () => {
                 >
                     <Key size={16} />
                     User Security
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant={"outline"}
                     onClick={() => setActiveTab('notifications')}
                     className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'notifications'
                         ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
@@ -251,7 +255,7 @@ const AdminDashboard = () => {
                 >
                     <Users size={16} />
                     Notifications
-                </button>
+                </Button>
             </div>
 
             {activeTab === 'gamification' && (
