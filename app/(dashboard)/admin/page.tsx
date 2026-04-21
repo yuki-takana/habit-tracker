@@ -12,6 +12,8 @@ import { DEFAULT_SUBSCRIPTION_CONFIG } from '@/lib/constants'
 import { toast } from "sonner"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { LEVEL_THRESHOLDS as defaultLevelThresholds } from '@/lib/gamify'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 const AdminDashboard = () => {
     const { data: session, status } = useSession()
@@ -638,7 +640,7 @@ const AdminDashboard = () => {
 
                         <div className="space-y-4 max-w-lg">
 
-                            <input
+                            <Input
                                 type="text"
                                 placeholder="Notification Title"
                                 className="w-full h-10 px-3 rounded border dark:bg-zinc-900"
@@ -646,14 +648,14 @@ const AdminDashboard = () => {
                                 onChange={(e) => setNotifTitle(e.target.value)}
                             />
 
-                            <textarea
+                            <Textarea
                                 placeholder="Notification Message"
                                 className="w-full h-24 px-3 py-2 rounded border dark:bg-zinc-900"
                                 value={notifBody}
                                 onChange={(e) => setNotifBody(e.target.value)}
                             />
 
-                            <input
+                            <Input
                                 type="text"
                                 placeholder="Redirect URL (e.g. /todos)"
                                 className="w-full h-10 px-3 rounded border dark:bg-zinc-900"
