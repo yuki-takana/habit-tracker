@@ -50,13 +50,16 @@ export async function GET() {
             const timeToCheck = todo.deadline || todo.reminderTime;
 
             if (
-                todo.status === "failed" ||
+                todo.status === "failed" &&
                 (timeToCheck && new Date(timeToCheck) < now && !todo.completed)
             ) {
                 grouped.failed.push(todo);
                 continue;
             }
-
+            if (timeToCheck && new Date(timeToCheck) <= now) {
+                grouped.timeUp.push(todo);
+                continue;
+            }
             if (
                 todo.status === "in_progress" ||
                 (todo.startTime && new Date(todo.startTime) <= now)
@@ -64,10 +67,7 @@ export async function GET() {
                 grouped.inProgress.push(todo);
                 continue;
             }
-            if (timeToCheck && new Date(timeToCheck) <= now) {
-                grouped.timeUp.push(todo);
-                continue;
-            }
+
             grouped.today.push(todo);
         }
 
@@ -82,6 +82,7 @@ export async function GET() {
                 completed: grouped.completed.length,
                 today: grouped.today.length,
                 timeUps: grouped.timeUp.length,
+                inProgress: grouped.inProgress.length,
             },
         });
     } catch (error) {

@@ -185,7 +185,7 @@ export default function TodosPage() {
     const [stats, setStats] = useState<any>({ total: 0, completed: 0, today: 0, timeUps: 0, inProgress: 0, failed: 0 });
     const [pagination, setPagination] = useState<any>({ page: 1, limit: 10, totalPages: 1 });
     const [grouped, setGrouped] = useState<any>({ today: [], timeUp: [], completed: [],  inProgress: [], failed: [], });
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ timeUp: false, today: true, completed: false, inProgress: true, failed: false });
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ timeUp: true, today: true, completed: false, inProgress: true, failed: false });
 
     const { text: greetingText, icon: GreetingIcon } = getGreeting();
     const { day, date, month } = formatDate();
@@ -487,8 +487,8 @@ export default function TodosPage() {
                     </div>
                 ) : tasks.length > 0 ? (
                     <div>
-                        {renderSection("In Progress", <Clock size={18} />, grouped.inProgress, "inProgress")}
                         {renderSection("Time Up", <AlertCircle size={18} />, grouped.timeUp, "timeUp")}
+                        {renderSection("In Progress", <Clock size={18} />, grouped.inProgress, "inProgress")}
                         {renderSection("Today's Missions", <Clock size={18} />, grouped.today, "today")}
                         {renderSection("Completed", <CheckCircle2 size={18} />, grouped.completed, "completed")}
                         {renderSection("Failed", <XCircle size={18} />, grouped.failed, "failed")}
