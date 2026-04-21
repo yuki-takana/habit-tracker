@@ -4,7 +4,8 @@ import { AddTodoModal } from "@/features/todos/add-todo-modal";
 import {
     Plus, ClipboardList, Smartphone, Loader2,
     Clock, CheckCircle2, AlertCircle, Sunrise, Sun, Moon, 
-    Briefcase, Dumbbell, Heart, BookOpen, Star, Target, TrendingUp, ChevronDown, CheckCheck
+    Briefcase, Dumbbell, Heart, BookOpen, Star, Target, TrendingUp, ChevronDown, CheckCheck,
+    XCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiGoalAssistant } from "@/features/ai-goals/ai-goal-assistant";
@@ -180,11 +181,11 @@ export default function TodosPage() {
     const [loading, setLoading] = useState(true);
     const [isWhatsappEnabled, setIsWhatsappEnabled] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
-    const [visibleCounts, setVisibleCounts] = useState({ today: 10, timeUp: 10, completed: 10 });
-    const [stats, setStats] = useState<any>({ total: 0, completed: 0, today: 0, timeUps: 0 });
+    const [visibleCounts, setVisibleCounts] = useState({ today: 10, timeUp: 10, completed: 10, inProgress: 10, failed: 10 });
+    const [stats, setStats] = useState<any>({ total: 0, completed: 0, today: 0, timeUps: 0, inProgress: 0, failed: 0 });
     const [pagination, setPagination] = useState<any>({ page: 1, limit: 10, totalPages: 1 });
-    const [grouped, setGrouped] = useState<any>({ today: [], timeUp: [], completed: [] });
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ timeUp: true, today: true, completed: false });
+    const [grouped, setGrouped] = useState<any>({ today: [], timeUp: [], completed: [],  inProgress: [], failed: [], });
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ timeUp: false, today: true, completed: false, inProgress: true, failed: false });
 
     const { text: greetingText, icon: GreetingIcon } = getGreeting();
     const { day, date, month } = formatDate();
@@ -250,14 +251,14 @@ export default function TodosPage() {
         fetchGroupedTasks();
     }, []);
 
-    const handleLoadMore = (cat: "today" | "timeUp" | "completed") =>
+    const handleLoadMore = (cat: "today" | "timeUp" | "completed" | "inProgress" | "failed") =>
         setVisibleCounts((p) => ({ ...p, [cat]: p[cat] + 10 }));
 
     function renderSection(
         title: string,
         icon: React.ReactNode,
         list: any[],
-        cat: "today" | "timeUp" | "completed"
+        cat: "today" | "timeUp" | "completed" | "inProgress" | "failed"
     ) {
         if (!list.length) return null;
         const visible = list.slice(0, visibleCounts[cat]);
@@ -266,11 +267,15 @@ export default function TodosPage() {
             today: "text-indigo-500",
             timeUp: "text-red-500",
             completed: "text-emerald-500",
+            inProgress: "text-indigo-500",
+            failed: "text-rose-500",
         };
         const bgAccentMap = {
             today: "bg-indigo-500/10",
             timeUp: "bg-red-500/10",
             completed: "bg-emerald-500/10",
+            inProgress: "bg-indigo-500/10",
+            failed: "bg-rose-500/10",
         };
 
         const isOpen = openSections[cat];
@@ -405,11 +410,11 @@ export default function TodosPage() {
                         <div>
                             <div className="flex items-center gap-2 mb-0.5">
                                 <GreetingIcon className="w-5 h-5 text-amber-500" />
-                                <span className="text-zinc-500 dark:text-zinc-400 text-3xl sm:text-4xl font-medium">
+                                <span className="text-zinc-500 dark:text-zinc-400 text-5xl font-medium">
                                     {greetingText},
                                 </span>
                             </div>
-                            <h1 className="text-4xl sm:text-5xl font-black text-zinc-900 dark:text-white leading-tight">
+                            <h1 className="text-3xl font-black text-zinc-900 dark:text-white leading-tight">
                                 {userName}!
                             </h1>
                         </div>
@@ -482,9 +487,11 @@ export default function TodosPage() {
                     </div>
                 ) : tasks.length > 0 ? (
                     <div>
+                        {renderSection("In Progress", <Clock size={18} />, grouped.inProgress, "inProgress")}
                         {renderSection("Time Up", <AlertCircle size={18} />, grouped.timeUp, "timeUp")}
                         {renderSection("Today's Missions", <Clock size={18} />, grouped.today, "today")}
                         {renderSection("Completed", <CheckCircle2 size={18} />, grouped.completed, "completed")}
+                        {renderSection("Failed", <XCircle size={18} />, grouped.failed, "failed")}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-24 px-8 rounded-[2.5rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-900/30">

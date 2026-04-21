@@ -416,7 +416,7 @@ export function TodoItem({
   const cardBorderClass = isCompleted
     ? "border-emerald-500/20 bg-emerald-50/30 dark:bg-transparent"
     : isFailed
-      ? "border-rose-500/30 bg-rose-50 dark:bg-rose-950/10 grayscale opacity-75"
+      ? "border-rose-500/30 bg-rose-50 dark:bg-rose-950/10 "
       : isOverdue
         ? "border-red-500/30 bg-red-50 dark:bg-red-950/10"
         : isInProgress
@@ -500,7 +500,7 @@ export function TodoItem({
           <div className="flex items-center gap-3">
 
             {/* Checkbox */}
-            {isCompleted ? (
+            {isCompleted || isFailed ? (
               <></>
             ) : (
               <button

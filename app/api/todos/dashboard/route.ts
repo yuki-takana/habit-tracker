@@ -35,23 +35,40 @@ export async function GET() {
             today: [] as any[],
             timeUp: [] as any[],
             completed: [] as any[],
+            inProgress: [] as any[],
+            failed: [] as any[],
         };
 
         for (const todo of todos) {
-            if (todo.completed) {
+            const now = new Date();
+
+            if (todo.completed || todo.status === "completed") {
                 grouped.completed.push(todo);
                 continue;
             }
 
             const timeToCheck = todo.deadline || todo.reminderTime;
 
-            if (!timeToCheck) {
-                grouped.today.push(todo);
-            } else if (new Date(timeToCheck) <= now) {
-                grouped.timeUp.push(todo);
-            } else {
-                grouped.today.push(todo);
+            if (
+                todo.status === "failed" ||
+                (timeToCheck && new Date(timeToCheck) < now && !todo.completed)
+            ) {
+                grouped.failed.push(todo);
+                continue;
             }
+
+            if (
+                todo.status === "in_progress" ||
+                (todo.startTime && new Date(todo.startTime) <= now)
+            ) {
+                grouped.inProgress.push(todo);
+                continue;
+            }
+            if (timeToCheck && new Date(timeToCheck) <= now) {
+                grouped.timeUp.push(todo);
+                continue;
+            }
+            grouped.today.push(todo);
         }
 
         if (!isPro && grouped.today.length > 10) {
