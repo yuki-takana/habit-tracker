@@ -55,6 +55,7 @@ export const authOptions: NextAuthOptions = {
                     name: user.name,
                     image: user.image,
                     phone: user.phone ?? undefined,
+                    wakeupTime: user.wakeUpTime ?? undefined,
                     whatsappEnabled: user.whatsappEnabled,
                     wakatimeApiKey: user.wakatimeApiKey ?? undefined,
                     githubApiKey: user.githubApiKey ?? undefined,
@@ -73,6 +74,7 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id;
                 token.phone = user.phone;
+                token.wakeUpTime = user.wakeUpTime;
                 token.whatsappEnabled = user.whatsappEnabled;
                 token.wakatimeApiKey = user.wakatimeApiKey;
                 token.githubApiKey = user.githubApiKey;
@@ -80,12 +82,27 @@ export const authOptions: NextAuthOptions = {
             if (trigger === "update" && session) {
                 return { ...token, ...session.user }
             }
+            if (token.id) {
+                const dbUser = await prisma.user.findUnique({
+                    where: { id: token.id }
+                });
+
+                if (dbUser) {
+                    token.phone = dbUser.phone ?? undefined;
+                    token.wakeUpTime = dbUser.wakeUpTime ?? undefined;
+                    token.whatsappEnabled = dbUser.whatsappEnabled ?? undefined;
+                    token.wakatimeApiKey = dbUser.wakatimeApiKey ?? undefined;
+                    token.githubApiKey = dbUser.githubApiKey ?? undefined;
+                }
+            }
+
             return token;
         },
         session: async ({ session, token }) => {
             if (session.user && token) {
                 session.user.id = token.id;
                 session.user.phone = token.phone;
+                session.user.wakeUpTime = token.wakeUpTime;
                 session.user.whatsappEnabled = token.whatsappEnabled;
                 session.user.wakatimeApiKey = token.wakatimeApiKey;
                 session.user.githubApiKey = token.githubApiKey;

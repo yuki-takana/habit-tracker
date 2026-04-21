@@ -8,6 +8,7 @@ declare module "next-auth" {
         user: {
             id: string
             phone?: string
+            wakeUpTime?: string;
             whatsappEnabled?: boolean
             wakatimeApiKey?: string
             githubApiKey?: string
@@ -17,6 +18,7 @@ declare module "next-auth" {
     interface User {
         id: string
         phone?: string
+        wakeUpTime?: string;
         whatsappEnabled?: boolean
         wakatimeApiKey?: string
         githubApiKey?: string
@@ -28,6 +30,7 @@ declare module "next-auth/jwt" {
     interface JWT {
         id: string
         phone?: string
+        wakeUpTime?: string;
         whatsappEnabled?: boolean
         wakatimeApiKey?: string
         githubApiKey?: string

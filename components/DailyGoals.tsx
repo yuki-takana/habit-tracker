@@ -605,35 +605,34 @@ export default function DailyGoalsArchitect({ onGenerate }: DailyGoalsProps) {
           transition={{ duration: 0.4 }}
           className="mb-8"
         >
-          {/* Date line */}
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-zinc-800 dark:text-zinc-100">
-                {day} {date}
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
-            </div>
-
-            {/* Notification bell */}
-            <button className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-              <Bell className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="text-sm text-zinc-500 dark:text-zinc-500 font-medium mb-4">
-            {month}
-          </div>
 
           {/* Greeting */}
-          <div className="mb-5">
-            <div className="flex items-center gap-2 mb-0.5">
-              <GreetingIcon className="w-5 h-5 text-amber-500" />
-              <span className="text-zinc-500 dark:text-zinc-400 text-5xl font-medium">
-                {greetingText},
-              </span>
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <GreetingIcon className="w-5 h-5 text-amber-500" />
+                <span className="text-zinc-500 dark:text-zinc-400 text-5xl font-medium">
+                  {greetingText},
+                </span>
+              </div>
+              <h1 className="text-3xl font-black text-zinc-900 dark:text-white leading-tight">
+                {userName}!
+              </h1>
             </div>
-            <h1 className="text-3xl font-black text-zinc-900 dark:text-white leading-tight">
-              {userName}!
-            </h1>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-zinc-800 dark:text-zinc-100">
+                    {day} {date}
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                </div>
+              </div>
+              <div className="text-sm text-zinc-500 dark:text-zinc-500 font-medium mb-4">
+                {month}
+              </div>
+            </div>
           </div>
 
           {/* Progress Card */}
