@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 
 const HeroSection = async () => {
     const users = await prisma.user.findMany({
-        take: 5,
         select: {
             id: true,
             name: true,
