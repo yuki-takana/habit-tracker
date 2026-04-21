@@ -19,25 +19,14 @@ export const sendPushNotification = async (
     const result = await admin.messaging().send({
         token: fcmToken,
         data: {
-            title,
-            body,
+            title: title || "UFL Habit Tracker",
+            body: body || "",
+            url: "/todos",
             ...data,
-        },
-
-        android: {
-            priority: "high",
         },
         webpush: {
             headers: { Urgency: "high" },
-            notification: {
-                title, 
-                body,
-                icon: "https://habits.hellocoders.in/UFLLogo.png",
-                badge: "https://habits.hellocoders.in/UFLLogo.png",
-                vibrate: [200, 100, 200],
-            },
-            fcmOptions: { link: "https://habits.hellocoders.in" },
-        },
+        }
     });
     console.log("[FCM Admin] Message sent:", result);
 };

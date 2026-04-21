@@ -15,7 +15,7 @@ import { LEVEL_THRESHOLDS as defaultLevelThresholds } from '@/lib/gamify'
 
 const AdminDashboard = () => {
     const { data: session, status } = useSession()
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'gamification' | 'security'>('dashboard')
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'gamification' | 'security' | 'notifications'>('dashboard')
 
     const [isGlobalEnabled, setIsGlobalEnabled] = useState(true)
     const [isLoading, setIsLoading] = useState(true)
@@ -23,7 +23,7 @@ const AdminDashboard = () => {
     const [subConfig, setSubConfig] = useState(DEFAULT_SUBSCRIPTION_CONFIG as any)
     const [isSavingConfig, setIsSavingConfig] = useState(false)
     const [stats, setStats] = useState<{ totalUsers: number, proUsers: number, freeUsers: number, chartData: any[] } | null>(null)
-    
+
     // Gamification state
     const [levelThresholds, setLevelThresholds] = useState<any[]>(defaultLevelThresholds)
     const [isSavingGamification, setIsSavingGamification] = useState(false)
@@ -32,6 +32,11 @@ const AdminDashboard = () => {
     const [targetEmail, setTargetEmail] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [isSavingPassword, setIsSavingPassword] = useState(false)
+
+    const [notifTitle, setNotifTitle] = useState("")
+    const [notifBody, setNotifBody] = useState("")
+    const [notifUrl, setNotifUrl] = useState("/todos")
+    const [isSendingNotif, setIsSendingNotif] = useState(false)
 
     const adminEmail = "abhisheaurya@gmail.com"
 
@@ -109,10 +114,47 @@ const AdminDashboard = () => {
         }
     }
 
+    const handleSendNotification = async () => {
+        if (!notifTitle || !notifBody) {
+            toast.error("Title and message required")
+            return
+        }
+
+        setIsSendingNotif(true)
+
+        try {
+            const res = await fetch("/api/admin/send-notification", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    title: notifTitle,
+                    body: notifBody,
+                    url: notifUrl,
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                toast.error(data.error || "Failed to send")
+            } else {
+                toast.success("Notification sent to all users 🚀")
+                setNotifTitle("")
+                setNotifBody("")
+            }
+        } catch (err) {
+            toast.error("Something went wrong")
+        } finally {
+            setIsSendingNotif(false)
+        }
+    }
+
     const handleThresholdChange = (levelIndex: number, xpValue: string) => {
         const newValue = parseInt(xpValue)
         if (isNaN(newValue)) return
-        
+
         const newThresholds = [...levelThresholds]
         newThresholds[levelIndex].xp = newValue
         setLevelThresholds(newThresholds)
@@ -170,36 +212,43 @@ const AdminDashboard = () => {
             <div className="flex bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl w-fit">
                 <button
                     onClick={() => setActiveTab('dashboard')}
-                    className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${
-                        activeTab === 'dashboard'
-                            ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'dashboard'
+                        ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
                 >
                     <Smartphone size={16} />
                     Overview & Gateway
                 </button>
                 <button
                     onClick={() => setActiveTab('gamification')}
-                    className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${
-                        activeTab === 'gamification'
-                            ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'gamification'
+                        ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
                 >
                     <Gamepad2 size={16} />
                     Gamification
                 </button>
                 <button
                     onClick={() => setActiveTab('security')}
-                    className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${
-                        activeTab === 'security'
-                            ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'security'
+                        ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
                 >
                     <Key size={16} />
                     User Security
+                </button>
+                <button
+                    onClick={() => setActiveTab('notifications')}
+                    className={`flex items-center gap-2 px-4 py-2 font-medium text-sm rounded-lg transition-all ${activeTab === 'notifications'
+                        ? 'bg-white dark:bg-zinc-800 shadow-sm text-indigo-600 dark:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                >
+                    <Users size={16} />
+                    Notifications
                 </button>
             </div>
 
@@ -212,7 +261,7 @@ const AdminDashboard = () => {
                         <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                             Adjust the amount of lifetime XP required to reach each gamification level. Modifying this affects all users immediately.
                         </p>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {levelThresholds.map((threshold, index) => (
                                 <div key={threshold.level} className="flex items-center space-x-4 bg-slate-50 dark:bg-zinc-900 p-3 rounded-lg border border-slate-100 dark:border-zinc-800">
@@ -326,13 +375,12 @@ const AdminDashboard = () => {
                                             { id: 'meta', label: 'Meta (Cloud API)' },
                                             { id: 'local', label: 'Local (WhatsApp Web)' }
                                         ].map((provider) => (
-                                            <label 
+                                            <label
                                                 key={provider.id}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 cursor-pointer transition-all ${
-                                                    subConfig.whatsapp_provider === provider.id
-                                                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
-                                                        : "border-slate-100 bg-slate-50 text-slate-500 dark:border-zinc-800 dark:bg-zinc-900"
-                                                }`}
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 cursor-pointer transition-all ${subConfig.whatsapp_provider === provider.id
+                                                    ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
+                                                    : "border-slate-100 bg-slate-50 text-slate-500 dark:border-zinc-800 dark:bg-zinc-900"
+                                                    }`}
                                             >
                                                 <input
                                                     type="radio"
@@ -569,6 +617,52 @@ const AdminDashboard = () => {
                         <div className="mt-8 flex justify-end">
                             <Button onClick={handleConfigSave} disabled={isSavingConfig}>
                                 {isSavingConfig ? "Saving..." : "Save Configuration"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'notifications' && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                            Send Push Notification
+                        </h3>
+
+                        <p className="text-sm text-slate-500 mb-6">
+                            Broadcast a custom notification to all users.
+                        </p>
+
+                        <div className="space-y-4 max-w-lg">
+
+                            <input
+                                type="text"
+                                placeholder="Notification Title"
+                                className="w-full h-10 px-3 rounded border dark:bg-zinc-900"
+                                value={notifTitle}
+                                onChange={(e) => setNotifTitle(e.target.value)}
+                            />
+
+                            <textarea
+                                placeholder="Notification Message"
+                                className="w-full h-24 px-3 py-2 rounded border dark:bg-zinc-900"
+                                value={notifBody}
+                                onChange={(e) => setNotifBody(e.target.value)}
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="Redirect URL (e.g. /todos)"
+                                className="w-full h-10 px-3 rounded border dark:bg-zinc-900"
+                                value={notifUrl}
+                                onChange={(e) => setNotifUrl(e.target.value)}
+                            />
+
+                            <Button onClick={handleSendNotification} disabled={isSendingNotif}>
+                                {isSendingNotif ? "Sending..." : "Send to All Users"}
                             </Button>
                         </div>
                     </div>

@@ -4,6 +4,7 @@ import { getWhatsAppProvider } from '@/services/whatsapp';
 import { sendDeadlineAlertTemplate } from '@/services/whatsapp-templates';
 import { getGlobalWhatsappStatus } from '@/app/action';
 import { DEADLINE_REMINDER_LEAD_TIME_MINS } from '@/lib/constants';
+import { sendPushNotification } from '@/lib/firebase/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,13 +20,14 @@ export async function POST(request: Request) {
   try {
     const now = new Date();
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
-    
+
     console.log(`🔍 Searching for todos with deadlines between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
 
     // Find todos approaching deadline
     const todos = await prisma.todo.findMany({
       where: {
         deadline: { lte: fiveMinsFromNow, gte: now },
+        whatsappDeadlineNotified: false,
         completed: false,
         status: { notIn: ['completed', 'failed'] },
         user: {
@@ -46,24 +48,38 @@ export async function POST(request: Request) {
       if (todo?.user?.phone) {
         try {
           const provider = await getWhatsAppProvider();
-          
+
           if (provider === 'meta') {
             await sendDeadlineAlertTemplate(
               todo.user.phone,
               todo.user.name || 'User',
               todo.task,
-              '15', // default minutesLeft string
+              '15',
               todo.id
             );
           } else {
-             console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
+            console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
           }
+
+          const tokens = await prisma.fcmToken.findMany({
+            where: { userId: todo.userId },
+            select: { token: true }
+          });
+          await Promise.allSettled(
+            tokens.map(t =>
+              sendPushNotification(
+                t.token,
+                "Deadline approaching",
+                `"${todo.task}" is about to expire. Finish it now!`
+              )
+            )
+          );
 
           await prisma.todo.update({
             where: { id: todo.id },
             data: { whatsappDeadlineNotified: true }
           });
-          
+
           results.push({ id: todo.id, status: 'success' });
         } catch (error: any) {
           console.error(`Failed to send deadline reminder to ${todo.user.phone}:`, error.message);

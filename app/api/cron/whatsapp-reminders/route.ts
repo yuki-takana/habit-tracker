@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getWhatsAppProvider } from '@/services/whatsapp';
 import { sendTodoStartReminderTemplate } from '@/services/whatsapp-templates';
 import { getGlobalWhatsappStatus } from '@/app/action';
+import { sendPushNotification } from '@/lib/firebase/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
   try {
     const now = new Date();
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
-console.log(`⏰ [Cron] WhatsApp Reminder Check Started at: ${now.toISOString()} and ${fiveMinsFromNow.toISOString()}`);
+    console.log(`⏰ [Cron] WhatsApp Reminder Check Started at: ${now.toISOString()} and ${fiveMinsFromNow.toISOString()}`);
     // 2. Find todos
     const todos = await prisma.todo.findMany({
       where: {
@@ -59,15 +60,27 @@ console.log(`⏰ [Cron] WhatsApp Reminder Check Started at: ${now.toISOString()}
               todo.id
             );
           } else {
-             // Let's implement twilio sending directly or ignore fallback
-             console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
+            // Let's implement twilio sending directly or ignore fallback
+            console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
           }
-
+          const tokens = await prisma.fcmToken.findMany({
+            where: {  userId: todo.userId },
+            select: { token: true }
+          });
+          await Promise.allSettled(
+            tokens.map(t =>
+              sendPushNotification(
+                t.token,
+                "Todo Reminder",
+                `Start: ${todo.task}`
+              )
+            )
+          );
           await prisma.todo.update({
             where: { id: todo.id },
             data: { whatsappNotified: true }
           });
-          
+
           console.log(`Successfully notified and updated Todo: ${todo.id}`);
           results.push({ id: todo.id, status: 'success' });
         } catch (error: any) {

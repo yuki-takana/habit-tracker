@@ -15,16 +15,30 @@ messaging.onBackgroundMessage((payload) => {
     console.log("[SW] Full payload:", JSON.stringify(payload));
     const title = payload.data?.title ?? "UFL Habit Tracker";
     const body = payload.data?.body ?? "";
+    const url = payload.data?.url || "/";
     self.registration.showNotification(title, {
         body: body,
-        icon: "https://habits.hellocoders.in/UFLLogo.png",
-        badge: "https://habits.hellocoders.in/UFLLogo.png",
         vibrate: [200, 100, 200],
-        data: payload.data ?? {},
+        data: {
+            url: url
+        },
     });
 });
 
 self.addEventListener("notificationclick", (event) => {
-    event.notification.close();
-    event.waitUntil(clients.openWindow("/todos"));
+  event.notification.close();
+
+  const url = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(url) && "focus" in client) {
+            return client.focus();
+          }
+        }
+        return clients.openWindow(url);
+      })
+  );
 });
