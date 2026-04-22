@@ -21,10 +21,23 @@ export async function POST(request: Request) {
     const now = new Date();
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
     console.log(`⏰ [Cron] WhatsApp Reminder Check Started at: ${now.toISOString()} and ${fiveMinsFromNow.toISOString()}`);
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
     // 2. Find todos
     const todos = await prisma.todo.findMany({
       where: {
         reminderTime: { lte: fiveMinsFromNow, gte: now },
+        AND: [
+          {
+            reminderTime: {
+              gte: startOfDay,
+              lte: endOfDay,
+            }
+          }
+        ],
         whatsappNotified: false,
         completed: false,
         status: { notIn: ['in_progress', 'completed', 'failed'] },
@@ -64,7 +77,7 @@ export async function POST(request: Request) {
             console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
           }
           const tokens = await prisma.fcmToken.findMany({
-            where: {  userId: todo.userId },
+            where: { userId: todo.userId },
             select: { token: true }
           });
           await Promise.allSettled(
