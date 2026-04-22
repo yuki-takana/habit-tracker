@@ -22,11 +22,23 @@ export async function POST(request: Request) {
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
 
     console.log(`🔍 Searching for todos with deadlines between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
 
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
     // Find todos approaching deadline
     const todos = await prisma.todo.findMany({
       where: {
         deadline: { lte: fiveMinsFromNow, gte: now },
+        AND: [
+          {
+            deadline: {
+              gte: startOfDay,
+              lte: endOfDay,
+            }
+          }
+        ],
         whatsappDeadlineNotified: false,
         completed: false,
         status: { notIn: ['completed', 'failed'] },
