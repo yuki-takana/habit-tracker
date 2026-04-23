@@ -288,30 +288,83 @@ export function ProgressCard({ stats, durKey, vis, theme: t, cardRef }: Progress
             </div>
 
             {/* Bar Chart */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", height: 120, marginBottom: 40 }}>
-                {safeData.map((val, i) => {
-                    const pct = Math.max(15, (val / maxVal) * 100);
-                    // Approximate daily XP using standard UFL ratio where 1 todo is approx 15xp plus base multiplier
-                    const dailyXp = val > 0 ? (val * 15) + 12 : 0; 
-                    
-                    return (
-                        <div key={i} className="group relative" style={{ width: 14, height: "100%", background: "#27272a", borderRadius: 12 }}>
-                            {/* Hover Tooltip */}
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-1 pointer-events-none z-10 flex flex-col items-center">
-                                <div style={{ background: "#27272a", padding: "6px 8px", borderRadius: 8, border: "1px solid #3f3f46", textAlign: "center", minWidth: 70, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.5)" }}>
-                                    <div style={{ color: "white", fontSize: 10, fontWeight: 700 }}>{val} Todos</div>
-                                    <div style={{ color: t.main, fontSize: 10, fontWeight: 500 }}>{dailyXp} XP</div>
-                                </div>
-                            </div>
-                            
-                            <div style={{ 
-                                position: "absolute", bottom: 0, left: 0, right: 0, height: `${pct}%`, 
-                                background: t.main, borderRadius: 12, transition: "height 0.4s ease-out"
-                            }} />
+            {(() => {
+                // Build last-7-days labels aligned with sparkData order
+                const DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                const dayLabels: string[] = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    dayLabels.push(DAY_SHORT[d.getDay()]);
+                }
+
+                return (
+                    <div style={{ marginBottom: 40 }}>
+                        {/* Bars */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", height: 100 }}>
+                            {safeData.map((xpVal, i) => {
+                                const pct = Math.max(10, (xpVal / maxVal) * 100);
+                                const isToday = i === 6;
+                                return (
+                                    <div key={i} className="group relative" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 32, height: "100%" }}>
+                                        {/* Hover Tooltip */}
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-[105%] left-1/2 -translate-x-1/2 mb-1 pointer-events-none z-10">
+                                            <div style={{ background: "#27272a", padding: "5px 8px", borderRadius: 8, border: "1px solid #3f3f46", textAlign: "center", minWidth: 52, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.5)", whiteSpace: "nowrap" }}>
+                                                <div style={{ color: t.main, fontSize: 11, fontWeight: 700 }}>{xpVal} XP</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Bar track */}
+                                        <div style={{ width: 14, flex: 1, background: "#27272a", borderRadius: 12, position: "relative", overflow: "visible" }}>
+                                            {/* XP label on top of filled bar (if > 0) */}
+                                            {xpVal > 0 && (
+                                                <div style={{
+                                                    position: "absolute",
+                                                    bottom: `calc(${pct}% + 4px)`,
+                                                    left: "50%",
+                                                    transform: "translateX(-50%)",
+                                                    fontSize: 8,
+                                                    fontWeight: 700,
+                                                    color: "rgba(255,255,255,0.55)",
+                                                    whiteSpace: "nowrap",
+                                                    pointerEvents: "none",
+                                                }}>
+                                                    {xpVal}
+                                                </div>
+                                            )}
+                                            {/* Filled segment */}
+                                            <div style={{
+                                                position: "absolute", bottom: 0, left: 0, right: 0,
+                                                height: `${pct}%`,
+                                                background: isToday ? t.main : `${t.main}99`,
+                                                borderRadius: 12,
+                                                transition: "height 0.4s ease-out",
+                                                boxShadow: isToday ? `0 0 8px ${t.main}55` : "none",
+                                            }} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    );
-                })}
-            </div>
+
+                        {/* Day labels */}
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                            {dayLabels.map((label, i) => (
+                                <div key={i} style={{
+                                    width: 32,
+                                    textAlign: "center",
+                                    fontSize: 9,
+                                    fontWeight: i === 6 ? 800 : 500,
+                                    color: i === 6 ? t.main : "#71717a",
+                                    letterSpacing: "0.02em",
+                                }}>
+                                    {label}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Compound Progress Bar */}
             <div style={{ width: "100%", height: 14, background: "#27272a", borderRadius: 12, display: "flex", overflow: "hidden", marginBottom: 32 }}>

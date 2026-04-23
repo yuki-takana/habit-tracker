@@ -73,9 +73,26 @@ export async function POST(request: Request) {
               todo.id
             );
           } else {
-            // Let's implement twilio sending directly or ignore fallback
             console.log(`Fallback twilio / local not implemented for new templates: ${provider}`);
           }
+
+          // ✅ WhatsApp delivered — skip FCM to avoid duplicate notifications.
+          // Deadline reminders send both channels (critical alerts), but
+          // start reminders use WhatsApp as the primary channel.
+
+          await prisma.todo.update({
+            where: { id: todo.id },
+            data: { whatsappNotified: true }
+          });
+
+          console.log(`Successfully notified (WhatsApp) and updated Todo: ${todo.id}`);
+          results.push({ id: todo.id, status: 'success', channel: 'whatsapp' });
+        } catch (error: any) {
+          console.error(`Failed to send WhatsApp to ${todo.user.phone}:`, error.message);
+        }
+      } else {
+        // No phone number — fall back to FCM push only
+        try {
           const tokens = await prisma.fcmToken.findMany({
             where: { userId: todo.userId },
             select: { token: true }
@@ -85,7 +102,8 @@ export async function POST(request: Request) {
               sendPushNotification(
                 t.token,
                 "Todo Reminder",
-                `Start: ${todo.task}`
+                `Time to start: ${todo.task}`,
+                { url: "/todos" }
               )
             )
           );
@@ -93,15 +111,11 @@ export async function POST(request: Request) {
             where: { id: todo.id },
             data: { whatsappNotified: true }
           });
-
-          console.log(`Successfully notified and updated Todo: ${todo.id}`);
-          results.push({ id: todo.id, status: 'success' });
-        } catch (error: any) {
-          console.error(`Failed to send to ${todo.user.phone}:`, error.message);
-          // results.push({ id: id: todo.id, status: 'error', error: String(error) });
+          console.log(`Successfully notified (FCM fallback) Todo: ${todo.id}`);
+          results.push({ id: todo.id, status: 'success', channel: 'fcm-fallback' });
+        } catch (fcmErr: any) {
+          console.error(`FCM fallback failed for Todo ${todo.id}:`, fcmErr.message);
         }
-      } else {
-        console.warn(`User for Todo ${todo.id} has no phone number.`);
       }
     }
 

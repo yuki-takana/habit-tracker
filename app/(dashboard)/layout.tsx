@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { fetchUserSubscriptionTier, getSubscriptionConfig } from "@/app/action";
 import FeatureGateGuard from "@/components/shared/FeatureGateGuard";
 import NotificationProvider from "@/components/NotificationProvider";
+import MicroInteractionProvider from "@/components/providers/MicroInteractionProvider";
 
 export default async function DashboardLayout({
   children,
@@ -30,7 +31,9 @@ export default async function DashboardLayout({
         <DashboardHeader isPro={isPro} periodEnd={periodEnd} />
         <div className="container mx-auto px-4 py-6">
           <FeatureGateGuard config={config}>
-            {children}
+            <MicroInteractionProvider>
+              {children}
+            </MicroInteractionProvider>
           </FeatureGateGuard>
         </div>
       </main>

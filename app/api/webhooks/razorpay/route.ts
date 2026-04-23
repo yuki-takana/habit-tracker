@@ -29,22 +29,43 @@ export async function POST(req: Request) {
 
         const event = body.event;
 
-        // We only care about successful payments for our orders
+        // Handle successful payments — both event types fire for a successful Razorpay payment
         if (event === 'payment.captured' || event === 'order.paid') {
-            const payment = body.payload.payment.entity;
-            const userId = payment.notes?.userId;
-            const type = payment.notes?.type;
+            let userId: string | undefined;
+            let type: string | undefined;
+            let billingCycle: string | undefined;
+            let agentId: string | undefined;
+            let amountPaid = 0;
+
+            if (event === 'payment.captured') {
+                // payment.captured → notes are on the payment entity
+                const payment = body.payload?.payment?.entity;
+                userId = payment?.notes?.userId;
+                type = payment?.notes?.type;
+                billingCycle = payment?.notes?.billingCycle;
+                agentId = payment?.notes?.agentId;
+                amountPaid = payment?.amount ? payment.amount / 100 : 0;
+            } else {
+                // order.paid → notes are on the ORDER entity, not the payment
+                const order = body.payload?.order?.entity;
+                const payment = body.payload?.payment?.entity;
+                userId = order?.notes?.userId;
+                type = order?.notes?.type;
+                billingCycle = order?.notes?.billingCycle;
+                agentId = order?.notes?.agentId;
+                amountPaid = payment?.amount ? payment.amount / 100 : 0;
+            }
+
+            console.log(`[Razorpay Webhook] Event: ${event} | userId: ${userId} | type: ${type} | billingCycle: ${billingCycle}`);
 
             if (userId) {
                 if (type === 'agentPurchase') {
-                    const agentId = payment.notes?.agentId;
-                    const amountPaid = payment.amount ? payment.amount / 100 : 0;
                     if (agentId) {
                         await purchaseAgent(userId, agentId, amountPaid);
                     }
                 } else {
-                    const billingCycle = payment.notes?.billingCycle; // "monthly" | "yearly"
-                    const periodToAdd = billingCycle === 'yearly' ? 365 : 30; // days
+                    // Pro subscription — upsert with correct period
+                    const periodToAdd = billingCycle === 'yearly' ? 365 : 30;
 
                     const existingSub = await prisma.subscription.findUnique({ where: { userId } });
 
@@ -69,7 +90,10 @@ export async function POST(req: Request) {
                             currentPeriodEnd: newEnd,
                         }
                     });
+                    console.log(`[Razorpay Webhook] ✅ Subscription activated for userId: ${userId} until ${newEnd.toISOString()}`);
                 }
+            } else {
+                console.warn(`[Razorpay Webhook] ⚠️ No userId found in notes for event: ${event}`);
             }
         }
 

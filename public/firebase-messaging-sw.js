@@ -11,34 +11,44 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-    console.log("[SW] Full payload:", JSON.stringify(payload));
-    const title = payload.data?.title ?? "UFL Habit Tracker";
-    const body = payload.data?.body ?? "";
-    const url = payload.data?.url || "/";
-    self.registration.showNotification(title, {
-        body: body,
-        vibrate: [200, 100, 200],
-        data: {
-            url: url
-        },
-    });
+// ─── Why no onBackgroundMessage handler? ────────────────────────────────────
+//
+// We send `webpush.notification` from the server (firebase-admin.ts).
+// When a FCM message contains a `notification` block, the BROWSER auto-displays
+// it natively — no SW code needed. If we ALSO call showNotification() here,
+// the user gets TWO identical toasts for every push.
+//
+// onBackgroundMessage is only needed for pure data-only payloads (no notification
+// block). Since we always send webpush.notification, we suppress this handler.
+//
+// The click routing below is all we need on the SW side.
+// ────────────────────────────────────────────────────────────────────────────
+
+messaging.onBackgroundMessage((_payload) => {
+    // Intentionally left empty.
+    // Auto-display is handled by the browser via webpush.notification.
+    // Logging only:
+    console.log("[SW] Background message received (auto-displayed by browser).");
 });
 
+// ── Route user to the correct page when they tap the notification ─────────
 self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
+    event.notification.close();
 
-  const url = event.notification.data?.url || "/";
+    const url = event.notification.data?.url || "/todos";
 
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        for (const client of clientList) {
-          if (client.url.includes(url) && "focus" in client) {
-            return client.focus();
-          }
-        }
-        return clients.openWindow(url);
-      })
-  );
+    event.waitUntil(
+        clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+            for (const client of clientList) {
+                // Focus existing tab if it matches the target path
+                if (
+                    new URL(client.url).pathname === new URL(url, self.location.origin).pathname
+                    && "focus" in client
+                ) {
+                    return client.focus();
+                }
+            }
+            return clients.openWindow(url);
+        })
+    );
 });

@@ -46,11 +46,32 @@ export default function PricingClient({ config, isPro }: { config: any, isPro: b
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_YourTestKey',
                     amount: data.amount,
                     currency: data.currency,
-                    name: "Habit Tracker",
+                    name: "UFL Habit AI",
                     description: `Pro Plan (${cycle})`,
                     order_id: data.orderId,
-                    handler: function () {
-                        toast.success("Payment successful! Updating your account...");
+                    handler: async function (response: any) {
+                        // Verify & activate subscription immediately — don’t wait for async webhook
+                        toast.loading("Activating your Pro plan...", { id: "rzp-verify" });
+                        try {
+                            const verifyRes = await fetch('/api/checkout/razorpay/verify', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    billingCycle: cycle,
+                                }),
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success) {
+                                toast.success("🎉 You're now Pro! Welcome to UFL Pro.", { id: "rzp-verify" });
+                            } else {
+                                toast.warning("Payment received — plan will activate shortly.", { id: "rzp-verify" });
+                            }
+                        } catch {
+                            toast.warning("Payment received — plan will activate shortly.", { id: "rzp-verify" });
+                        }
                         setTimeout(() => window.location.href = '/dashboard', 2000);
                     },
                     theme: { color: "#4f46e5" }
