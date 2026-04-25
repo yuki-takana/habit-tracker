@@ -2,12 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { getJourneyData, getJourneyBentoData } from '@/app/actions/journey';
-import { Flame, CheckCircle, Target, Calendar } from 'lucide-react';
+import { Flame, CheckCircle, Target, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
 import { UflLoaderInline } from '@/components/ui/ufl-loader';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import {
+  AreaChart, Area, ResponsiveContainer, BarChart as ReBarChart,
+  Bar, XAxis, Tooltip, Cell
+} from 'recharts';
+import { useTheme } from 'next-themes';
 
 /* ─────────────────── types ─────────────────── */
+type FilterRange = 'Today' | '7D' | 'Month' | 'Year' | 'All';
+
 interface BentoData {
   completionRate: number;
   overallPerformance: string;
@@ -18,6 +25,9 @@ interface BentoData {
   weeklyXp: number[];
   weeklyCompleted: number[];
   weeklyFailed: number[];
+  monthlyXp: number[];
+  monthlyCompleted: number[];
+  dailyRateTrend: number[];
 }
 
 interface JourneyEvent {
@@ -29,43 +39,7 @@ interface JourneyEvent {
   icon: string;
 }
 
-/* ─────────────────── bar chart ─────────────────── */
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-function BarChart({ xp }: { xp: number[] }) {
-  const max = Math.max(...xp, 1);
-  return (
-    <div className="mt-3">
-      <div className="flex items-end gap-1.5 h-16">
-        {xp.map((v, i) => {
-          const pct = Math.round((v / max) * 100);
-          const isHigh = pct >= 70;
-          return (
-            <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-              <div
-                className={`w-full rounded-t-md transition-all ${
-                  isHigh
-                    ? 'bg-indigo-500 dark:bg-indigo-400'
-                    : 'bg-slate-200 dark:bg-zinc-700'
-                }`}
-                style={{ height: `${pct}%` }}
-                title={`${v} XP`}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex gap-1.5 mt-1">
-        {DAYS.map(d => (
-          <div key={d} className="flex-1 text-center text-[9px] text-slate-400 dark:text-zinc-600">{d}</div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ─────────────────── consistency dots ─────────────────── */
-// Light mode: slate → indigo ramp. Dark mode: zinc → indigo ramp.
 const DOT_SHADES = [
   'bg-slate-200 dark:bg-zinc-800',
   'bg-indigo-100 dark:bg-indigo-950',
@@ -97,16 +71,11 @@ function PerfRing({ pct, color }: { pct: number; color: string }) {
     <div className="relative w-20 h-20 shrink-0">
       <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
         <circle cx="40" cy="40" r={r} fill="none" stroke="currentColor" className="text-slate-200 dark:text-zinc-800" strokeWidth="8" />
-        <circle
-          cx="40" cy="40" r={r} fill="none"
-          stroke={color} strokeWidth="8" strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={offset}
-        />
+        <circle cx="40" cy="40" r={r} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
+          strokeDasharray={circ} strokeDashoffset={offset} />
       </svg>
-      <div
-        className="absolute inset-0 flex items-center justify-center font-black text-xl text-slate-900 dark:text-white"
-        style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-      >
+      <div className="absolute inset-0 flex items-center justify-center font-black text-xl text-slate-900 dark:text-white"
+        style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
         {pct}%
       </div>
     </div>
@@ -115,29 +84,22 @@ function PerfRing({ pct, color }: { pct: number; color: string }) {
 
 /* ─────────────────── icon maps ─────────────────── */
 const iconMap: Record<string, React.ReactNode> = {
-  Flame:       <Flame       className="text-orange-500"  size={16} />,
+  Flame: <Flame className="text-orange-500" size={16} />,
   CheckCircle: <CheckCircle className="text-emerald-500" size={16} />,
-  Target:      <Target      className="text-indigo-500"  size={16} />,
+  Target: <Target className="text-indigo-500" size={16} />,
 };
 const iconBg: Record<string, string> = {
-  Flame:       'bg-orange-100  dark:bg-orange-950/60',
+  Flame: 'bg-orange-100  dark:bg-orange-950/60',
   CheckCircle: 'bg-emerald-100 dark:bg-emerald-950/60',
-  Target:      'bg-indigo-100  dark:bg-indigo-950/60',
+  Target: 'bg-indigo-100  dark:bg-indigo-950/60',
 };
 
-/* ─────────────────── card ─────────────────── */
+/* ─────────────────── base card ─────────────────── */
 function Card({
-  children,
-  className = '',
-  colSpan = 1,
-  rowSpan = 1,
-  noPad = false,
+  children, className = '', colSpan = 1, rowSpan = 1, noPad = false,
 }: {
-  children: React.ReactNode;
-  className?: string;
-  colSpan?: number;
-  rowSpan?: number;
-  noPad?: boolean;
+  children: React.ReactNode; className?: string;
+  colSpan?: number; rowSpan?: number; noPad?: boolean;
 }) {
   return (
     <motion.div
@@ -145,18 +107,17 @@ function Card({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       className={`
-        bg-white dark:bg-zinc-900/60
+        relative bg-white dark:bg-zinc-900/60
         border border-slate-200 dark:border-zinc-800
         rounded-2xl overflow-hidden
         hover:border-indigo-300 dark:hover:border-indigo-800
         hover:shadow-lg hover:shadow-indigo-500/5
         transition-all duration-300
-        ${noPad ? '' : 'p-5'}
-        ${className}
+        ${noPad ? '' : 'p-5'} ${className}
       `}
       style={{
         gridColumn: colSpan > 1 ? `span ${colSpan}` : undefined,
-        gridRow:    rowSpan > 1 ? `span ${rowSpan}` : undefined,
+        gridRow: rowSpan > 1 ? `span ${rowSpan}` : undefined,
       }}
     >
       {children}
@@ -164,20 +125,165 @@ function Card({
   );
 }
 
+/* ─────────────────── split stat card (inspired by reference) ─────────────────── */
+function StatCard({
+  label, value, subLabel, trend, trendLabel, data, color, gradStart, gradEnd, colSpan = 1,
+}: {
+  label: string; value: number | string; subLabel?: string;
+  trend?: 'up' | 'down'; trendLabel?: string;
+  data: number[]; color: string; gradStart: string; gradEnd: string;
+  colSpan?: number;
+}) {
+  const chartData = data.map((v, i) => ({ v, i }));
+  const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown;
+  const trendColor = trend === 'up' ? 'text-emerald-500' : 'text-red-500';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="relative bg-white dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 
+                 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
+      style={{ gridColumn: colSpan > 1 ? `span ${colSpan}` : undefined }}
+    >
+      {/* header */}
+      <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4">
+        <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
+          {label}
+        </p>
+
+        {trend && trendLabel && (
+          <span className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold ${trendColor}`}>
+            <TrendIcon size={10} className="sm:w-3 sm:h-3" />
+            {trendLabel}
+          </span>
+        )}
+      </div>
+
+      {/* body */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between 
+                      px-4 sm:px-5 pb-4 sm:pb-5 pt-2 sm:pt-3 gap-3 sm:gap-4">
+
+        {/* number */}
+        <div className="z-10">
+          <p
+            className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-none"
+            style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
+          >
+            {value}
+          </p>
+
+          {subLabel && (
+            <p
+              className="text-[10px] sm:text-[11px] mt-1 sm:mt-1.5 font-medium"
+              style={{ color }}
+            >
+              {subLabel}
+            </p>
+          )}
+        </div>
+
+        {/* chart */}
+        <div className="w-full sm:flex-1 h-16 sm:h-20">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id={`sg-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={gradStart} stopOpacity={0.5} />
+                  <stop offset="100%" stopColor={gradEnd} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+
+              <Area
+                type="monotone"
+                dataKey="v"
+                stroke={color}
+                strokeWidth={1}
+                fill={`url(#sg-${color.replace('#', '')})`}
+                dot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+/* ─────────────────── weekly xp bar chart ─────────────────── */
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function WeeklyXpBar({ xp }: { xp: number[] }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const data = xp.map((v, i) => ({ day: DAYS[i], xp: v }));
+  const max = Math.max(...xp, 1);
+  return (
+    <div className="mt-3 h-28">
+      <ResponsiveContainer width="100%" height="100%">
+        <ReBarChart data={data} barCategoryGap="30%">
+          <XAxis
+            dataKey="day"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
+          />
+          <Tooltip
+            cursor={false}
+            content={({ active, payload }) =>
+              active && payload?.[0] ? (
+                <div className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-white shadow-sm">
+                  {payload[0].value} XP
+                </div>
+              ) : null
+            }
+          />
+          <Bar dataKey="xp" radius={[4, 4, 0, 0]}>
+            {data.map((entry, i) => (
+              <Cell
+                key={i}
+                fill={entry.xp >= max * 0.7
+                  ? isDark
+                    ? "#818cf8"   // highlight (dark)
+                    : "#6366f1"   // highlight (light)
+                  : isDark
+                    ? "#3f3f46"   // base (dark)
+                    : "#e5e7eb"   // base (light)
+                }
+              // className="dark:fill-red-400"
+              />
+            ))}
+          </Bar>
+        </ReBarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/* ─────────────────── helpers ─────────────────── */
 const Label = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[10px] uppercase tracking-[1.8px] text-slate-400 dark:text-zinc-600 font-medium mb-2">
     {children}
   </p>
 );
 
-const BigNum = ({ children }: { children: React.ReactNode }) => (
-  <p
-    className="text-4xl font-black text-slate-900 dark:text-white leading-none"
-    style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-  >
-    {children}
-  </p>
-);
+function perfRingColor(rate: number) {
+  if (rate >= 80) return '#6366f1';
+  if (rate >= 50) return '#f59e0b';
+  return '#ef4444';
+}
+
+function perfTextColor(rate: number) {
+  if (rate >= 80) return 'text-indigo-600 dark:text-indigo-400';
+  if (rate >= 50) return 'text-amber-600 dark:text-amber-400';
+  return 'text-red-600 dark:text-red-400';
+}
+
+function perfBadge(rate: number) {
+  if (rate >= 80) return 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+  if (rate >= 50) return 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+  return 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800';
+}
 
 /* ─────────────────── empty state ─────────────────── */
 function EmptyState() {
@@ -186,62 +292,23 @@ function EmptyState() {
       <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-center justify-center mx-auto mb-6">
         <Calendar className="text-slate-400 dark:text-zinc-600" size={36} />
       </div>
-      <h2
-        className="text-2xl font-black text-slate-900 dark:text-white mb-3"
-        style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-      >
+      <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3"
+        style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
         Your journey starts now
       </h2>
       <p className="text-slate-500 dark:text-zinc-500 text-sm leading-relaxed max-w-sm mx-auto mb-8">
         Complete habits, finish todos, and close tasks to see your story unfold here.
       </p>
-      <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
-        {[
-          { icon: <Flame       className="text-orange-500  mx-auto mb-1.5" size={22} />, label: 'Complete habits' },
-          { icon: <CheckCircle className="text-emerald-500 mx-auto mb-1.5" size={22} />, label: 'Finish todos'    },
-          { icon: <Target      className="text-indigo-500  mx-auto mb-1.5" size={22} />, label: 'Close tasks'     },
-        ].map(({ icon, label }) => (
-          <div
-            key={label}
-            className="p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-center"
-          >
-            {icon}
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-zinc-500 font-medium">
-              {label}
-            </p>
-          </div>
-        ))}
-      </div>
     </div>
   );
-}
-
-/* ─────────────────── helpers ─────────────────── */
-function perfRingColor(rate: number) {
-  if (rate >= 80) return '#6366f1'; // indigo-500
-  if (rate >= 50) return '#f59e0b'; // amber-500
-  return '#ef4444';                 // red-500
-}
-
-function perfTextColor(rate: number) {
-  if (rate >= 80) return 'text-indigo-600 dark:text-indigo-400';
-  if (rate >= 50) return 'text-amber-600  dark:text-amber-400';
-  return                'text-red-600    dark:text-red-400';
-}
-
-function perfBadge(rate: number) {
-  if (rate >= 80)
-    return 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
-  if (rate >= 50)
-    return 'bg-amber-50  dark:bg-amber-950/60  text-amber-700  dark:text-amber-300  border border-amber-200  dark:border-amber-800';
-  return   'bg-red-50    dark:bg-red-950/60    text-red-700    dark:text-red-300    border border-red-200    dark:border-red-800';
 }
 
 /* ─────────────────── main page ─────────────────── */
 export default function JourneyPage() {
   const [loading, setLoading] = useState(true);
-  const [events,  setEvents]  = useState<JourneyEvent[]>([]);
-  const [bento,   setBento]   = useState<BentoData | null>(null);
+  const [events, setEvents] = useState<JourneyEvent[]>([]);
+  const [bento, setBento] = useState<BentoData | null>(null);
+  const [filter, setFilter] = useState<FilterRange>('7D');
 
   useEffect(() => {
     async function load() {
@@ -268,111 +335,176 @@ export default function JourneyPage() {
 
   if (events.length === 0 || !bento) return <EmptyState />;
 
-  const recentEvents  = events.slice(0, 5);
-  const pendingTodos  = bento.totalTodos - bento.completedTodos - bento.failedTodos;
-  const totalXp       = bento.weeklyXp.reduce((a, b) => a + b, 0);
+  const recentEvents = events.slice(0, 5);
+  const pendingTodos = Math.max(0, bento.totalTodos - bento.completedTodos - bento.failedTodos);
+
+  // Filter-aware data — Today = last element of the 7-day arrays
+  const todayVal = (arr: number[]) => {
+    const v = arr[6] ?? 0;
+    // Pad to 5 points so the area chart renders a rising curve
+    return [0, Math.round(v * 0.2), Math.round(v * 0.5), Math.round(v * 0.8), v];
+  };
+
+  const activeXp = filter === 'Today' ? todayVal(bento.weeklyXp)
+    : filter === 'Month' || filter === 'Year' ? bento.monthlyXp
+      : bento.weeklyXp;
+  const activeCompleted = filter === 'Today' ? todayVal(bento.weeklyCompleted)
+    : filter === 'Month' || filter === 'Year' ? bento.monthlyCompleted
+      : bento.weeklyCompleted;
+  const activeFailed = filter === 'Today' ? todayVal(bento.weeklyFailed)
+    : bento.weeklyFailed;
+  const activePending = activeCompleted.map((v, i) =>
+    Math.max(0, bento.totalTodos - v - (activeFailed[i] ?? 0))
+  );
+  const activeRate = activeCompleted.map((v, i) =>
+    bento.totalTodos > 0 ? Math.round((v / bento.totalTodos) * 100) : 0
+  );
+
+  const totalXp = activeXp.reduce((a, b) => a + b, 0);
+  const weekCompleted = activeCompleted.reduce((a, b) => a + b, 0);
+  const weekFailed = activeFailed.reduce((a, b) => a + b, 0);
+  const xpChartData = activeXp.map((v, i) => ({ v, i }));
+  const filterLabel = filter === 'Today' ? 'today' : filter === '7D' ? 'this week' : filter === 'Month' ? 'this month' : filter === 'Year' ? 'this year' : 'all time';
+
+  // When Today is selected: all stat card charts show XP graph
+  // When other filters: each card shows its own data trend
+  const todayXpCurve = todayVal(bento.weeklyXp);
+  const cardChart = (ownData: number[]) =>
+    filter === 'Today' ? todayXpCurve : ownData;
 
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 sm:px-6">
 
-      {/* ── header ── */}
-      <motion.header
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h1
-          className="text-4xl font-black tracking-tight text-slate-900 dark:text-white"
-          style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-        >
-          Your Journey
-        </h1>
-        <p className="text-slate-500 dark:text-zinc-500 mt-1">
-          A living record of your wins, streaks &amp; growth.
-        </p>
+      {/* header */}
+      <motion.header initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white"
+              style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+              Your Journey
+            </h1>
+            <p className="text-slate-500 dark:text-zinc-500 mt-1">
+              A living record of your wins, streaks &amp; growth.
+            </p>
+          </div>
+          {/* Filter pills */}
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 rounded-xl p-1 self-start mt-1">
+            {(['Today', '7D', 'Month', 'Year', 'All'] as FilterRange[]).map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filter === f
+                  ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'
+                  }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
       </motion.header>
 
-      {/* ── bento grid ── */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
 
-        {/* HERO — deep indigo gradient instead of neon */}
+        {/* HERO — with background organic area chart */}
         <Card
           colSpan={2} rowSpan={2} noPad
-          className="
-            !bg-gradient-to-br !from-indigo-600 !to-violet-700
-            dark:!from-indigo-700 dark:!to-violet-900
-            !border-transparent flex flex-col justify-end p-6 min-h-60
-          "
+          className="bg-linear-to-br! from-indigo-800! to-violet-800! dark:from-indigo-900! dark:to-violet-950! border-transparent! flex flex-col justify-end p-6 min-h-60"
         >
-          <div
-            className="text-7xl font-black text-white leading-none mb-2"
-            style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-          >
-            {totalXp}
+          {/* Background blob chart */}
+          <div className="absolute inset-0 opacity-25 pointer-events-none">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={xpChartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="hero-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity={0.6} />
+                    <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area type="monotoneX" dataKey="v" stroke="#ffffff" strokeWidth={1} fill="url(#hero-grad)" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-          <div className="text-[10px] uppercase tracking-[2px] text-indigo-200 font-medium mb-4">
-            XP this week
+
+          <div className="relative z-10">
+            <div className="text-[90px] font-black text-white leading-none mb-1"
+              style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+              {totalXp}
+            </div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="text-[10px] uppercase tracking-[2px] text-indigo-200 font-medium">
+                XP · {filter === 'Today' ? 'Today' : filter === '7D' ? 'This week' : filter === 'Month' ? 'This month' : filter === 'Year' ? 'This year' : 'All time'}
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
+                +{weekCompleted} tasks
+              </span>
+            </div>
+            <h2 className="text-2xl font-black text-white mb-1"
+              style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+              🔥 Keep the streak
+            </h2>
+            <p className="text-sm text-indigo-200">You've logged activity every day this week.</p>
           </div>
-          <h2
-            className="text-2xl font-black text-white mb-1"
-            style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-          >
-            🔥 Keep the streak
-          </h2>
-          <p className="text-sm text-indigo-200">
-            You've logged activity every day this week.
-          </p>
         </Card>
+        {/* <div className="grid grid-cols-2  lg:grid-cols- gap-4"> */}
+        {/* Todos done — split layout */}
+        <StatCard
+          label="Todos done"
+          value={bento.completedTodos}
+          subLabel={`+${weekCompleted} ${filterLabel}`}
+          trend="up"
+          trendLabel={`${bento.completionRate}%`}
+          data={cardChart(activeCompleted)}
+          color="#10b981"
+          gradStart="#10b981"
+          gradEnd="#d1fae5"
+        />
 
-        {/* Todos done */}
-        <Card>
-          <Label>Todos done</Label>
-          <BigNum>{bento.completedTodos}</BigNum>
-          <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">of {bento.totalTodos} total</p>
-          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-medium">
-            +{bento.weeklyCompleted.reduce((a, b) => a + b, 0)} this week
-          </span>
-        </Card>
+        {/* Completion rate — with area chart */}
+        <StatCard
+          label="Completion rate"
+          value={`${bento.completionRate}%`}
+          subLabel={bento.overallPerformance}
+          trend={bento.completionRate >= 50 ? 'up' : 'down'}
+          trendLabel={`of ${bento.totalTodos} todos`}
+          data={cardChart(activeRate.length > 0 ? activeRate : (bento.dailyRateTrend ?? bento.weeklyCompleted))}
+          color={bento.completionRate >= 80 ? '#6366f1' : bento.completionRate >= 50 ? '#f59e0b' : '#ef4444'}
+          gradStart={bento.completionRate >= 80 ? '#6366f1' : bento.completionRate >= 50 ? '#f59e0b' : '#ef4444'}
+          gradEnd={bento.completionRate >= 80 ? '#ede9fe' : bento.completionRate >= 50 ? '#fef3c7' : '#fee2e2'}
+        />
 
-        {/* Completion rate */}
-        <Card>
-          <Label>Completion rate</Label>
-          <div className="flex items-baseline gap-1">
-            <BigNum>{bento.completionRate}</BigNum>
-            <span className="text-lg text-slate-400 dark:text-zinc-500">%</span>
-          </div>
-          <span className={`inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full font-medium ${perfBadge(bento.completionRate)}`}>
-            {bento.overallPerformance}
-          </span>
-        </Card>
+        {/* Failed — split layout */}
+        <StatCard
+          label="Failed todos"
+          value={bento.failedTodos}
+          subLabel={`${weekFailed} ${filterLabel}`}
+          trend="down"
+          trendLabel="missed"
+          data={cardChart(activeFailed)}
+          color="#ef4444"
+          gradStart="#ef4444"
+          gradEnd="#fee2e2"
+        />
 
-        {/* Failed */}
-        <Card>
-          <Label>Failed todos</Label>
-          <BigNum>{bento.failedTodos}</BigNum>
-          <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">missed deadline</p>
-          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 font-medium">
-            {bento.weeklyFailed.reduce((a, b) => a + b, 0)} this week
-          </span>
-        </Card>
-
-        {/* Pending */}
-        <Card>
-          <Label>Pending</Label>
-          <BigNum>{pendingTodos}</BigNum>
-          <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">still in progress</p>
-          <span className="inline-block mt-3 text-[10px] px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 font-medium">
-            Not overdue
-          </span>
-        </Card>
-
-        {/* Weekly XP bar chart */}
+        {/* Pending — split layout */}
+        <StatCard
+          label="Pending"
+          value={pendingTodos}
+          subLabel="still in progress"
+          data={cardChart(activePending)}
+          color="#f59e0b"
+          gradStart="#f59e0b"
+          gradEnd="#fef3c7"
+        />
+        {/* </div> */}
+        {/* Weekly XP bar chart — FIXED */}
         <Card colSpan={2}>
           <Label>Weekly XP breakdown</Label>
-          <BarChart xp={bento.weeklyXp} />
+          <WeeklyXpBar xp={bento.weeklyXp} />
         </Card>
 
-        {/* 30-day consistency */}
+        {/* 30-day consistency — UNTOUCHED */}
         <Card colSpan={2}>
           <Label>30-day consistency</Label>
           <ConsistencyGrid data={bento.consistencyData} />
@@ -386,7 +518,7 @@ export default function JourneyPage() {
           </div>
         </Card>
 
-        {/* Recent activity */}
+        {/* Recent activity — UNTOUCHED */}
         <Card colSpan={2} rowSpan={2}>
           <Label>Recent activity</Label>
           <div className="mt-2 space-y-1">
@@ -423,47 +555,41 @@ export default function JourneyPage() {
           </div>
         </Card>
 
-        {/* Performance ring */}
+        {/* Overall performance — UNTOUCHED */}
         <Card colSpan={2}>
           <Label>Overall performance</Label>
           <div className="flex items-center gap-5 mt-3">
             <PerfRing pct={bento.completionRate} color={perfRingColor(bento.completionRate)} />
             <div>
-              <p
-                className={`text-xl font-black ${perfTextColor(bento.completionRate)}`}
-                style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-              >
+              <p className={`text-xl font-black ${perfTextColor(bento.completionRate)}`}
+                style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
                 {bento.overallPerformance}
               </p>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed max-w-[180px]">
                 {bento.completionRate >= 80
                   ? "You're crushing it. Maintain the momentum!"
                   : bento.completionRate >= 50
-                  ? `Close ${Math.ceil(bento.totalTodos * 0.8) - bento.completedTodos} more todos to reach Excellent.`
-                  : 'Pick the top 3 todos and focus on them today.'}
+                    ? `Close ${Math.ceil(bento.totalTodos * 0.8) - bento.completedTodos} more todos to reach Excellent.`
+                    : 'Pick the top 3 todos and focus on them today.'}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Quick stats */}
+        {/* Quick stats — UNTOUCHED */}
         <Card colSpan={2}>
           <Label>Quick stats</Label>
           <div className="grid grid-cols-3 gap-2 mt-2">
             {[
               { label: 'Completed', value: bento.completedTodos, color: 'text-indigo-600 dark:text-indigo-400' },
-              { label: 'Failed',    value: bento.failedTodos,    color: 'text-red-600    dark:text-red-400'    },
-              { label: 'Pending',   value: pendingTodos,          color: 'text-amber-600  dark:text-amber-400'  },
+              { label: 'Failed', value: bento.failedTodos, color: 'text-red-600 dark:text-red-400' },
+              { label: 'Pending', value: pendingTodos, color: 'text-amber-600 dark:text-amber-400' },
             ].map(({ label, value, color }) => (
-              <div
-                key={label}
-                className="bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 rounded-xl p-3"
-              >
+              <div key={label}
+                className="bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 rounded-xl p-3">
                 <p className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-zinc-600">{label}</p>
-                <p
-                  className={`text-2xl font-black mt-1 ${color}`}
-                  style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-                >
+                <p className={`text-2xl font-black mt-1 ${color}`}
+                  style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
                   {value}
                 </p>
               </div>

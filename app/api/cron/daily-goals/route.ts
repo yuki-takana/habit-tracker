@@ -47,7 +47,7 @@ export async function POST(request: Request) {
           continue;
         }
 
-        const wakeUpTime = user.userProfile?.wakeUpTime || "06:30";
+        const wakeUpTime = user.wakeUpTime || "06:30";
 
         console.log(`[Cron: Daily Goals] Architecting for ${user.email} (Wakeup: ${wakeUpTime})...`);
 

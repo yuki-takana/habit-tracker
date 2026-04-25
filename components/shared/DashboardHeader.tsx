@@ -14,6 +14,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useXp } from '@/components/providers/xp-provider'
 import { LogOut, Settings, Sun, Moon } from 'lucide-react'
 import { useTheme } from "next-themes"
+import Image from 'next/image'
+import logo from '@/public/UFLLogo.png'
+
 
 export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, periodEnd?: Date | null }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -77,17 +80,6 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
 
                 {/* Right: Badges and User */}
                 <div className="flex items-center gap-2 pr-1">
-                    {isPro && (
-                        <div className="flex flex-col items-center px-3 py-[3px] rounded-xl bg-indigo-500/10 border border-indigo-500/50 max-w-[80px]">
-                            <span className="text-xs font-black tracking-widest uppercase text-indigo-500 leading-tight">PRO</span>
-                            {/* {periodEnd && (
-                                <span className="text-[9px] text-[#5C5C70] font-medium leading-none mt-[2px]">
-                                    {Math.max(0, Math.ceil((new Date(periodEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))}d left
-                                </span>
-                            )} */}
-                        </div>
-                    )}
-
                     {/* User Profile */}
                     <DropdownMenu open={userMenuOpen} onOpenChange={setUserMenuOpen}>
                         <DropdownMenuTrigger asChild>
@@ -99,18 +91,19 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
                                 )}
                             </div>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 mt-2 ml-4">
+                        <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuLabel>
                                 <div className="flex flex-col space-y-1">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name}</p>
-                                        <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                        <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name} </p>
+
+                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                             Lvl {level} ({xp} XP)
                                         </span>
                                     </div>
                                     <p className="text-xs leading-none text-slate-500 dark:text-slate-400 mt-1">{session?.user?.email}</p>
                                     {session?.user?.phone && (
-                                        <p className="text-xs leading-none text-indigo-500 font-medium pt-0.5">{session.user.phone}</p>
+                                        <p className="text-[10px] leading-none text-indigo-500 font-medium pt-0.5">{session.user.phone}</p>
                                     )}
                                 </div>
                             </DropdownMenuLabel>
@@ -148,9 +141,18 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
                             <DropdownMenuItem onClick={(e) => {
                                 e.preventDefault();
                                 setTheme(theme === "dark" ? "light" : "dark");
-                            }} className="cursor-pointer">
-                                {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                                <span>Toggle Switch Theme</span>
+                            }} className="cursor-pointer flex items-center justify-between group">
+                                <div className="flex items-center">
+                                    {theme === "dark" ? (
+                                        <Moon className="mr-2 h-4 w-4 text-indigo-400 transition-all duration-500 group-hover:-rotate-12 group-hover:scale-110" />
+                                    ) : (
+                                        <Sun className="mr-2 h-4 w-4 text-amber-500 transition-all duration-500 group-hover:rotate-90 group-hover:scale-110" />
+                                    )}
+                                    <span>Theme</span>
+                                </div>
+                                <div className="relative inline-flex h-5 w-9 items-center rounded-full bg-slate-200 dark:bg-zinc-700 transition-colors">
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-4' : 'translate-x-1'}`} />
+                                </div>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })} className="text-red-600 dark:text-red-400 cursor-pointer">
                                 <LogOut className="mr-2 h-4 w-4" />
@@ -167,11 +169,8 @@ export default function DashboardHeader({ isPro, periodEnd }: { isPro: boolean, 
                     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
                     <div className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col pt-6 pb-20 overflow-y-auto min-h-screen">
                         <div className="px-6 mb-8 flex items-center justify-between ">
-                            <Link href="/" className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
-                                    H
-                                </div>
-                                <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white">Habit AI</span>
+                            <Link href="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
+                                <Image src={logo} alt="Habit AI" width={32} height={32} className="rounded-full " /> Habit AI
                             </Link>
                             <button onClick={() => setIsOpen(false)} className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full bg-slate-50 dark:bg-zinc-900">
                                 <X size={20} />

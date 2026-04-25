@@ -1,5 +1,6 @@
 "use client"
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
@@ -17,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { KNOWN_ROUTES, DASHBOARD_ROUTES } from "@/lib/constants"
-
+import logo from '@/public/UFLLogo.png'
 const Nav = () => {
     const pathname = usePathname()
     const [isAuthOpen, setIsAuthOpen] = useState(false)
@@ -61,8 +62,8 @@ const Nav = () => {
         <>
             <nav className={`fixed top-0 z-50 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md ${isDashboardRoute ? 'hidden lg:block' : ''}`}>
                 <div className="container mx-auto flex h-16 items-center justify-between px-6">
-                    <Link href="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-white">
-                        UFL<span className="text-indigo-500">.</span>
+                    <Link href="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
+                        <Image src={logo} alt="Habit AI" width={32} height={32} className="rounded-full" /> Habit AI
                     </Link>
 
                     <div className="flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -70,11 +71,7 @@ const Nav = () => {
 
                         {isLoggedIn ? (
                             <DropdownMenu open={open} onOpenChange={setOpen}>
-                                {isPro && (
-                                    <span className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
-                                        PRO
-                                    </span>
-                                )}
+
                                 <DropdownMenuTrigger asChild>
                                     <div className="h-8 w-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center cursor-pointer hover:bg-indigo-500/20 transition-all text-indigo-600 dark:text-indigo-400 font-bold text-xs">
                                         {session?.user?.image ? (
@@ -88,7 +85,8 @@ const Nav = () => {
                                     <DropdownMenuLabel>
                                         <div className="flex flex-col space-y-1">
                                             <div className="flex items-center justify-between">
-                                                <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name}</p>
+                                                <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name} </p>
+
                                                 <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                                     Lvl {level} ({xp} XP)
                                                 </span>
@@ -133,9 +131,18 @@ const Nav = () => {
                                     <DropdownMenuItem onClick={(e) => {
                                         e.preventDefault();
                                         setTheme(theme === "dark" ? "light" : "dark");
-                                    }} className="cursor-pointer">
-                                        {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                                        <span>Toggle Switch Theme</span>
+                                    }} className="cursor-pointer flex items-center justify-between group">
+                                        <div className="flex items-center">
+                                            {theme === "dark" ? (
+                                                <Moon className="mr-2 h-4 w-4 text-indigo-400 transition-all duration-500 group-hover:-rotate-12 group-hover:scale-110" />
+                                            ) : (
+                                                <Sun className="mr-2 h-4 w-4 text-amber-500 transition-all duration-500 group-hover:rotate-90 group-hover:scale-110" />
+                                            )}
+                                            <span>Theme</span>
+                                        </div>
+                                        <div className="relative inline-flex h-5 w-9 items-center rounded-full bg-slate-200 dark:bg-zinc-700 transition-colors">
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-4' : 'translate-x-1'}`} />
+                                        </div>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })} className="text-red-600 dark:text-red-400 cursor-pointer">
                                         <LogOut className="mr-2 h-4 w-4" />

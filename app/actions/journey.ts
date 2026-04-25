@@ -3,7 +3,6 @@
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { startOfDay, format } from 'date-fns';
 
 export async function getJourneyData() {
     const session = await getServerSession(authOptions);
@@ -37,102 +36,82 @@ export async function getJourneyData() {
 
     const events: any[] = [];
 
-    // Add Habit completions
     user.habits.forEach(habit => {
         habit.logs.forEach(log => {
-            events.push({
-                id: log.id,
-                date: log.date,
-                type: 'Habit',
-                title: habit.name,
-                description: 'Completed habit',
-                icon: 'Flame'
-            });
+            events.push({ id: log.id, date: log.date, type: 'Habit', title: habit.name, icon: 'Flame' });
         });
     });
 
-    // Add Todo completions
     user.todos.forEach(todo => {
         if (todo.completedAt) {
-            events.push({
-                id: todo.id,
-                date: todo.completedAt,
-                type: 'Todo',
-                title: todo.task,
-                description: `Completed todo in category: ${todo.category || 'General'}`,
-                icon: 'CheckCircle'
-            });
+            events.push({ id: todo.id, date: todo.completedAt, type: 'Todo', title: todo.task, icon: 'CheckCircle' });
         }
     });
 
-    // Add Task completions
     user.tasks.forEach(task => {
-        events.push({
-            id: task.id,
-            date: task.updatedAt,
-            type: 'Task',
-            title: task.title,
-            description: `Finished task: ${task.description || ''}`,
-            icon: 'Target'
-        });
+        events.push({ id: task.id, date: task.updatedAt, type: 'Task', title: task.title, icon: 'Target' });
     });
 
-    const allEvents = events.sort((a, b) => b.date.getTime() - a.date.getTime());
-    console.log(`[Journey] Fetched ${allEvents.length} events for user ${session.user.email}`);
-    return allEvents;
+    return events.sort((a, b) => b.date.getTime() - a.date.getTime());
 }
 
 export async function getJourneyBentoData() {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) throw new Error("Unauthorized");
 
-    // Fetch user with todos and habits
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        include: {
-            todos: true,
-        }
+        include: { todos: true }
     });
 
     if (!user) throw new Error("User not found");
 
     const now = new Date();
-    
-    // 7 days XP array
-    const xpByDay = Array(7).fill(0);
+
+    // Arrays for 7/30/365 days
+    const xpByDay      = Array(7).fill(0);
     const completedByDay = Array(7).fill(0);
-    const failedByDay = Array(7).fill(0);
+    const failedByDay    = Array(7).fill(0);
     const consistencyData = Array(30).fill(0);
+    // 12-month XP for "Year" filter
+    const xpByMonth    = Array(12).fill(0);
+    const completedByMonth = Array(12).fill(0);
 
     let totalTodos = user.todos.length;
     let completedTodos = 0;
     let failedTodos = 0;
 
+    // Daily completion rate trend (last 7 days) – what % of all todos were done by that day
+    const dailyRateTrend = Array(7).fill(0);
+
     user.todos.forEach(todo => {
-        // Evaluate completion rate overall
-        if (todo.completed) {
-            completedTodos++;
-        } else if (todo.deadline && new Date(todo.deadline) < now) {
-            failedTodos++;
-        }
+        if (todo.completed) completedTodos++;
+        else if (todo.deadline && new Date(todo.deadline) < now) failedTodos++;
 
-        // Area chart consistency (last 30 days)
         if (todo.completedAt) {
-            const diffDays = Math.floor((now.getTime() - new Date(todo.completedAt).getTime()) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 0 && diffDays < 30) {
-                consistencyData[29 - diffDays]++; // 0 index is oldest, 29 is today
-            }
+            const ms = now.getTime() - new Date(todo.completedAt).getTime();
+            const diffDays = Math.floor(ms / 86400000);
 
-            // 7 days XP
+            // 30-day consistency
+            if (diffDays >= 0 && diffDays < 30) {
+                consistencyData[29 - diffDays]++;
+            }
+            // 7-day
             if (diffDays >= 0 && diffDays < 7) {
-                xpByDay[6 - diffDays] += todo.earnedXp || 20; 
+                xpByDay[6 - diffDays] += todo.earnedXp || 20;
                 completedByDay[6 - diffDays]++;
+                dailyRateTrend[6 - diffDays]++;
+            }
+            // 12-month
+            const diffMonths = Math.floor(ms / (86400000 * 30.44));
+            if (diffMonths >= 0 && diffMonths < 12) {
+                xpByMonth[11 - diffMonths] += todo.earnedXp || 20;
+                completedByMonth[11 - diffMonths]++;
             }
         }
 
-        // 7 days failed
         if (!todo.completed && todo.deadline) {
-            const diffDays = Math.floor((now.getTime() - new Date(todo.deadline).getTime()) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor((now.getTime() - new Date(todo.deadline).getTime()) / 86400000);
             if (diffDays >= 0 && diffDays < 7) {
                 failedByDay[6 - diffDays]++;
             }
@@ -148,9 +127,12 @@ export async function getJourneyBentoData() {
         totalTodos,
         completedTodos,
         failedTodos,
-        consistencyData, // 30 days completed counts
-        weeklyXp: xpByDay, // last 7 days XP
+        consistencyData,
+        weeklyXp: xpByDay,
         weeklyCompleted: completedByDay,
         weeklyFailed: failedByDay,
+        monthlyXp: xpByMonth,
+        monthlyCompleted: completedByMonth,
+        dailyRateTrend, // 7 data points for completion rate sparkline
     };
 }

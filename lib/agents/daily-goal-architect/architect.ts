@@ -136,7 +136,7 @@ SESSION PARAMETERS
 ══════════════════════════════════════════════════════════
 Date             : ${currentDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
 Today ISO date   : ${todayISO}
-Wake-up time     : ${effectiveWakeUp}
+Wake-up time     : ${effectiveWakeUp} (Schedule MUST start here, even if it is currently later in the day)
 First work slot  : ${firstSlotHHMM}  (+30 min morning prep after wake)
 Target sleep     : ${sleepTime}       (7.5 hours before wake = 5 × 90-min REM cycles)
 Routine active   : ${routineActiveToday ? `YES — "${routine?.name}" [${routine?.energyProfile}]` : "NO"}

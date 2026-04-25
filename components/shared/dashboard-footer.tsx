@@ -34,7 +34,7 @@ const DashboardFooter = () => {
                     {/* LEFT: BRAND */}
                     <div>
                         <h3 className="text-base font-semibold text-slate-800 dark:text-white mb-2">
-                            UFL
+                            Habit AI
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-zinc-500 leading-relaxed max-w-xs">
                             Building systems for consistency, growth, and personal evolution.
@@ -79,7 +79,7 @@ const DashboardFooter = () => {
                         </h4> */}
 
                         <p className="text-xs text-slate-500 dark:text-zinc-500 mb-3">
-                            © 2026 UFL. All rights reserved.
+                            © 2026 Habit AI. All rights reserved.
                         </p>
 
                         <p className="text-xs text-slate-400 dark:text-zinc-600">
