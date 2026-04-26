@@ -14,6 +14,7 @@ export default function HabitsPage() {
   const [limits, setLimits] = useState<any>(null);
   
   const { habits, isLoading: loading, mutate } = useHabits();
+  const habitsArray = Array.isArray(habits) ? habits : [];
   const fetchLimits = async () => {
     try {
       const data = await subscriptionApi.getLimits();
@@ -90,9 +91,9 @@ export default function HabitsPage() {
           <UflLoaderInline style="flip" />
           <p className="text-slate-500 font-medium text-lg">Loading your rituals...</p>
         </div>
-      ) : habits && habits.length > 0 ? (
+      ) : habitsArray.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {habits.map((habit) => (
+          {habitsArray.map((habit) => (
             <div key={habit.id} className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group">
               <div className="flex justify-between items-start mb-4">
                 <div>
