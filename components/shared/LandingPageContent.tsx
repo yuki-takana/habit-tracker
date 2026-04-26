@@ -22,7 +22,7 @@ const LandingPageContent = async () => {
                 <div className="flex justify-center mb-4">
                     <Badge
                         variant="outline"
-                        className="gap-2 px-3 py-1 text-[10px] font-bold tracking-widest uppercase border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/10"
+                        className="gap-2 px-3 py-1 text-[10px] font-bold tracking-widest capitalize border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/10"
                     >
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-500 opacity-75" />

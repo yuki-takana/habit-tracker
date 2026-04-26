@@ -1,22 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
 import { startOfDay } from "date-fns";
+import { withAuth } from "@/lib/api-auth";
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAuth(async (req, context, user) => {
     try {
-        const { id } = await params;
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const habitId = id;
-        const userId = session.user.id;
+        const { id: habitId } = await context.params;
+        const userId = user.id;
         const today = startOfDay(new Date());
 
         // Check if habit belongs to user
@@ -59,4 +49,4 @@ export async function POST(
         console.error("Error logging habit:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-}
+});

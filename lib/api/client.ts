@@ -8,6 +8,17 @@
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+export class ApiError extends Error {
+  status: number;
+  data: any;
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
 export interface ApiRequestOptions extends Omit<RequestInit, 'body' | 'method'> {
   body?: Record<string, unknown> | unknown[] | null;
   method?: HttpMethod;
@@ -34,7 +45,7 @@ export async function apiRequest<T = unknown>(
 
   if (!response.ok) {
     const error = isJson ? await response.json() : { message: `HTTP ${response.status}` };
-    throw new Error(error.message || 'API request failed');
+    throw new ApiError(error.message || 'API request failed', response.status, error);
   }
 
   return isJson ? response.json() : ({} as T);

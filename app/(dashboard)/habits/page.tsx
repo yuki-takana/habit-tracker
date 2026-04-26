@@ -1,55 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Sparkles, Activity, CheckCircle, RefreshCcw, Target, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { AddHabitModal } from "@/features/habits/add-habit-modal";
 import { Button } from "@/components/ui/button";
+import { useHabits } from "@/hooks/api/useHabits";
+import { habitsApi, subscriptionApi } from "@/lib/api/services";
 
 export default function HabitsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [habits, setHabits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [limits, setLimits] = useState<any>(null);
-
-  const fetchHabits = async () => {
-    try {
-      const res = await fetch("/api/habits");
-      if (res.ok) {
-        const data = await res.json();
-        setHabits(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch habits:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
+  const { habits, isLoading: loading, mutate } = useHabits();
   const fetchLimits = async () => {
     try {
-      const res = await fetch("/api/subscription/limits");
-      if (res.ok) setLimits(await res.json());
+      const data = await subscriptionApi.getLimits();
+      setLimits(data);
     } catch (e) { console.error(e); }
   };
 
   const handleSync = async (habitId: string) => {
     try {
-      const res = await fetch("/api/habits/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ habitId }),
-      });
-      if (res.ok) {
-        toast.success("Synced to Daily Todos!");
-      } else {
-        const data = await res.json();
-        toast.error(data.error || "Failed to sync");
-      }
-    } catch (error) {
+      await habitsApi.sync(habitId);
+      toast.success("Synced to Daily Todos!");
+    } catch (error: any) {
       console.error(error);
-      toast.error("Internal Server Error");
+      toast.error(error.message || "Failed to sync");
     }
   };
 
@@ -60,15 +38,9 @@ export default function HabitsPage() {
         label: "Delete",
         onClick: async () => {
           try {
-            const res = await fetch(`/api/habits/${id}`, {
-              method: "DELETE",
-            });
-            if (res.ok) {
-              toast.success("Ritual removed");
-              fetchHabits();
-            } else {
-              toast.error("Failed to delete");
-            }
+            await habitsApi.delete(id);
+            toast.success("Ritual removed");
+            mutate();
           } catch (error) {
             console.error(error);
             toast.error("Something went wrong");
@@ -81,20 +53,15 @@ export default function HabitsPage() {
 
   const handleLog = async (habitId: string) => {
     try {
-      const res = await fetch(`/api/habits/${habitId}/logs`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        fetchHabits();
-        toast.success("Session logged!");
-      }
+      await habitsApi.log(habitId);
+      toast.success("Session logged!");
+      mutate();
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchHabits();
     fetchLimits();
   }, []);
 
@@ -123,7 +90,7 @@ export default function HabitsPage() {
           <UflLoaderInline style="flip" />
           <p className="text-slate-500 font-medium text-lg">Loading your rituals...</p>
         </div>
-      ) : habits.length > 0 ? (
+      ) : habits && habits.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {habits.map((habit) => (
             <div key={habit.id} className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group">
@@ -217,7 +184,7 @@ export default function HabitsPage() {
         limits={limits}
         onClose={() => {
           setIsModalOpen(false);
-          fetchHabits();
+          mutate();
           fetchLimits();
         }}
       />

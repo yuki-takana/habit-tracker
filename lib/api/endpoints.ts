@@ -19,6 +19,8 @@ export const ENDPOINTS = {
   // Habits
   HABITS:                '/api/habits',
   HABIT:                 (id: string) => `/api/habits/${id}`,
+  HABIT_LOG:             (id: string) => `/api/habits/${id}/logs`,
+  HABIT_SYNC:            '/api/habits/sync',
 
   // Todos
   TODOS:                 '/api/todos',

@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { startOfDay, subDays } from "date-fns";
 import { processUserDailyProgress } from "@/lib/progress";
 import { REMINDER_LEAD_TIME_MINS } from "@/lib/constants";
 import { getTodayEndIST } from "@/lib/utils/getTodayEndIST";
+import { withAuth } from "@/lib/api-auth";
 
-export async function GET() {
+export const GET = withAuth(async (req, context, authUser) => {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const userId = session.user.id;
+        const userId = authUser.id;
 
         // Process progress updates (lazy sync)
         await processUserDailyProgress(userId);
@@ -241,7 +235,7 @@ export async function GET() {
         console.error("Dashboard Summary Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-}
+});
 
 function calculateStreak(habits: any[]) {
     // Current day streak calculation

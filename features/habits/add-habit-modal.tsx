@@ -16,6 +16,9 @@ import {
 } from "@/components/ui/select";
 
 import { toast } from "sonner";
+import { habitsApi } from "@/lib/api/services";
+import { ApiError } from "@/lib/api/client";
+import { useHabits } from "@/hooks/api/useHabits";
 
 export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; onClose: () => void; limits?: any }) {
     const router = useRouter();
@@ -28,6 +31,8 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
     const [targetValue, setTargetValue] = useState("");
     const [targetUnit, setTargetUnit] = useState("");
     const [loading, setLoading] = useState(false);
+    
+    const { mutate } = useHabits();
 
     const handleSubmit = async (e: React.FormEvent | null, force = false) => {
         if (e) e.preventDefault();
@@ -35,48 +40,41 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
 
         setLoading(true);
         try {
-            const res = await fetch("/api/habits", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name,
-                    description,
-                    category,
-                    frequency,
-                    autoCreateTodos,
-                    targetType,
-                    targetValue: targetValue ? parseFloat(targetValue) : null,
-                    targetUnit,
-                    force
-                }),
+            await habitsApi.create({
+                name,
+                description,
+                category,
+                frequency,
+                autoCreateTodos,
+                targetType,
+                targetValue: targetValue ? parseFloat(targetValue) : undefined,
+                targetUnit,
+                force
             });
 
-            if (res.ok) {
-                toast.success(force ? "Duplicate Ritual Created!" : "New Ritual Set!");
-                setName("");
-                setDescription("");
-                setCategory("Growth");
-                setFrequency("daily");
-                setTargetType("binary");
-                setTargetValue("");
-                setTargetUnit("");
-                onClose();
-                router.refresh();
-            } else if (res.status === 409) {
-                const data = await res.json();
-                toast.warning(data.message, {
+            toast.success(force ? "Duplicate Ritual Created!" : "New Ritual Set!");
+            setName("");
+            setDescription("");
+            setCategory("Growth");
+            setFrequency("daily");
+            setTargetType("binary");
+            setTargetValue("");
+            setTargetUnit("");
+            onClose();
+            mutate(); // Refresh habits cache without hard reload
+            
+        } catch (error: any) {
+            console.error(error);
+            if (error instanceof ApiError && error.status === 409) {
+                toast.warning(error.data?.message || "Duplicate ritual found", {
                     action: {
                         label: "Duplicate",
                         onClick: () => handleSubmit(null, true),
                     },
                 });
             } else {
-                const data = await res.json();
-                toast.error(data.error || "Something went wrong");
+                toast.error(error.message || "Failed to create habit");
             }
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to create habit");
         } finally {
             setLoading(false);
         }

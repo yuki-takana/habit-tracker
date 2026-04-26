@@ -1,22 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
+import { withAuth } from "@/lib/api-auth";
 
-export async function DELETE(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth(async (req, context, user) => {
     try {
-        const { id } = await params;
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const userId = session.user.id;
-        const habitId = id;
+        const { id: habitId } = await context.params;
+        const userId = user.id;
 
         // Verify ownership
         const habit = await prisma.habit.findUnique({
@@ -39,4 +28,4 @@ export async function DELETE(
             { status: 500 }
         );
     }
-}
+});

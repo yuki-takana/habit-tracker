@@ -1,25 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
-
+import { withAuth } from "@/lib/api-auth";
 import { hasReachedHabitLimit } from "@/lib/subscription";
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (req, context, user) => {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
 
         const limitReached = await hasReachedHabitLimit(user.id);
         if (limitReached) {
@@ -74,23 +59,10 @@ export async function POST(req: NextRequest) {
             { status: 500 }
         );
     }
-}
+});
 
-export async function GET() {
+export const GET = withAuth(async (req, context, user) => {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
 
         const habits = await prisma.habit.findMany({
             where: { userId: user.id },
@@ -117,4 +89,4 @@ export async function GET() {
             { status: 500 }
         );
     }
-}
+});

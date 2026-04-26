@@ -13,12 +13,21 @@ export const habitsApi = {
     targetType?: string;
     targetValue?: number;
     targetUnit?: string;
+    force?: boolean;
+    autoCreateTodos?: boolean;
+    description?: string;
   }) => apiPost(ENDPOINTS.HABITS, data as any),
 
   update: (id: string, data: Record<string, unknown>) =>
     apiPatch(ENDPOINTS.HABIT(id), data),
 
   delete: (id: string) => apiDelete(ENDPOINTS.HABIT(id)),
+
+  log: (id: string, data?: Record<string, unknown>) =>
+    apiPost(ENDPOINTS.HABIT_LOG(id), data),
+
+  sync: (id: string) =>
+    apiPost(ENDPOINTS.HABIT_SYNC, { habitId: id }),
 };
 
 // ── Todos ────────────────────────────────────────────────

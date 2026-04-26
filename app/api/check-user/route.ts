@@ -1,31 +1,16 @@
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions }      from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/api-auth";
 
 // ── GET /api/check-user ─────────────────────────────────────────
 // Returns the current user's phone & whatsappEnabled status for
 // the MicroInteractionProvider to decide which dialog to show.
-export async function GET() {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.email) {
-            return Response.json({ error: "Unauthenticated" }, { status: 401 });
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-            select: { phone: true, whatsappEnabled: true },
-        });
-
-        return Response.json({
-            phone:           user?.phone          ?? null,
-            whatsappEnabled: user?.whatsappEnabled ?? false,
-        });
-    } catch (error) {
-        console.error("GET /api/check-user error:", error);
-        return Response.json({ error: "Internal server error" }, { status: 500 });
-    }
-}
+export const GET = withAuth(async (req, context, user) => {
+    return NextResponse.json({
+        phone: user.phone ?? null,
+        whatsappEnabled: user.whatsappEnabled ?? false,
+    });
+});
 
 // ── POST /api/check-user ────────────────────────────────────────
 // Legacy: checks if a given phone number is registered.
@@ -43,13 +28,13 @@ export async function POST(req: Request) {
             where: { phone: formattedPhone }
         });
 
-        return Response.json({
+        return NextResponse.json({
             registered: !!user,
             userId:     user?.id || null
         });
     } catch (error) {
         console.error("POST /api/check-user error:", error);
-        return Response.json(
+        return NextResponse.json(
             { error: "Internal server error", registered: false },
             { status: 500 }
         );

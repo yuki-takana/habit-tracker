@@ -217,8 +217,8 @@ const Dashboard = () => {
                                     <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
                                     <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }} />
-                                    <Area type="monotone" dataKey="energy" name="Energy" stroke="#eab308" strokeWidth={4} fillOpacity={1} fill="url(#colorEnergy)" />
-                                    <Area type="monotone" dataKey="workoutIntensity" name="Intensity" stroke="#ef4444" strokeWidth={4} fill="transparent" />
+                                    <Area type="monotone" dataKey="energy" name="Energy" stroke="#eab308" strokeWidth={2} fillOpacity={1} fill="url(#colorEnergy)" />
+                                    <Area type="monotone" dataKey="workoutIntensity" name="Intensity" stroke="#ef4444" strokeWidth={2} fill="transparent" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
