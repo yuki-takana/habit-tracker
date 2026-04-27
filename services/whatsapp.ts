@@ -42,10 +42,6 @@ export async function sendWhatsAppReminderTwilio(to: string, taskName: string) {
   }
 }
 
-/**
- * Send a plain text message via Meta WhatsApp Cloud API.
- * Used for replies from webhook and general text messages.
- */
 export async function sendMetaTextMessage(
   to: string,
   templateName: string,

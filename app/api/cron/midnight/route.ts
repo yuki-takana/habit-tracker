@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { addXpToUser } from "@/lib/gamify";
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
     // Validate cron secret if deployed to Vercel
-    const authHeader = req.headers.get('authorization');
-    if (
-        process.env.CRON_SECRET && 
-        authHeader !== `Bearer ${process.env.CRON_SECRET}`
-    ) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // const authHeader = req.headers.get('authorization');
+    // if (
+    //     process.env.CRON_SECRET && 
+    //     authHeader !== `Bearer ${process.env.CRON_SECRET}`
+    // ) {
+    //     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
 
     try {
         const users = await prisma.user.findMany({

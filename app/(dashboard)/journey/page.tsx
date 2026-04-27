@@ -11,6 +11,7 @@ import {
   Bar, XAxis, Tooltip, Cell
 } from 'recharts';
 import { useTheme } from 'next-themes';
+import { getFontSize } from '@/lib/utils/getFontSize';
 
 /* ─────────────────── types ─────────────────── */
 type FilterRange = 'Today' | '7D' | 'Month' | 'Year' | 'All';
@@ -74,8 +75,7 @@ function PerfRing({ pct, color }: { pct: number; color: string }) {
         <circle cx="40" cy="40" r={r} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={offset} />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center font-black text-xl text-slate-900 dark:text-white"
-        style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+      <div className="absolute inset-0 flex items-center justify-center font-black text-xl text-slate-900 dark:text-white">
         {pct}%
       </div>
     </div>
@@ -168,9 +168,7 @@ function StatCard({
         {/* number */}
         <div className="z-10">
           <p
-            className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-none"
-            style={{ fontFamily: 'var(--font-syne, sans-serif)' }}
-          >
+            className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-none">
             {value}
           </p>
 
@@ -292,8 +290,7 @@ function EmptyState() {
       <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-center justify-center mx-auto mb-6">
         <Calendar className="text-slate-400 dark:text-zinc-600" size={36} />
       </div>
-      <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3"
-        style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+      <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">
         Your journey starts now
       </h2>
       <p className="text-slate-500 dark:text-zinc-500 text-sm leading-relaxed max-w-sm mx-auto mb-8">
@@ -379,9 +376,8 @@ export default function JourneyPage() {
       <motion.header initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white"
-              style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
-              Your Journey
+            <h1 className="text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+              Your Journey 🎯
             </h1>
             <p className="text-slate-500 dark:text-zinc-500 mt-1">
               A living record of your wins, streaks &amp; growth.
@@ -428,8 +424,12 @@ export default function JourneyPage() {
           </div>
 
           <div className="relative z-10">
-            <div className="text-[90px] font-black text-white leading-none mb-1"
-              style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+            <div
+              className="font-black text-white leading-none mb-1"
+              style={{
+                fontSize: getFontSize(totalXp),
+              }}
+            >
               {totalXp}
             </div>
             <div className="flex items-center gap-2 mb-4">
@@ -440,8 +440,7 @@ export default function JourneyPage() {
                 +{weekCompleted} tasks
               </span>
             </div>
-            <h2 className="text-2xl font-black text-white mb-1"
-              style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+            <h2 className="text-2xl font-black text-white mb-1">
               🔥 Keep the streak
             </h2>
             <p className="text-sm text-indigo-200">You've logged activity every day this week.</p>
@@ -561,8 +560,7 @@ export default function JourneyPage() {
           <div className="flex items-center gap-5 mt-3">
             <PerfRing pct={bento.completionRate} color={perfRingColor(bento.completionRate)} />
             <div>
-              <p className={`text-xl font-black ${perfTextColor(bento.completionRate)}`}
-                style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+              <p className={`text-xl font-black ${perfTextColor(bento.completionRate)}`}>
                 {bento.overallPerformance}
               </p>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed max-w-[180px]">
@@ -588,8 +586,7 @@ export default function JourneyPage() {
               <div key={label}
                 className="bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 rounded-xl p-3">
                 <p className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-zinc-600">{label}</p>
-                <p className={`text-2xl font-black mt-1 ${color}`}
-                  style={{ fontFamily: 'var(--font-syne, sans-serif)' }}>
+                <p className={`text-2xl font-black mt-1 ${color}`}>
                   {value}
                 </p>
               </div>

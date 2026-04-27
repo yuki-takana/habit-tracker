@@ -6,8 +6,9 @@ import { getGlobalWhatsappStatus } from '@/app/action';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   // 1. Security Check (Only allow the cron provider to call this)
+  
   // const authHeader = request.headers.get('authorization');
   // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
   //   return new Response('Unauthorized', { status: 401 });

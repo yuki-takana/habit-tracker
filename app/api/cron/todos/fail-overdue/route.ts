@@ -1,25 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// This endpoint should be triggered by a cron job service (e.g. Vercel Cron, GitHub Actions, cron-job.org)
-// at 11:59 PM every day.
 export async function POST(req: Request) {
     try {
-        // Optional: Secure the cron job with a secret key
-        const authHeader = req.headers.get("authorization");
-        if (
-            process.env.CRON_SECRET &&
-            authHeader !== `Bearer ${process.env.CRON_SECRET}`
-        ) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        // Secure the cron job with a secret key
+        // const authHeader = req.headers.get("authorization");
+        // if (
+        //     process.env.CRON_SECRET &&
+        //     authHeader !== `Bearer ${process.env.CRON_SECRET}`
+        // ) {
+        //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // }
 
         const now = new Date();
-
-        // Find all incomplete todos whose deadline has passed OR are just generally not completed by the end of the day
-        // Assuming daily goals have a deadline set, we'll mark any incomplete todo with a deadline <= now as failed.
-        // We can also mark todos created before today as failed if they don't have a deadline.
-        
         const updatedTodos = await prisma.todo.updateMany({
             where: {
                 completed: false,
@@ -52,7 +45,7 @@ export async function POST(req: Request) {
     }
 }
 
-export async function GET(req: Request) {
-    // Some cron services prefer GET
-    return POST(req);
-}
+// export async function GET(req: Request) {
+//     // Some cron services prefer GET
+//     return POST(req);
+// }

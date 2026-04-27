@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPushNotification } from "@/lib/firebase/firebase-admin";
 
-export async function GET() {
+export async function POST() {
   try {
     // Fetch all tokens
     const tokens = await prisma.fcmToken.findMany({

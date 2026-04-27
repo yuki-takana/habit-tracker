@@ -1,60 +1,60 @@
 import { prisma } from "@/lib/prisma";
+import { sendMorningBriefingTemplate } from "@/services/whatsapp-templates";
 
-export async function sendMorningBriefing(userId: string, phone: string) {
-  // 1. Get current day (e.g., "Monday")
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+interface BriefingUser {
+  userId: string;
+  name: string;
+  phone: string | null;
+  wakeupTime: string | null;
+}
 
-  // 2. Fetch the active plan and today's workout
+export async function sendMorningBriefing({
+  userId,
+  phone,
+  name,
+}: BriefingUser) {
+  if (!phone) return;
+  console.log("Sending morning briefing to", phone);
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+
   const workoutPlan = await prisma.workoutPlan.findFirst({
-    where: { 
-        userId: userId, 
-        isActive: true 
+    where: {
+      userId,
+      isActive: true,
     },
     include: {
       workouts: {
         where: { dayOfWeek: today },
-        include: { exercises: true }
-      }
-    }
+        include: { exercises: true },
+      },
+    },
   });
 
-  // 3. Handle Rest Days
+  let todayTopTasks = "";
+  let missedYesterday = "No missed tasks yesterday ✅";
+
+  // 3. Handle rest day
   if (!workoutPlan || workoutPlan.workouts.length === 0) {
-    const restMsg = `🌅 *Good morning Abhishek!* \n\nToday is a *Rest & Recovery* day. Focus on your nutrition and hit your protein goals! 🥗`;
-    return await callWhatsappBridge(phone, restMsg);
+    todayTopTasks = "Rest & Recovery Day 🧘‍♂️ Focus on nutrition and recovery.";
+  } else {
+    const workout = workoutPlan.workouts[0];
+
+    // Convert exercises → readable string
+    todayTopTasks = workout.exercises
+      .map(
+        (ex, i) =>
+          `${i + 1}. ${ex.name} (${ex.sets}x${ex.reps})`
+      )
+      .join(",");
   }
 
-  const workout = workoutPlan.workouts[0];
-
-  // 4. Format the Workout Message
-  let message = `🚀 *UFL DAILY BRIEFING: ${today.toUpperCase()}* 🚀\n\n`;
-  message += `Today's Focus: *${workout.focus}*\n`;
-  message += `----------------------------\n\n`;
-
-  workout.exercises.forEach((ex, i) => {
-    message += `${i + 1}. *${ex.name}*\n`;
-    message += `   ∟ ${ex.sets} sets x ${ex.reps} reps\n`;
-  });
-
-  message += `\n*Note:* Reply 'DONE' once you finish the session to update your 90-day progress! 💪`;
-
-  // 5. Send to Bridge
-  return await callWhatsappBridge(phone, message);
-}
-
-/**
- * Helper to talk to your Bridge running on Port 4000
- */
-async function callWhatsappBridge(phone: string, message: string) {
-    try {
-        const response = await fetch("http://localhost:4000/send-message", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone, message }),
-        });
-        return await response.json();
-    } catch (error) {
-        console.error("Bridge Error:", error);
-        return { success: false, error: "Bridge unreachable" };
-    }
+  // 4. Send template message
+  return await sendMorningBriefingTemplate(
+    phone,
+    name || "Champion",
+    missedYesterday,
+    todayTopTasks
+  );
 }

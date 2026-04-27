@@ -91,7 +91,7 @@ export async function sendMorningBriefingTemplate(
   todayTopTasks: string,
   appLink: string = `${APP_BASE_URL}/daily-goals`
 ) {
-  return sendMetaTemplate(to, 'morning_briefing_v2', [
+  return sendMetaTemplate(to, 'morning_briefing', [
     {
       type: 'body',
       parameters: [
