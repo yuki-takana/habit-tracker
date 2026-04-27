@@ -31,6 +31,7 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "@/components/providers/Providers";
+import CachingProvider from "@/components/provider";
 import { fetchUserSubscriptionTier } from "./action";
 import ServiceWorkerRegister from "@/lib/utils/serviceWorker";
 import Script from "next/script";
@@ -53,18 +54,20 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <Providers>
-            <div className="flex flex-col min-h-screen bg-white dark:bg-[#09090B] transition-colors duration-300">
-              <Nav />
-              <ServiceWorkerRegister />
-              <main className="flex-1 w-full mt-16">
-                {children}
-                <Toaster richColors position="bottom-right" />
-              </main>
+          <CachingProvider>
+            <Providers>
+              <div className="flex flex-col min-h-screen bg-white dark:bg-[#09090B] transition-colors duration-300">
+                <Nav />
+                <ServiceWorkerRegister />
+                <main className="flex-1 w-full mt-16">
+                  {children}
+                  <Toaster richColors position="bottom-right" />
+                </main>
 
-              <DashboardFooter />
-            </div>
-          </Providers>
+                <DashboardFooter />
+              </div>
+            </Providers>
+          </CachingProvider>
         </ThemeProvider>
         <Script
           src="https://checkout.razorpay.com/v1/checkout.js"

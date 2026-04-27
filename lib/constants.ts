@@ -1,3 +1,5 @@
+import { size } from "zod/v4";
+
 export const DEFAULT_SUBSCRIPTION_CONFIG = {
     pro_monthly_price_usd: "4.99",
     pro_monthly_price_inr: "299",
@@ -42,3 +44,26 @@ export const XP_FOR_LEVEL_UP = (level: number) => Math.floor(100 * Math.pow(XP_M
 // === ROUTES ===
 export const KNOWN_ROUTES = ["/", "/coding", "/blueprint", "/dashboard", "/settings", "/signin", "/signup", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/leaderboard", "/privacy", "/terms", "/journey", "/workouts", "/tasks", "/billing"];
 export const DASHBOARD_ROUTES = ["/dashboard", "/habits", "/todos", "/insights", "/daily-goals", "/routines", "/challenges", "/admin", "/plans", "/coding", "/journey", "/workouts", "/tasks", "/blueprint", "/billing"];
+
+
+
+export const PROVIDERS = [
+    { id: 'twilio', label: 'Twilio' },
+    { id: 'meta', label: 'Meta API' },
+    { id: 'local', label: 'Local' },
+]
+
+export const GATEWAYS = [
+    { id: 'both', label: 'Both' },
+    { id: 'stripe', label: 'Stripe' },
+    { id: 'razorpay', label: 'Razorpay' },
+]
+
+export const FEATURES = [
+    { id: 'feature_dashboard', label: 'Dashboard' },
+    { id: 'feature_insights', label: 'Insights' },
+    { id: 'feature_habits', label: 'Habits' },
+    { id: 'feature_todos', label: 'Todos' },
+    { id: 'feature_challenges', label: 'Challenges' },
+    { id: 'feature_workouts', label: 'Workouts' },
+]
