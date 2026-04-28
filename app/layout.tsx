@@ -61,7 +61,7 @@ export default async function RootLayout({
                 <ServiceWorkerRegister />
                 <main className="flex-1 w-full mt-16">
                   {children}
-                  <Toaster richColors position="bottom-right" />
+                  <Toaster richColors position="top-center" />
                 </main>
 
                 <DashboardFooter />

@@ -3,12 +3,14 @@
 import { AddTodoModal } from "@/features/todos/add-todo-modal";
 import {
     Plus, ClipboardList, Smartphone, Loader2,
-    Clock, CheckCircle2, AlertCircle, Sunrise, Sun, Moon, 
+    Clock, CheckCircle2, AlertCircle, Sunrise, Sun, Moon,
     Briefcase, Dumbbell, Heart, BookOpen, Star, Target, TrendingUp, ChevronDown, CheckCheck,
     XCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiGoalAssistant } from "@/features/ai-goals/ai-goal-assistant";
+import { GoalPromptDialog } from "@/features/todos/goal-prompt-dialog";
+import { RoutinePromptDialog } from "@/features/todos/routine-prompt-dialog";
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { toggleWhatsapp } from "@/app/action";
@@ -21,30 +23,30 @@ import UFLProgressCard from "@/features/analytics/shareable-card";
 import { getTreeEmojiString, calculateTreeScale } from '@/lib/utils/forest';
 
 function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return { text: "Good morning", icon: Sunrise };
-  if (h < 17) return { text: "Good afternoon", icon: Sun };
-  return { text: "Good evening", icon: Moon };
+    const h = new Date().getHours();
+    if (h < 12) return { text: "Good morning", icon: Sunrise };
+    if (h < 17) return { text: "Good afternoon", icon: Sun };
+    return { text: "Good evening", icon: Moon };
 }
 
 function formatDate() {
-  const now = new Date();
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  return { day: days[now.getDay()], date: now.getDate(), month: months[now.getMonth()] };
+    const now = new Date();
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return { day: days[now.getDay()], date: now.getDate(), month: months[now.getMonth()] };
 }
 
 function getCategoryIconAndColor(category: string) {
-  const c = category?.toLowerCase() || '';
-  switch (c) {
-    case 'fitness': return { icon: Dumbbell, bg: 'bg-orange-500', color: 'text-white' };
-    case 'health': return { icon: Heart, bg: 'bg-rose-500', color: 'text-white' };
-    case 'work': return { icon: Briefcase, bg: 'bg-indigo-500', color: 'text-white' };
-    case 'finance': return { icon: TrendingUp, bg: 'bg-emerald-500', color: 'text-white' };
-    case 'learning': return { icon: BookOpen, bg: 'bg-amber-500', color: 'text-white' };
-    case 'mindset': return { icon: Star, bg: 'bg-purple-500', color: 'text-white' };
-    default: return { icon: Target, bg: 'bg-sky-500', color: 'text-white' };
-  }
+    const c = category?.toLowerCase() || '';
+    switch (c) {
+        case 'fitness': return { icon: Dumbbell, bg: 'bg-orange-500', color: 'text-white' };
+        case 'health': return { icon: Heart, bg: 'bg-rose-500', color: 'text-white' };
+        case 'work': return { icon: Briefcase, bg: 'bg-indigo-500', color: 'text-white' };
+        case 'finance': return { icon: TrendingUp, bg: 'bg-emerald-500', color: 'text-white' };
+        case 'learning': return { icon: BookOpen, bg: 'bg-amber-500', color: 'text-white' };
+        case 'mindset': return { icon: Star, bg: 'bg-purple-500', color: 'text-white' };
+        default: return { icon: Target, bg: 'bg-sky-500', color: 'text-white' };
+    }
 }
 
 
@@ -53,7 +55,7 @@ function getCategoryIconAndColor(category: string) {
 function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }: any) {
     const ref = useRef<HTMLDivElement>(null);
     const emoji = getTreeEmojiString(category, index);
-    
+
     // Smooth size mapping: 0 to 5 -> 0.55 to 1.0 scale
     const scale = calculateTreeScale(treeTaskCount);
 
@@ -131,7 +133,7 @@ function ForestView({ tasks }: { tasks: any[] }) {
                 <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500">Virtual Forest</p>
                 <div className="flex-1 h-px bg-zinc-200/60 dark:bg-zinc-800" />
             </div>
-            
+
             <div className="relative bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 sm:px-6 sm:py-6 shadow-sm overflow-hidden">
                 <div className="flex flex-wrap items-end justify-center gap-6 sm:gap-10 pb-2 sm:pb-0">
                     {categories.map(([cat, counts]) => {
@@ -153,15 +155,15 @@ function ForestView({ tasks }: { tasks: any[] }) {
                             );
                         }
                         return (
-                           <div key={cat} className="flex flex-col items-center gap-3 relative group/cat">
-                              <div className="absolute -inset-x-3 -inset-y-2 bg-zinc-100/50 dark:bg-zinc-800/30 rounded-2xl opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
-                              <div className="flex items-end gap-1 sm:gap-1.5 h-12 relative z-10">
-                                  {elements}
-                              </div>
-                              <p className="text-[8px] sm:text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.15em] z-10">
-                                {cat}
-                              </p>
-                           </div>
+                            <div key={cat} className="flex flex-col items-center gap-3 relative group/cat">
+                                <div className="absolute -inset-x-3 -inset-y-2 bg-zinc-100/50 dark:bg-zinc-800/30 rounded-2xl opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+                                <div className="flex items-end gap-1 sm:gap-1.5 h-12 relative z-10">
+                                    {elements}
+                                </div>
+                                <p className="text-[8px] sm:text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.15em] z-10">
+                                    {cat}
+                                </p>
+                            </div>
                         );
                     })}
                 </div>
@@ -184,8 +186,11 @@ export default function TodosPage() {
     const [visibleCounts, setVisibleCounts] = useState({ today: 10, timeUp: 10, completed: 10, inProgress: 10, failed: 10 });
     const [stats, setStats] = useState<any>({ total: 0, completed: 0, today: 0, timeUps: 0, inProgress: 0, failed: 0 });
     const [pagination, setPagination] = useState<any>({ page: 1, limit: 10, totalPages: 1 });
-    const [grouped, setGrouped] = useState<any>({ today: [], timeUp: [], completed: [],  inProgress: [], failed: [], });
+    const [grouped, setGrouped] = useState<any>({ today: [], timeUp: [], completed: [], inProgress: [], failed: [], });
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({ timeUp: true, today: true, completed: false, inProgress: true, failed: false });
+    const [dashboardMeta, setDashboardMeta] = useState({ hasGoal: true, hasRoutine: true });
+    const [showGoalPrompt, setShowGoalPrompt] = useState(false);
+    const [showRoutinePrompt, setShowRoutinePrompt] = useState(false);
 
     const { text: greetingText, icon: GreetingIcon } = getGreeting();
     const { day, date, month } = formatDate();
@@ -238,11 +243,22 @@ export default function TodosPage() {
             const res = await fetch(`/api/todos/dashboard`);
             if (res.ok) {
                 const result = await res.json();
+    
                 setGrouped(result.grouped);
                 if (result.stats) setStats(result.stats);
+
+                setDashboardMeta({ hasGoal: result.hasGoal, hasRoutine: result.hasRoutine });
+
+                if (result.hasGoal === false) {
+                    setShowGoalPrompt(true);
+                } else if (result.hasRoutine === false) {
+                    setShowRoutinePrompt(true);
+                }
             }
         } catch (e) {
             console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -279,7 +295,7 @@ export default function TodosPage() {
         };
 
         const isOpen = openSections[cat];
-        const setOpen = () => setOpenSections(prev => ({...prev, [cat]: !prev[cat]}));
+        const setOpen = () => setOpenSections(prev => ({ ...prev, [cat]: !prev[cat] }));
 
         return (
             <div className="mb-4">
@@ -317,12 +333,12 @@ export default function TodosPage() {
                                     const inProgress = task.status === 'in_progress';
 
                                     return (
-                                       <motion.div
-                                          initial={{ opacity: 0, x: -12 }}
-                                          animate={{ opacity: 1, x: 0 }}
-                                          transition={{ delay: idx * 0.05, duration: 0.3 }}
-                                          className="flex gap-4 group" key={task.id}
-                                       >
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -12 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05, duration: 0.3 }}
+                                            className="flex gap-4 group" key={task.id}
+                                        >
                                             {/* Left: Timestamp */}
                                             <div className="w-12 shrink-0 pt-2.5 text-right hidden lg:block">
                                                 <span className="text-[11px] font-mono font-semibold text-zinc-400 dark:text-zinc-600 leading-none">
@@ -352,14 +368,14 @@ export default function TodosPage() {
                                                     status={task.status}
                                                     completed={task.completed ?? false}
                                                     startTime={task.startTime ?? null}
-                                                    deadline={task.deadline ?? null} 
-                                                    startedAt={task.startedAt ?? null} 
+                                                    deadline={task.deadline ?? null}
+                                                    startedAt={task.startedAt ?? null}
                                                     reminderTime={task.reminderTime ? new Date(task.reminderTime) : null}
                                                     delayCount={task.delayCount ?? 0}
                                                     onToggleComplete={handleToggleComplete}
                                                 />
                                             </div>
-                                       </motion.div>
+                                        </motion.div>
                                     );
                                 })}
                             </div>
@@ -444,7 +460,7 @@ export default function TodosPage() {
                             </button>
                         </div>
                     </div>
-                    
+
                     {/* Progress Card */}
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
@@ -516,11 +532,29 @@ export default function TodosPage() {
                 {/* Modals */}
                 <AddTodoModal
                     isOpen={isModalOpen}
-                    onClose={() => { setIsModalOpen(false); fetchTasks(); fetchGroupedTasks(); }}
+                    onClose={() => { setIsModalOpen(false); fetchGroupedTasks(); }}
                 />
                 <AiGoalAssistant
                     isOpen={isAiModalOpen}
-                    onClose={() => { setIsAiModalOpen(false); fetchTasks(); }}
+                    onClose={() => { setIsAiModalOpen(false); fetchGroupedTasks(); }}
+                />
+                <GoalPromptDialog
+                    isOpen={showGoalPrompt}
+                    onClose={() => {
+                        setShowGoalPrompt(false);
+                        if (!dashboardMeta.hasRoutine) {
+                            setShowRoutinePrompt(true);
+                        } else {
+                            fetchGroupedTasks();
+                        }
+                    }}
+                />
+                <RoutinePromptDialog
+                    isOpen={showRoutinePrompt}
+                    onClose={() => {
+                        setShowRoutinePrompt(false);
+                        fetchGroupedTasks();
+                    }}
                 />
             </div>
         </>

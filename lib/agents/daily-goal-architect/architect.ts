@@ -376,6 +376,10 @@ STREAK SHIELD
   If streakShieldContinuity > 0: user needs 50–60%+ completion.
   Adjust total todo count so hitting the shield target is achievable.
 
+USER GOALS — P0 Critical
+  If userContext.userGoals exists, you MUST generate at least 2-3 specific, high-leverage todos focused entirely on advancing these goals. 
+  Schedule these in Peak or Rebound zones. Ensure normal life rules (eating, resting) are maintained.
+
 ══════════════════════════════════════════════════════════
 TIMESTAMP RULES
 ══════════════════════════════════════════════════════════
@@ -652,7 +656,8 @@ export async function fetchProgressData(userId: string, prisma: any) {
                     roleLevel: true,
                     roleTitle: true,
                     fitnessGoal: true,
-                    experience: true
+                    experience: true,
+                    userGoals: true
                 }
             }),
 
@@ -741,7 +746,8 @@ export async function fetchProgressData(userId: string, prisma: any) {
                 roleLevel: userProfile?.roleLevel || 0,
                 roleTitle: userProfile?.roleTitle || "Beginner",
                 fitnessGoal: userProfile?.fitnessGoal,
-                experience: userProfile?.experience
+                experience: userProfile?.experience,
+                userGoals: userProfile?.userGoals || []
             },
             routine: activeRoutine
                 ? {

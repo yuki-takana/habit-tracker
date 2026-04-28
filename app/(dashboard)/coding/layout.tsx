@@ -7,13 +7,13 @@ import Link from "next/link";
 
 export default async function CodingLayout({ children }: { children: React.ReactNode }) {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) redirect("/");
+    if (!session?.user?.id) return null; // Handled by middleware
 
     const user = await prisma.user.findUnique({
         where: { id: session.user.id }
     });
     
-    if (!user) redirect("/");
+    if (!user) return null;
 
     const hasKeys = !!(user.wakatimeApiKey || user.githubApiKey);
 

@@ -99,6 +99,7 @@ model User {
   subscription           Subscription?
   challenges             Challenge[]
   todoSessions           TodoSession[]
+  platformFeedbacks      PlatformFeedback[]
   totalStreakDays        Int                 @default(0)
   streakShields          Int                 @default(0)
   streakShieldContinuity Int                 @default(0) // Days with 50-60%+ todo completion
@@ -447,6 +448,17 @@ model UserFeedback {
   planType            String // "gym" | "income" | "project" | "career" | "general"
   suggestedAdjustment String
   createdAt           DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PlatformFeedback {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  message   String
+  rating    Int      @default(5)
+  category  String   @default("general") // "bug", "feature", "general", "praise"
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -28,6 +28,7 @@ const Nav = () => {
     const { data: session, status } = useSession()
 
     const isLoggedIn = status === "authenticated"
+    const isLoading = status === "loading"
     const userInitials = session?.user?.name
         ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
         : session?.user?.email?.[0].toUpperCase() || "U"
@@ -69,7 +70,9 @@ const Nav = () => {
                     <div className="flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
 
 
-                        {isLoggedIn ? (
+                        {isLoading ? (
+                            <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-zinc-800 animate-pulse" />
+                        ) : isLoggedIn ? (
                             <DropdownMenu open={open} onOpenChange={setOpen}>
 
                                 <DropdownMenuTrigger asChild>

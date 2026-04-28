@@ -13,11 +13,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/signin");
-  }
+  // Authentication handled by middleware
 
   const { plan, periodEnd } = await fetchUserSubscriptionTier();
   const config = await getSubscriptionConfig();

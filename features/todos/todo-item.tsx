@@ -210,8 +210,6 @@ export function TodoItem({
   const showTimerSection =
     (isInProgress || isOverdue) && (deadline || startedAt);
 
-  console.log("show timer section is ", isInProgress, showTimerSection, deadline, startedAt)
-
   useEffect(() => {
     const unlock = () => {
       try {

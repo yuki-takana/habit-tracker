@@ -7,7 +7,7 @@ import PricingClient from './PricingClient';
 
 export default async function BillingPage() {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) redirect("/");
+    if (!session?.user?.id) return null; // Handled by middleware
 
     const config = await getSubscriptionConfig();
     const limits = await getSubscriptionLimits(session.user.id);

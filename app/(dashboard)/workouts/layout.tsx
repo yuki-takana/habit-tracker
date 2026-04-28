@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default async function WorkoutsLayout({ children }: { children: React.ReactNode }) {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) redirect("/");
+    if (!session?.user?.id) return null; // Handled by middleware
 
     const sub = await prisma.subscription.findFirst({
         where: { userId: session.user.id, status: "active" }

@@ -1,6 +1,10 @@
 "use client";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { KNOWN_ROUTES, DASHBOARD_ROUTES } from "@/lib/constants";
+import { FeedbackModal } from "./FeedbackModal";
+import { MessageSquarePlus } from "lucide-react";
+
 const PROJECTS = [
     { name: "Vaadanuvaad", url: "https://vaadanuvaad.vercel.app/" },
     { name: "Brainwave", url: "https://brainwave-omega-sooty.vercel.app/" },
@@ -12,6 +16,8 @@ const PROJECTS = [
 
 const DashboardFooter = () => {
     const pathname = usePathname();
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    
     const isUsername = pathname.split("/").length === 2 && !KNOWN_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/")) && !pathname.startsWith("/api");
     const isDashboardRoute = DASHBOARD_ROUTES.some(
         (r) => pathname === r || pathname.startsWith(r + "/")
@@ -19,7 +25,8 @@ const DashboardFooter = () => {
     if (isUsername) return null;
 
     return (
-        <footer className="border-t border-slate-200 dark:border-zinc-800 py-10 text-sm text-slate-500 dark:text-zinc-400 mb-16 md:mb-0">
+        <footer className="border-t border-slate-200 dark:border-zinc-800 py-10 text-sm text-slate-500 dark:text-zinc-400 mb-16 md:mb-0 relative">
+            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
             <div
                 className={`
@@ -100,8 +107,15 @@ const DashboardFooter = () => {
                 </div>
 
                 {/* BOTTOM LINE */}
-                <div className="mt-8 pt-4 border-t border-slate-200 dark:border-zinc-800 text-center text-xs text-slate-400 dark:text-zinc-600">
-                    Built for focus. Designed for growth.
+                <div className="mt-8 pt-4 border-t border-slate-200 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 dark:text-zinc-600">
+                    <div>Built for focus. Designed for growth.</div>
+                    <button 
+                        onClick={() => setIsFeedbackOpen(true)}
+                        className="mt-4 sm:mt-0 flex items-center gap-2 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors bg-slate-100 dark:bg-zinc-800/50 px-3 py-1.5 rounded-lg font-medium"
+                    >
+                        <MessageSquarePlus className="w-4 h-4" />
+                        Give Feedback
+                    </button>
                 </div>
 
             </div>

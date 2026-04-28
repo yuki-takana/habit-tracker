@@ -12,6 +12,10 @@ export async function GET() {
 
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
+            include: {
+                userGoals: { take: 1 },
+                routines: { where: { isActive: true }, take: 1 }
+            }
         });
 
         if (!user) {
@@ -77,6 +81,8 @@ export async function GET() {
 
         return NextResponse.json({
             grouped,
+            hasRoutine: user.routines.length > 0,
+            hasGoal: user.userGoals.length > 0,
             stats: {
                 total: todos.length,
                 completed: grouped.completed.length,
