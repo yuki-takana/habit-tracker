@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import HabitImpactGraph from '../HabitImpactGraph'
 import AnimatedGradient from '../AnimatedGradient'
-import { Sparkles, MessageSquare, Terminal, ArrowRight } from 'lucide-react'
+import { Sparkles, MessageSquare } from 'lucide-react'
 import { AvatarGroupCountIconExample } from './avatarGroup'
 import { prisma } from "@/lib/prisma";
+import HeroButtons from './HeroButtons';
 
 const HeroSection = async () => {
     const users = await prisma.user.findMany({
@@ -15,10 +15,7 @@ const HeroSection = async () => {
     });
     return (
         <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-white dark:bg-zinc-950 px-6 pt-32 pb-40">
-            {/* Premium Animated Background */}
             <AnimatedGradient />
-
-            {/* Radial overlay */}
             <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
@@ -27,7 +24,6 @@ const HeroSection = async () => {
                 }}
             />
 
-            {/* Grid lines */}
             <div
                 className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none"
                 style={{
@@ -53,63 +49,43 @@ const HeroSection = async () => {
 
             <div className="text-center max-w-4xl relative z-10">
                 <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-slate-900 dark:text-white mb-8 capitalize leading-[0.9]">
-                    Turn daily tiny habits into <span className="text-indigo-600 dark:text-indigo-400">your biggest flex<span className="text-slate-400 dark:text-zinc-800">.</span></span>
+                    Turn daily tiny habits into{" "}
+                    <span className="text-indigo-600 dark:text-indigo-400">
+                        your biggest flex
+                        <span className="text-slate-400 dark:text-zinc-800">.</span>
+                    </span>
                 </h1>
 
                 <div className="flex flex-col items-center gap-6 mb-12 text-center px-4">
-
-
                     <h2 className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
                         The gamified habit tracker built for developers and builders. Log via WhatsApp, and watch your life level up — one habit at a time.
                     </h2>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link
-                        href="/dashboard"
-                        className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-indigo-500/30 active:scale-95 hover:cursor-pointer flex items-center gap-2"
-                    >
-                        Start Today
-                        <ArrowRight size={18} />
-                    </Link>
-                    <Link
-                        href="/journey"
-                        className="px-10 py-5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white font-bold rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all hover:cursor-pointer shadow-lg"
-                    >
-                        View Progress
-                    </Link>
-                </div>
-                <div className="w-full flex flex-col md:flex-row items-center justify-center gap-3 pt-5">
+                <HeroButtons />
 
+                <div className="w-full flex flex-col md:flex-row items-center justify-center gap-3 pt-5">
                     <div className="flex items-center justify-center">
                         <AvatarGroupCountIconExample users={users} />
                     </div>
-
                     <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
                         <div className="flex text-yellow-400 text-sm sm:text-base">
                             {"★★★★★"}
                         </div>
                         <p className="text-sm sm:text-base text-gray-600">
-                            Loved by <span className="font-semibold text-foreground">{users.length}+</span> users
+                            Loved by{" "}
+                            <span className="font-semibold text-foreground">{users.length}+</span>{" "}
+                            users
                         </p>
-
                     </div>
-
                 </div>
 
                 <p className="mt-8 text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-zinc-600 opacity-50">
                     Track code • Gym • Finance • Mindset
                 </p>
             </div>
-
-            {/* App Preview Frame */}
-            {/* <div className="mt-24 w-full max-w-5xl rounded-[3rem] border-8 border-slate-100/50 dark:border-zinc-900/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-md shadow-[0_40px_100px_-20px_rgba(99,102,241,0.2)]">
-                <div className="rounded-[2rem] overflow-hidden border border-slate-200 dark:border-zinc-800">
-                    <HabitImpactGraph />
-                </div>
-            </div> */}
         </div>
-    )
-}
+    );
+};
 
-export default HeroSection
+export default HeroSection;

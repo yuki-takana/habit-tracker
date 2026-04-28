@@ -4,23 +4,64 @@ import { AddTodoModal } from "@/features/todos/add-todo-modal";
 import {
     Plus, ClipboardList, Smartphone, Loader2,
     Clock, CheckCircle2, AlertCircle, Sunrise, Sun, Moon,
-    Briefcase, Dumbbell, Heart, BookOpen, Star, Target, TrendingUp, ChevronDown, CheckCheck,
-    XCircle
+    Briefcase, Dumbbell, Heart, BookOpen, Star, Target,
+    TrendingUp, ChevronDown, CheckCheck, XCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiGoalAssistant } from "@/features/ai-goals/ai-goal-assistant";
 import { GoalPromptDialog } from "@/features/todos/goal-prompt-dialog";
 import { RoutinePromptDialog } from "@/features/todos/routine-prompt-dialog";
-
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { toggleWhatsapp } from "@/app/action";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
 import { TodoItem } from "@/features/todos/todo-item";
 import UFLProgressCard from "@/features/analytics/shareable-card";
 import { getTreeEmojiString, calculateTreeScale } from '@/lib/utils/forest';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Task {
+    id: string;
+    task: string;
+    category?: string;
+    status?: string;
+    completed?: boolean;
+    startTime?: string | null;
+    deadline?: string | null;
+    startedAt?: string | null;
+    reminderTime?: string | null;
+    delayCount?: number;
+    earnedXp?: number;
+}
+
+interface GroupedTasks {
+    today: Task[];
+    timeUp: Task[];
+    completed: Task[];
+    inProgress: Task[];
+    failed: Task[];
+}
+
+interface Stats {
+    total: number;
+    completed: number;
+    today: number;
+    timeUps: number;
+    inProgress: number;
+    failed: number;
+}
+
+interface TodosPageProps {
+    // Initial data passed from server component (page.tsx)
+    initialGrouped: GroupedTasks;
+    initialStats: Stats;
+    initialHasGoal: boolean;
+    initialHasRoutine: boolean;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getGreeting() {
     const h = new Date().getHours();
@@ -32,7 +73,8 @@ function getGreeting() {
 function formatDate() {
     const now = new Date();
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const months = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
     return { day: days[now.getDay()], date: now.getDate(), month: months[now.getMonth()] };
 }
 
@@ -49,14 +91,11 @@ function getCategoryIconAndColor(category: string) {
     }
 }
 
-
-// ─── Forest Tree Card ─────────────────────────────────────────────────────────
+// ─── Forest components (unchanged) ───────────────────────────────────────────
 
 function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }: any) {
     const ref = useRef<HTMLDivElement>(null);
     const emoji = getTreeEmojiString(category, index);
-
-    // Smooth size mapping: 0 to 5 -> 0.55 to 1.0 scale
     const scale = calculateTreeScale(treeTaskCount);
 
     const handleOpen = () => {
@@ -75,9 +114,12 @@ function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }:
         >
             <div className={cn(
                 "relative flex items-end justify-center transition-all duration-300 origin-bottom",
-                activeTree?.category === category && activeTree?.index === index ? "scale-150 z-20 drop-shadow-xl" : "group-hover:scale-125 drop-shadow-sm group-hover:drop-shadow-md"
+                activeTree?.category === category && activeTree?.index === index
+                    ? "scale-150 z-20 drop-shadow-xl"
+                    : "group-hover:scale-125 drop-shadow-sm group-hover:drop-shadow-md"
             )}>
-                <div className="text-2xl sm:text-3xl leading-none transition-all duration-300" style={{ transform: `scale(${scale})` }}>
+                <div className="text-2xl sm:text-3xl leading-none transition-all duration-300"
+                    style={{ transform: `scale(${scale})` }}>
                     {emoji}
                 </div>
             </div>
@@ -108,9 +150,7 @@ function TreeTooltip({ data }: any) {
     );
 }
 
-// ─── Forest View ──────────────────────────────────────────────────────────────
-
-function ForestView({ tasks }: { tasks: any[] }) {
+function ForestView({ tasks }: { tasks: Task[] }) {
     const [activeTree, setActiveTree] = useState<any>(null);
 
     const categories = useMemo(() => {
@@ -130,10 +170,11 @@ function ForestView({ tasks }: { tasks: any[] }) {
     return (
         <div className="mb-6 relative">
             <div className="flex items-center gap-2 mb-3 px-1">
-                <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500">Virtual Forest</p>
+                <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500">
+                    Virtual Forest
+                </p>
                 <div className="flex-1 h-px bg-zinc-200/60 dark:bg-zinc-800" />
             </div>
-
             <div className="relative bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 sm:px-6 sm:py-6 shadow-sm overflow-hidden">
                 <div className="flex flex-wrap items-end justify-center gap-6 sm:gap-10 pb-2 sm:pb-0">
                     {categories.map(([cat, counts]) => {
@@ -144,22 +185,14 @@ function ForestView({ tasks }: { tasks: any[] }) {
                                 ? counts.completed % 5
                                 : counts.completed === 0 ? 0 : 5;
                             elements.push(
-                                <TreeMini
-                                    key={`${cat}-${i}`}
-                                    category={cat}
-                                    index={i}
-                                    treeTaskCount={treeTaskCount}
-                                    activeTree={activeTree}
-                                    setActiveTree={setActiveTree}
-                                />
+                                <TreeMini key={`${cat}-${i}`} category={cat} index={i}
+                                    treeTaskCount={treeTaskCount} activeTree={activeTree} setActiveTree={setActiveTree} />
                             );
                         }
                         return (
                             <div key={cat} className="flex flex-col items-center gap-3 relative group/cat">
                                 <div className="absolute -inset-x-3 -inset-y-2 bg-zinc-100/50 dark:bg-zinc-800/30 rounded-2xl opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
-                                <div className="flex items-end gap-1 sm:gap-1.5 h-12 relative z-10">
-                                    {elements}
-                                </div>
+                                <div className="flex items-end gap-1 sm:gap-1.5 h-12 relative z-10">{elements}</div>
                                 <p className="text-[8px] sm:text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.15em] z-10">
                                     {cat}
                                 </p>
@@ -173,39 +206,244 @@ function ForestView({ tasks }: { tasks: any[] }) {
     );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+function TaskSkeleton() {
+    return (
+        <div className="flex gap-4 mb-5">
+            <div className="w-12 shrink-0 hidden lg:block" />
+            <div className="flex flex-col items-center pt-1.5">
+                <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+                <div className="w-px flex-1 mt-1.5 bg-zinc-100 dark:bg-zinc-800 min-h-[40px]" />
+            </div>
+            <div className="flex-1 pb-5">
+                <div className="rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 space-y-2">
+                    <div className="h-4 w-3/4 rounded-lg bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+                    <div className="h-3 w-1/3 rounded-lg bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
+                </div>
+            </div>
+        </div>
+    );
+}
 
-export default function TodosPage() {
+// ─── Infinite scroll hook ─────────────────────────────────────────────────────
+
+function useInfiniteSection(initialItems: Task[], pageSize = 10) {
+    const [items, setItems] = useState<Task[]>(initialItems);
+    const [page, setPage] = useState(1);
+    const hasMore = items.length < initialItems.length || page * pageSize < initialItems.length;
+
+    // When initialItems change (after refresh), reset
+    useEffect(() => { setItems(initialItems.slice(0, pageSize)); setPage(1); }, [initialItems]);
+
+    const loadMore = useCallback(() => {
+        const next = page + 1;
+        setItems(initialItems.slice(0, next * pageSize));
+        setPage(next);
+    }, [page, initialItems, pageSize]);
+
+    const visibleItems = initialItems.slice(0, page * pageSize);
+    const canLoadMore = page * pageSize < initialItems.length;
+
+    return { visibleItems, canLoadMore, loadMore };
+}
+
+
+function TaskSection({
+    title, icon, tasks, cat, onToggleComplete
+}: {
+    title: string;
+    icon: React.ReactNode;
+    tasks: Task[];
+    cat: "today" | "timeUp" | "completed" | "inProgress" | "failed";
+    onToggleComplete: (id: string, completed: boolean) => void;
+}) {
+    const [isOpen, setIsOpen] = useState(cat !== "completed" && cat !== "failed");
+    const { visibleItems, canLoadMore, loadMore } = useInfiniteSection(tasks, 10);
+    const sentinelRef = useRef<HTMLDivElement>(null);
+
+    // Auto-load more when sentinel enters viewport
+    useEffect(() => {
+        if (!isOpen || !canLoadMore) return;
+        const observer = new IntersectionObserver(
+            (entries) => { if (entries[0].isIntersecting) loadMore(); },
+            { threshold: 0.1 }
+        );
+        if (sentinelRef.current) observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [isOpen, canLoadMore, loadMore]);
+
+    if (!tasks.length) return null;
+
+    const accentMap = {
+        today: "text-indigo-500", timeUp: "text-red-500", completed: "text-emerald-500",
+        inProgress: "text-indigo-500", failed: "text-rose-500",
+    };
+    const bgAccentMap = {
+        today: "bg-indigo-500/10", timeUp: "bg-red-500/10", completed: "bg-emerald-500/10",
+        inProgress: "bg-indigo-500/10", failed: "bg-rose-500/10",
+    };
+
+    return (
+        <div className="mb-4">
+            <button
+                onClick={() => setIsOpen(o => !o)}
+                className="flex items-center gap-2.5 w-full text-left mb-6 mt-8 group"
+            >
+                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", bgAccentMap[cat], accentMap[cat])}>
+                    {icon}
+                </div>
+                <h2 className="text-xs font-black tracking-widest uppercase text-zinc-500 dark:text-zinc-400">{title}</h2>
+                <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full ml-1">
+                    {tasks.length}
+                </span>
+                <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
+                <ChevronDown className={cn("w-3.5 h-3.5 text-zinc-400 transition-transform duration-200", isOpen ? "rotate-0" : "-rotate-90")} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="flex flex-col">
+                            {visibleItems.map((task, idx) => {
+                                const isLast = idx === visibleItems.length - 1 && !canLoadMore;
+                                const { icon: CatIcon, bg, color } = getCategoryIconAndColor(task.category || '');
+                                const isDone = task.completed || task.status === 'completed';
+                                const inProgress = task.status === 'in_progress';
+
+                                return (
+                                    <motion.div
+                                        key={task.id}
+                                        initial={{ opacity: 0, x: -12 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: Math.min(idx * 0.04, 0.3), duration: 0.25 }}
+                                        className="flex gap-4 group"
+                                    >
+                                        {/* Timestamp */}
+                                        <div className="w-12 shrink-0 pt-2.5 text-right hidden lg:block">
+                                            <span className="text-[11px] font-mono font-semibold text-zinc-400 dark:text-zinc-600 leading-none">
+                                                {task.reminderTime
+                                                    ? new Date(task.reminderTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+                                                    : "—:——"}
+                                            </span>
+                                        </div>
+
+                                        {/* Timeline dot + line */}
+                                        <div className="flex flex-col items-center pt-1.5">
+                                            <div className={cn(
+                                                "relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                                                bg, isDone && "opacity-70 saturate-50"
+                                            )}>
+                                                {isDone
+                                                    ? <CheckCheck className="w-3.5 h-3.5 text-white" />
+                                                    : <CatIcon className={cn("w-3.5 h-3.5", color)} />
+                                                }
+                                                {inProgress && (
+                                                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-indigo-400 rounded-full border-2 border-background animate-pulse" />
+                                                )}
+                                            </div>
+                                            {!isLast && (
+                                                <div className="w-px flex-1 mt-1.5 bg-gradient-to-b from-zinc-300/30 dark:from-zinc-700/50 to-transparent min-h-[20px]" />
+                                            )}
+                                        </div>
+
+                                        {/* Task card */}
+                                        <div className="flex-1 pb-5 min-w-0">
+                                            <TodoItem
+                                                id={task.id}
+                                                task={task.task}
+                                                category={task.category || "General"}
+                                                status={task.status || (task.completed ? "completed" : "pending")}
+                                                completed={task.completed ?? false}
+                                                startTime={task.startTime ?? null}
+                                                deadline={task.deadline ?? null}
+                                                startedAt={task.startedAt ?? null}
+                                                reminderTime={task.reminderTime ? new Date(task.reminderTime) : null}
+                                                delayCount={task.delayCount ?? 0}
+                                                onToggleComplete={onToggleComplete}
+                                            />
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Intersection observer sentinel for auto-load */}
+                        {canLoadMore && (
+                            <div ref={sentinelRef} className="flex gap-4 mb-4">
+                                <div className="w-12 shrink-0 hidden lg:block" />
+                                <div className="flex flex-col items-center">
+                                    <div className="w-8 shrink-0 flex justify-center">
+                                        <div className="w-px h-full bg-gradient-to-b from-zinc-300/30 dark:from-zinc-700/50 to-transparent" />
+                                    </div>
+                                </div>
+                                <div className="flex-1 py-3 flex items-center justify-center gap-2 text-zinc-400 text-[10px] font-extrabold tracking-widest uppercase">
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    Loading more...
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+export default function TodosPage({
+    initialGrouped,
+    initialStats,
+    initialHasGoal,
+    initialHasRoutine,
+}: TodosPageProps) {
     const { data: session } = useSession();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-    const [tasks, setTasks] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isWhatsappEnabled, setIsWhatsappEnabled] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
-    const [visibleCounts, setVisibleCounts] = useState({ today: 10, timeUp: 10, completed: 10, inProgress: 10, failed: 10 });
-    const [stats, setStats] = useState<any>({ total: 0, completed: 0, today: 0, timeUps: 0, inProgress: 0, failed: 0 });
-    const [pagination, setPagination] = useState<any>({ page: 1, limit: 10, totalPages: 1 });
-    const [grouped, setGrouped] = useState<any>({ today: [], timeUp: [], completed: [], inProgress: [], failed: [], });
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ timeUp: true, today: true, completed: false, inProgress: true, failed: false });
-    const [dashboardMeta, setDashboardMeta] = useState({ hasGoal: true, hasRoutine: true });
-    const [showGoalPrompt, setShowGoalPrompt] = useState(false);
-    const [showRoutinePrompt, setShowRoutinePrompt] = useState(false);
+    const [grouped, setGrouped] = useState<GroupedTasks>(initialGrouped);
+    const [stats, setStats] = useState<Stats>(initialStats);
+    const [hasGoal, setHasGoal] = useState(initialHasGoal);
+    const [hasRoutine, setHasRoutine] = useState(initialHasRoutine);
+    const [showGoalPrompt, setShowGoalPrompt] = useState(!initialHasGoal);
+    const [showRoutinePrompt, setShowRoutinePrompt] = useState(initialHasGoal && !initialHasRoutine);
+
+    // All tasks flat list for forest view
+    const allTasks = useMemo(() => [
+        ...grouped.today, ...grouped.inProgress, ...grouped.completed,
+        ...grouped.timeUp, ...grouped.failed
+    ], [grouped]);
 
     const { text: greetingText, icon: GreetingIcon } = getGreeting();
     const { day, date, month } = formatDate();
     const userName = session?.user?.name ? session.user.name.split(" ")[0] : "there";
-    const progressPct = (stats?.total || 0) > 0 ? Math.round(((stats?.completed || 0) / (stats?.total || 1)) * 100) : 0;
+    const progressPct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
     useEffect(() => {
-        if (session?.user) {
+        // @ts-ignore
+        if (session?.user?.whatsappEnabled !== undefined) {
             // @ts-ignore
             setIsWhatsappEnabled(session.user.whatsappEnabled || false);
         }
     }, [session]);
 
     const handleToggleComplete = useCallback((id: string, completed: boolean) => {
-        setTasks((prev) => prev.map((t) => t.id === id ? { ...t, completed } : t));
+        setGrouped(prev => {
+            const updated = { ...prev };
+            (Object.keys(updated) as (keyof GroupedTasks)[]).forEach(key => {
+                updated[key] = updated[key].map(t => t.id === id ? { ...t, completed } : t);
+            });
+            return updated;
+        });
+        // Update stats optimistically
+        setStats(prev => ({
+            ...prev,
+            completed: completed ? prev.completed + 1 : Math.max(0, prev.completed - 1),
+        }));
     }, []);
 
     const handleToggleWhatsapp = async () => {
@@ -222,193 +460,37 @@ export default function TodosPage() {
         }
     };
 
-    const fetchTasks = async (page = 1) => {
+    // Refresh grouped data after modal actions (lightweight — no full page reload)
+    const refreshGrouped = useCallback(async () => {
         try {
-            const res = await fetch(`/api/todos?page=${page}&limit=10`);
+            const res = await fetch('/api/todos/dashboard');
             if (res.ok) {
                 const result = await res.json();
-                setTasks(result.data);
-                if (result.stats) setStats(result.stats);
-                setPagination(result.pagination);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchGroupedTasks = async () => {
-        try {
-            const res = await fetch(`/api/todos/dashboard`);
-            if (res.ok) {
-                const result = await res.json();
-    
                 setGrouped(result.grouped);
                 if (result.stats) setStats(result.stats);
-
-                setDashboardMeta({ hasGoal: result.hasGoal, hasRoutine: result.hasRoutine });
-
-                if (result.hasGoal === false) {
-                    setShowGoalPrompt(true);
-                } else if (result.hasRoutine === false) {
-                    setShowRoutinePrompt(true);
-                }
+                setHasGoal(result.hasGoal);
+                setHasRoutine(result.hasRoutine);
             }
         } catch (e) {
             console.error(e);
-        } finally {
-            setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        fetchTasks();
-        fetchGroupedTasks();
     }, []);
 
-    const handleLoadMore = (cat: "today" | "timeUp" | "completed" | "inProgress" | "failed") =>
-        setVisibleCounts((p) => ({ ...p, [cat]: p[cat] + 10 }));
-
-    function renderSection(
-        title: string,
-        icon: React.ReactNode,
-        list: any[],
-        cat: "today" | "timeUp" | "completed" | "inProgress" | "failed"
-    ) {
-        if (!list.length) return null;
-        const visible = list.slice(0, visibleCounts[cat]);
-        const hasMore = list.length > visibleCounts[cat];
-        const accentMap = {
-            today: "text-indigo-500",
-            timeUp: "text-red-500",
-            completed: "text-emerald-500",
-            inProgress: "text-indigo-500",
-            failed: "text-rose-500",
-        };
-        const bgAccentMap = {
-            today: "bg-indigo-500/10",
-            timeUp: "bg-red-500/10",
-            completed: "bg-emerald-500/10",
-            inProgress: "bg-indigo-500/10",
-            failed: "bg-rose-500/10",
-        };
-
-        const isOpen = openSections[cat];
-        const setOpen = () => setOpenSections(prev => ({ ...prev, [cat]: !prev[cat] }));
-
-        return (
-            <div className="mb-4">
-                <button
-                    onClick={setOpen}
-                    className="flex items-center gap-2.5 w-full text-left mb-6 mt-8 group"
-                >
-                    <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", bgAccentMap[cat], accentMap[cat])}>
-                        {icon}
-                    </div>
-                    <h2 className="text-xs font-black tracking-widest uppercase text-zinc-500 dark:text-zinc-400">{title}</h2>
-                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full ml-1">
-                        {list.length}
-                    </span>
-                    <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
-                    <ChevronDown
-                        className={cn("w-3.5 h-3.5 text-zinc-400 transition-transform duration-200", isOpen ? "rotate-0" : "-rotate-90")}
-                    />
-                </button>
-
-                <AnimatePresence>
-                    {isOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                        >
-                            <div className="flex flex-col">
-                                {visible.map((task, idx) => {
-                                    const isLast = idx === visible.length - 1 && !hasMore;
-                                    const { icon: CatIcon, bg, color } = getCategoryIconAndColor(task.category);
-                                    const isDone = task.completed || task.status === 'completed';
-                                    const inProgress = task.status === 'in_progress';
-
-                                    return (
-                                        <motion.div
-                                            initial={{ opacity: 0, x: -12 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.05, duration: 0.3 }}
-                                            className="flex gap-4 group" key={task.id}
-                                        >
-                                            {/* Left: Timestamp */}
-                                            <div className="w-12 shrink-0 pt-2.5 text-right hidden lg:block">
-                                                <span className="text-[11px] font-mono font-semibold text-zinc-400 dark:text-zinc-600 leading-none">
-                                                    {task.reminderTime ? new Date(task.reminderTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }) : "—:——"}
-                                                </span>
-                                            </div>
-
-                                            {/* Center: Icon + Line */}
-                                            <div className="flex flex-col items-center pt-1.5">
-                                                <div className={cn("relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md", bg, isDone && "opacity-70 saturate-50")}>
-                                                    {isDone ? <CheckCheck className="w-3.5 h-3.5 text-white" /> : <CatIcon className={cn("w-3.5 h-3.5", color)} />}
-                                                    {inProgress && (
-                                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-indigo-400 rounded-full border-2 border-background animate-pulse" />
-                                                    )}
-                                                </div>
-                                                {!isLast && (
-                                                    <div className="w-px flex-1 mt-1.5 bg-gradient-to-b from-zinc-300/30 dark:from-zinc-700/50 to-transparent min-h-[20px]" />
-                                                )}
-                                            </div>
-
-                                            {/* Right: Task Card */}
-                                            <div className="flex-1 pb-5 min-w-0">
-                                                <TodoItem
-                                                    id={task.id}
-                                                    task={task.task}
-                                                    category={task.category || "General"}
-                                                    status={task.status}
-                                                    completed={task.completed ?? false}
-                                                    startTime={task.startTime ?? null}
-                                                    deadline={task.deadline ?? null}
-                                                    startedAt={task.startedAt ?? null}
-                                                    reminderTime={task.reminderTime ? new Date(task.reminderTime) : null}
-                                                    delayCount={task.delayCount ?? 0}
-                                                    onToggleComplete={handleToggleComplete}
-                                                />
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
-
-                            {hasMore && (
-                                <div className="flex gap-4 mb-4">
-                                    <div className="w-12 shrink-0 hidden lg:block" />
-                                    <div className="flex flex-col items-center"><div className="w-8 shrink-0 flex justify-center"><div className="w-px h-full bg-gradient-to-b from-zinc-300/30 dark:from-zinc-700/50 to-transparent" /></div></div>
-                                    <button
-                                        onClick={() => handleLoadMore(cat)}
-                                        className="flex-1 py-3 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400 text-[10px] font-extrabold tracking-widest uppercase hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all active:scale-95"
-                                    >
-                                        Load More
-                                    </button>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-        );
-    }
+    const isEmpty = allTasks.length === 0;
 
     return (
         <>
             <style>{`
-        @keyframes header-in { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
-        .page-header { animation: header-in .45s ease forwards; }
-      `}</style>
+                @keyframes header-in {
+                    from { opacity: 0; transform: translateY(-12px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .page-header { animation: header-in .45s ease forwards; }
+            `}</style>
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-24">
 
-                {/* Header */}
+                {/* ── Header ─────────────────────────────────────────── */}
                 <div className="page-header mb-8 pt-6">
                     <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-1.5">
@@ -418,9 +500,7 @@ export default function TodosPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
                         </div>
                     </div>
-                    <div className="text-sm text-zinc-500 dark:text-zinc-500 font-medium mb-4">
-                        {month}
-                    </div>
+                    <div className="text-sm text-zinc-500 dark:text-zinc-500 font-medium mb-4">{month}</div>
 
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-6">
                         <div>
@@ -446,7 +526,9 @@ export default function TodosPage() {
                                         : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-zinc-600"
                                 )}
                             >
-                                {toggleLoading ? <Loader2 size={20} className="animate-spin" /> : <Smartphone size={20} />}
+                                {toggleLoading
+                                    ? <Loader2 size={20} className="animate-spin" />
+                                    : <Smartphone size={20} />}
                             </button>
 
                             <UFLProgressCard />
@@ -461,23 +543,40 @@ export default function TodosPage() {
                         </div>
                     </div>
 
-                    {/* Progress Card */}
+                    {/* Progress bar */}
                     <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">
-                                    Progress in motion
-                                </p>
-                            </div>
-                            <span className={cn("text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider", progressPct >= 80 ? "bg-emerald-500/15 text-emerald-500" : progressPct >= 50 ? "bg-amber-500/15 text-amber-500" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500")}>
+                            <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">
+                                Progress in motion
+                            </p>
+                            <span className={cn(
+                                "text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider",
+                                progressPct >= 80
+                                    ? "bg-emerald-500/15 text-emerald-500"
+                                    : progressPct >= 50
+                                        ? "bg-amber-500/15 text-amber-500"
+                                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                            )}>
                                 {progressPct}% complete
                             </span>
                         </div>
                         <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${progressPct}%` }} transition={{ duration: 0.8, ease: "easeOut" }} className={cn("h-full rounded-full", progressPct >= 80 ? "bg-emerald-500" : progressPct >= 50 ? "bg-amber-500" : "bg-indigo-500")} />
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progressPct}%` }}
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                className={cn(
+                                    "h-full rounded-full",
+                                    progressPct >= 80 ? "bg-emerald-500" : progressPct >= 50 ? "bg-amber-500" : "bg-indigo-500"
+                                )}
+                            />
                         </div>
                         <div className="flex gap-3 mt-3">
-                            {[{ label: "total", value: stats?.total || 0, color: "text-zinc-500" }, { label: "done", value: stats?.completed || 0, color: "text-emerald-500" }, { label: "pending", value: (stats?.total || 0) - (stats?.completed || 0), color: "text-amber-500" }].map(s => (
+                            {[
+                                { label: "total", value: stats.total, color: "text-zinc-500" },
+                                { label: "done", value: stats.completed, color: "text-emerald-500" },
+                                { label: "pending", value: stats.total - stats.completed, color: "text-amber-500" },
+                            ].map(s => (
                                 <div key={s.label} className="flex items-baseline gap-1">
                                     <span className={`text-sm font-black ${s.color}`}>{s.value}</span>
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">{s.label}</span>
@@ -487,29 +586,11 @@ export default function TodosPage() {
                     </div>
                 </div>
 
-                {/* Forest */}
-                {!loading && tasks.length > 0 && <ForestView tasks={tasks} />}
+                {/* ── Forest ─────────────────────────────────────────── */}
+                {allTasks.length > 0 && <ForestView tasks={allTasks} />}
 
-                {/* Todo sections */}
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-24 gap-4">
-                        <div className="relative w-10 h-10">
-                            <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20" />
-                            <div className="absolute inset-0 rounded-full border-2 border-t-indigo-500 animate-spin" />
-                        </div>
-                        <p className="text-xs font-extrabold tracking-[.2em] uppercase text-zinc-400 animate-pulse">
-                            Syncing consciousness...
-                        </p>
-                    </div>
-                ) : tasks.length > 0 ? (
-                    <div>
-                        {renderSection("Time Up", <AlertCircle size={18} />, grouped.timeUp, "timeUp")}
-                        {renderSection("In Progress", <Clock size={18} />, grouped.inProgress, "inProgress")}
-                        {renderSection("Today's Missions", <Clock size={18} />, grouped.today, "today")}
-                        {renderSection("Completed", <CheckCircle2 size={18} />, grouped.completed, "completed")}
-                        {renderSection("Failed", <XCircle size={18} />, grouped.failed, "failed")}
-                    </div>
-                ) : (
+                {/* ── Task sections ──────────────────────────────────── */}
+                {isEmpty ? (
                     <div className="flex flex-col items-center justify-center py-24 px-8 rounded-[2.5rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-900/30">
                         <div className="w-20 h-20 rounded-[1.8rem] bg-white dark:bg-zinc-800 flex items-center justify-center mb-6 shadow-xl shadow-indigo-100/50 dark:shadow-none">
                             <ClipboardList className="text-indigo-500" size={40} />
@@ -527,34 +608,36 @@ export default function TodosPage() {
                             Create First Task
                         </button>
                     </div>
+                ) : (
+                    <div>
+                        <TaskSection title="Time Up" icon={<AlertCircle size={14} />} tasks={grouped.timeUp} cat="timeUp" onToggleComplete={handleToggleComplete} />
+                        <TaskSection title="In Progress" icon={<Clock size={14} />} tasks={grouped.inProgress} cat="inProgress" onToggleComplete={handleToggleComplete} />
+                        <TaskSection title="Today's Missions" icon={<Clock size={14} />} tasks={grouped.today} cat="today" onToggleComplete={handleToggleComplete} />
+                        <TaskSection title="Completed" icon={<CheckCircle2 size={14} />} tasks={grouped.completed} cat="completed" onToggleComplete={handleToggleComplete} />
+                        <TaskSection title="Failed" icon={<XCircle size={14} />} tasks={grouped.failed} cat="failed" onToggleComplete={handleToggleComplete} />
+                    </div>
                 )}
 
-                {/* Modals */}
+                {/* ── Modals ─────────────────────────────────────────── */}
                 <AddTodoModal
                     isOpen={isModalOpen}
-                    onClose={() => { setIsModalOpen(false); fetchGroupedTasks(); }}
+                    onClose={() => { setIsModalOpen(false); refreshGrouped(); }}
                 />
                 <AiGoalAssistant
                     isOpen={isAiModalOpen}
-                    onClose={() => { setIsAiModalOpen(false); fetchGroupedTasks(); }}
+                    onClose={() => { setIsAiModalOpen(false); refreshGrouped(); }}
                 />
                 <GoalPromptDialog
                     isOpen={showGoalPrompt}
                     onClose={() => {
                         setShowGoalPrompt(false);
-                        if (!dashboardMeta.hasRoutine) {
-                            setShowRoutinePrompt(true);
-                        } else {
-                            fetchGroupedTasks();
-                        }
+                        if (!hasRoutine) setShowRoutinePrompt(true);
+                        else refreshGrouped();
                     }}
                 />
                 <RoutinePromptDialog
                     isOpen={showRoutinePrompt}
-                    onClose={() => {
-                        setShowRoutinePrompt(false);
-                        fetchGroupedTasks();
-                    }}
+                    onClose={() => { setShowRoutinePrompt(false); refreshGrouped(); }}
                 />
             </div>
         </>
