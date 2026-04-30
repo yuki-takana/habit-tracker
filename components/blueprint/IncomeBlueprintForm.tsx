@@ -176,7 +176,7 @@ export function IncomeBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-lg shadow-emerald-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Revenue Plan...</>
+                                <><UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> Architecting Revenue Plan...</>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <HandCoins className="w-5 h-5" />
@@ -190,3 +190,4 @@ export function IncomeBlueprintForm() {
         </motion.div>
     )
 }
+

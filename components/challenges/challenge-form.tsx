@@ -139,7 +139,7 @@ export default function ChallengeForm({ onSuccess }: { onSuccess?: () => void })
                         disabled={loading}
                     >
                         {loading ? (
-                            <UflLoaderInline style="flip" compact={true} className="mr-2" />
+                            <UflLoaderInline style="pulse-dots" compact={true} className="mr-2" />
                         ) : (
                             <span className="flex items-center gap-2">
                                 <Target size={20} />
@@ -152,3 +152,4 @@ export default function ChallengeForm({ onSuccess }: { onSuccess?: () => void })
         </Card>
     );
 }
+

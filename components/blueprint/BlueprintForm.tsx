@@ -212,7 +212,7 @@ export function BlueprintForm({ domain, title, description, icon: Icon, colorCla
                             >
                                 {isLoading ? (
                                     <span className="flex items-center justify-center gap-3">
-                                        <UflLoaderInline style="flip" compact={true} className="w-6 h-6" />
+                                        <UflLoaderInline style="pulse-dots" compact={true} className="w-6 h-6" />
                                         <span>Architecting Your Future...</span>
                                     </span>
                                 ) : (

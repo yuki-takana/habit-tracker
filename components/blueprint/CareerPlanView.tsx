@@ -56,7 +56,7 @@ export function CareerPlanView({ planId }: { planId: string }) {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground animate-in fade-in duration-500">
-                <UflLoaderInline style="flip" text="Generating your career transition roadmap..." />
+                <UflLoaderInline style="pulse-dots" text="Generating your career transition roadmap..." />
             </div>
         )
     }
@@ -267,3 +267,4 @@ export function CareerPlanView({ planId }: { planId: string }) {
         </div>
     )
 }
+

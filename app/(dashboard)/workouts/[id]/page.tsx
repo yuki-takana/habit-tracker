@@ -50,7 +50,7 @@ export default function WorkoutDetail() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <UflLoaderInline style="flip" text="Loading workout..." />
+                <UflLoaderInline style="pulse-dots" text="Loading workout..." />
             </div>
         )
     }

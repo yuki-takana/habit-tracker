@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 
 /* ─────────────────────────────────────────────────────
    Shared helpers
@@ -309,9 +310,98 @@ export function SplitLoader({ text }: { text?: string }) {
 }
 
 /* ─────────────────────────────────────────────────────
+   8. MINIMAL RING — sleek gradient spinner ring
+───────────────────────────────────────────────────── */
+export function MinimalRingLoader({ text }: { text?: string }) {
+    return (
+        <div className="flex flex-col items-center gap-5">
+            <motion.div
+                className="w-12 h-12 rounded-full border-4 border-slate-200 dark:border-zinc-800 border-t-indigo-500"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+            {text && <p className="text-xs text-muted-foreground font-medium tracking-widest uppercase animate-pulse">{text}</p>}
+        </div>
+    )
+}
+
+/* ─────────────────────────────────────────────────────
+   9. PULSE DOTS — minimal fading dots
+───────────────────────────────────────────────────── */
+export function PulseDotsLoader({ text }: { text?: string }) {
+    return (
+        <div className="flex flex-col items-center gap-5">
+            <div className="flex items-center gap-2 h-12">
+                {[0, 1, 2].map((i) => (
+                    <motion.div
+                        key={i}
+                        className="w-3 h-3 rounded-full bg-indigo-500"
+                        animate={{ scale: [1, 0.5, 1], opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
+                    />
+                ))}
+            </div>
+            {text && <p className="text-xs text-muted-foreground font-medium tracking-widest uppercase animate-pulse">{text}</p>}
+        </div>
+    )
+}
+
+/* ─────────────────────────────────────────────────────
+   10. AI CORE — futuristic AI pulsing core with spinning ring
+───────────────────────────────────────────────────── */
+export function AiCoreLoader({ text }: { text?: string }) {
+    return (
+        <div className="flex flex-col items-center gap-5">
+            <div className="relative flex items-center justify-center w-16 h-16">
+                {/* Core */}
+                <motion.div
+                    className="w-4 h-4 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.8)]"
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.8, 1, 0.8] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                {/* Spinning ring 1 */}
+                <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-500/50"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                />
+                {/* Spinning ring 2 */}
+                <motion.div
+                    className="absolute inset-2 rounded-full border border-t-transparent border-violet-500"
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                />
+            </div>
+            {text && <p className="text-xs text-muted-foreground font-medium tracking-widest uppercase animate-pulse">{text}</p>}
+        </div>
+    )
+}
+
+/* ─────────────────────────────────────────────────────
+   11. WAVE BARS — minimalist vertical bars
+───────────────────────────────────────────────────── */
+export function WaveBarsLoader({ text }: { text?: string }) {
+    return (
+        <div className="flex flex-col items-center gap-5">
+            <div className="flex items-center gap-1.5 h-12">
+                {[0, 1, 2, 3, 4].map((i) => (
+                    <motion.div
+                        key={i}
+                        className="w-1.5 rounded-full bg-indigo-500"
+                        animate={{ height: ["12px", "32px", "12px"] }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "easeInOut", delay: i * 0.1 }}
+                    />
+                ))}
+            </div>
+            {text && <p className="text-xs text-muted-foreground font-medium tracking-widest uppercase animate-pulse">{text}</p>}
+        </div>
+    )
+}
+
+/* ─────────────────────────────────────────────────────
    Master export — UflLoader with `style` prop
 ───────────────────────────────────────────────────── */
-export type LoaderStyle = "bounce" | "typewriter" | "glitch" | "flip" | "glow" | "orbit" | "split"
+export type LoaderStyle = "bounce" | "typewriter" | "glitch" | "flip" | "glow" | "orbit" | "split" | "minimal-ring" | "pulse-dots" | "ai-core" | "wave-bars"
 
 function LoaderInner({ style = "bounce", text, compact = false }: { style: LoaderStyle; text?: string; compact?: boolean }) {
     switch (style) {
@@ -321,6 +411,10 @@ function LoaderInner({ style = "bounce", text, compact = false }: { style: Loade
         case "glow": return <GlowLoader text={text} />
         case "orbit": return <OrbitLoader text={text} />
         case "split": return <SplitLoader text={text} />
+        case "minimal-ring": return <MinimalRingLoader text={text} />
+        case "pulse-dots": return <PulseDotsLoader text={text} />
+        case "ai-core": return <AiCoreLoader text={text} />
+        case "wave-bars": return <WaveBarsLoader text={text} />
         default: return <BounceLoader text={text} />
     }
 }
@@ -349,5 +443,8 @@ export function UflLoader({ style = "bounce", variant = "full", text, className,
 
 /** Inline convenience wrapper — use like <UflLoaderInline /> to replace Loader2 spinners */
 export function UflLoaderInline({ style = "bounce", text, className, compact = false }: Omit<UflLoaderProps, "variant">) {
+    if (compact) {
+        return <Loader2 className={cn("animate-spin", className)} />
+    }
     return <UflLoader style={style} variant="inline" text={text} className={cn(!compact && "py-16", className)} compact={compact} />
 }

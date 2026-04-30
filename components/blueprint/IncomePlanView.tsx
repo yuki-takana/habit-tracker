@@ -73,7 +73,7 @@ export function IncomePlanView({ planId }: { planId: string }) {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground animate-in fade-in duration-500">
-                <UflLoaderInline style="flip" text="Retrieving your classified financial blueprint..." />
+                <UflLoaderInline style="pulse-dots" text="Retrieving your classified financial blueprint..." />
             </div>
         )
     }
@@ -255,3 +255,4 @@ export function IncomePlanView({ planId }: { planId: string }) {
         </div>
     )
 }
+

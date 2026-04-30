@@ -201,7 +201,7 @@ export default function TodoSessionsPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <UflLoaderInline style="flip" />
+                <UflLoaderInline style="pulse-dots" />
                 <p className="text-slate-500 font-medium">Preparing your focus room...</p>
             </div>
         );

@@ -62,7 +62,7 @@ export function BlueprintTaskView({ planId }: { planId: string }) {
 
     if (isLoading) return (
         <div className="flex flex-col items-center justify-center p-20 space-y-4">
-            <UflLoaderInline style="flip" />
+            <UflLoaderInline style="pulse-dots" />
             <p className="text-muted-foreground animate-pulse font-medium">Assembling your daily roadmap...</p>
         </div>
     )
@@ -194,3 +194,4 @@ export function BlueprintTaskView({ planId }: { planId: string }) {
         </div>
     )
 }
+

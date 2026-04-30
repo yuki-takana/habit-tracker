@@ -234,7 +234,7 @@ export function ProductivityBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl shadow-lg shadow-amber-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting System...</>
+                                <><UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> Architecting System...</>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <Clock className="w-5 h-5" />
@@ -248,3 +248,4 @@ export function ProductivityBlueprintForm() {
         </motion.div>
     )
 }
+

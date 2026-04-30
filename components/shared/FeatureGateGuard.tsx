@@ -46,7 +46,7 @@ export default function FeatureGateGuard({ children, config }: FeatureGateGuardP
     if (isChecking) {
         return (
             <div className="h-[60vh] flex items-center justify-center">
-                <UflLoaderInline style="flip" />
+                <UflLoaderInline style="pulse-dots" />
             </div>
         )
     }
@@ -55,3 +55,4 @@ export default function FeatureGateGuard({ children, config }: FeatureGateGuardP
 
     return <>{children}</>
 }
+

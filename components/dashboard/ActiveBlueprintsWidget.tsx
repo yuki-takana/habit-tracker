@@ -57,7 +57,7 @@ export function ActiveBlueprintsWidget() {
     if (isLoading) {
         return (
             <Card className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
-                <UflLoaderInline style="flip" />
+                <UflLoaderInline style="pulse-dots" />
                 <p className="text-sm font-medium text-slate-500 mt-6 animate-pulse uppercase tracking-[0.2em]">Syncing Blueprints...</p>
             </Card>
         )
@@ -130,3 +130,4 @@ export function ActiveBlueprintsWidget() {
         </Card>
     )
 }
+

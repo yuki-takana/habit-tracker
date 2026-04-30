@@ -72,7 +72,7 @@ export default function ChallengesPage() {
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <UflLoaderInline style="flip" />
+                    <UflLoaderInline style="pulse-dots" />
                     <p className="text-slate-500 font-medium text-lg">Loading your journey...</p>
                 </div>
             ) : challenges.length > 0 ? (
@@ -207,3 +207,4 @@ export default function ChallengesPage() {
         </div>
     );
 }
+

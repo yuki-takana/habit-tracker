@@ -175,7 +175,7 @@ export function BusinessBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl shadow-lg shadow-slate-800/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Venture...</>
+                                <><UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> Architecting Venture...</>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <TrendingUp className="w-5 h-5" />
@@ -189,3 +189,4 @@ export function BusinessBlueprintForm() {
         </motion.div>
     )
 }
+

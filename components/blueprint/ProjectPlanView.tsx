@@ -73,7 +73,7 @@ export function ProjectPlanView({ planId }: { planId: string }) {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground animate-in fade-in duration-500">
-                <UflLoaderInline style="flip" text="Compiling architecture roadmap..." />
+                <UflLoaderInline style="pulse-dots" text="Compiling architecture roadmap..." />
             </div>
         )
     }
@@ -241,3 +241,4 @@ export function ProjectPlanView({ planId }: { planId: string }) {
         </div>
     )
 }
+

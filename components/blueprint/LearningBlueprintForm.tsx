@@ -208,7 +208,7 @@ export function LearningBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl shadow-lg shadow-orange-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Learning Path...</>
+                                <><UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> Architecting Learning Path...</>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <BookOpen className="w-5 h-5" />
@@ -222,3 +222,4 @@ export function LearningBlueprintForm() {
         </motion.div>
     )
 }
+

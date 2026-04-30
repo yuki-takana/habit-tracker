@@ -14,6 +14,10 @@ const variants: { style: LoaderStyle; label: string; desc: string; dark?: boolea
     { style: "glow", label: "Neon Glow", desc: "Letters pulse with expanding neon rings" },
     { style: "orbit", label: "Orbit", desc: "Dots orbit around the UFL text" },
     { style: "split", label: "Split", desc: "Letters fly apart and slam back together" },
+    { style: "minimal-ring", label: "Minimal Ring", desc: "Sleek and classic gradient spinning ring" },
+    { style: "pulse-dots", label: "Pulse Dots", desc: "Simple fading dots for minimal distraction" },
+    { style: "ai-core", label: "AI Core", desc: "Futuristic pulsing core with rotating tech rings", dark: true },
+    { style: "wave-bars", label: "Wave Bars", desc: "Minimalist vertical wave animation" },
 ]
 
 export default function LoaderDemoPage() {
@@ -32,7 +36,7 @@ export default function LoaderDemoPage() {
             <div className="max-w-5xl mx-auto space-y-12">
                 <div className="text-center space-y-2">
                     <Badge variant="outline" className="text-xs tracking-widest uppercase font-semibold mb-4">UFL Loader Gallery</Badge>
-                    <h1 className="text-4xl font-black tracking-tight">7 Loader Styles</h1>
+                    <h1 className="text-4xl font-black tracking-tight">{variants.length} Loader Styles</h1>
                     <p className="text-muted-foreground">Click any card to preview it full-screen. Pick your favourite to roll out app-wide.</p>
                 </div>
 

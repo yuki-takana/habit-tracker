@@ -155,7 +155,7 @@ const AdminDashboard = () => {
     if (isQueryLoading) {
         return (
             <div className="flex h-[80vh] items-center justify-center">
-                <UflLoaderInline style="flip" />
+                <UflLoaderInline style="pulse-dots" />
             </div>
         )
     }

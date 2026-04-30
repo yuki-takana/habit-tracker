@@ -87,7 +87,7 @@ export function PlanView({ planId, domain, accentColor, icon: Icon, title }: Pla
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center p-20 space-y-4">
-                <UflLoaderInline style="flip" />
+                <UflLoaderInline style="pulse-dots" />
                 <p className="text-muted-foreground animate-pulse font-medium">Loading your blueprint...</p>
             </div>
         )
@@ -324,3 +324,4 @@ export function PlanView({ planId, domain, accentColor, icon: Icon, title }: Pla
         </div>
     )
 }
+

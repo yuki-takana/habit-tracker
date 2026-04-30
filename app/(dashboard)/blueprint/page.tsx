@@ -378,7 +378,7 @@ export default function BlueprintHubPage() {
 
                 {isLoading ? (
                     <div className="flex items-center justify-center p-12">
-                        <UflLoaderInline style="flip" />
+                        <UflLoaderInline style="pulse-dots" />
                     </div>
                 ) : activeBlueprints.length === 0 ? (
                     <div className="text-center p-12 bg-primary/5 rounded-2xl border border-primary/10 border-dashed">
@@ -429,3 +429,4 @@ export default function BlueprintHubPage() {
         </div>
     );
 }
+

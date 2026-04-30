@@ -160,7 +160,7 @@ export default function CodingPage() {
                 <section className="w-full flex justify-center">
                     {loadingAdvanced ? (
                         <Card className="w-full max-w-6xl p-12 flex flex-col items-center justify-center border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 rounded-3xl gap-4">
-                            <UflLoaderInline style="flip" />
+                            <UflLoaderInline style="pulse-dots" />
                             <p className="text-sm text-slate-500 font-medium">
                                 Analyzing contribution pattern...
                             </p>
@@ -175,7 +175,7 @@ export default function CodingPage() {
                 <div >
                     {loadingStats ? (
                         <div className="flex justify-center py-20">
-                            <UflLoaderInline style="flip" />
+                            <UflLoaderInline style="pulse-dots" />
                         </div>
                     ) : (
                         <DevStatsSection stats={stats} />
@@ -311,7 +311,7 @@ export default function CodingPage() {
                     <div className="lg:col-span-1">
                         {loadingAdvanced ? (
                             <Card className="p-12 flex flex-col items-center justify-center border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 rounded-3xl gap-4 h-full">
-                                <UflLoaderInline style="flip" />
+                                <UflLoaderInline style="pulse-dots" />
                                 <p className="text-sm text-slate-500 font-medium">Syncing commits...</p>
                             </Card>
                         ) : (
@@ -324,3 +324,4 @@ export default function CodingPage() {
         </div>
     );
 }
+

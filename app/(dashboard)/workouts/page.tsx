@@ -54,7 +54,7 @@ export default function WorkoutHub() {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                <UflLoaderInline style="flip" text="Loading your workouts..." />
+                <UflLoaderInline style="pulse-dots" text="Loading your workouts..." />
                 <p className="text-muted-foreground animate-pulse">Loading your fitness blueprints...</p>
             </div>
         )
@@ -157,3 +157,4 @@ export default function WorkoutHub() {
         </div>
     )
 }
+

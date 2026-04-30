@@ -214,7 +214,7 @@ export function HealthBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl shadow-lg shadow-rose-500/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Wellness Plan...</>
+                                <><UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> Architecting Wellness Plan...</>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <Activity className="w-5 h-5" />
@@ -228,3 +228,4 @@ export function HealthBlueprintForm() {
         </motion.div>
     )
 }
+

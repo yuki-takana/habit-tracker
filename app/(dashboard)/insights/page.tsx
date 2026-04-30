@@ -30,7 +30,7 @@ export default function InsightsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-                <UflLoaderInline style="flip" text="Analyzing your progress..." />
+                <UflLoaderInline style="pulse-dots" text="Analyzing your progress..." />
             </div>
         );
     }
@@ -181,3 +181,4 @@ export default function InsightsPage() {
         </div>
     );
 }
+

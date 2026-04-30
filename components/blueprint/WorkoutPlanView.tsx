@@ -38,7 +38,7 @@ export function WorkoutPlanView({ planId }: WorkoutPlanViewProps) {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-10">
-                <UflLoaderInline style="flip" />
+                <UflLoaderInline style="pulse-dots" />
             </div>
         )
     }
@@ -87,3 +87,4 @@ export function WorkoutPlanView({ planId }: WorkoutPlanViewProps) {
         </div>
     )
 }
+

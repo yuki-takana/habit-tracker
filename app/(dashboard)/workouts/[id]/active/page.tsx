@@ -112,7 +112,7 @@ export default function ActiveWorkout() {
         return (
             <div className="fixed inset-0 bg-background flex flex-col items-center justify-center">
                 <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-                    <UflLoaderInline style="flip" text="Starting your session..." />
+                    <UflLoaderInline style="pulse-dots" text="Starting your session..." />
                 </div>
             </div>
         )
@@ -293,7 +293,7 @@ export default function ActiveWorkout() {
                                     onClick={handleFinish}
                                 >
                                     {isFinishing ? (
-                                        <UflLoaderInline style="flip" compact={true} className="mr-2" />
+                                        <UflLoaderInline style="pulse-dots" compact={true} className="mr-2" />
                                     ) : (
                                         <Trophy className="w-6 h-6 mr-2" />
                                     )}

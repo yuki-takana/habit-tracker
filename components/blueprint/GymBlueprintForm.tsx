@@ -186,7 +186,7 @@ export function GymBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-lg shadow-red-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Workout...</>
+                                <><UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> Architecting Workout...</>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <Activity className="w-5 h-5" />
@@ -200,3 +200,4 @@ export function GymBlueprintForm() {
         </motion.div>
     )
 }
+

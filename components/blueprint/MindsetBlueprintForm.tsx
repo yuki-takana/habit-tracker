@@ -207,7 +207,7 @@ export function MindsetBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl shadow-lg shadow-pink-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Growth Mindset...</>
+                                <><UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> Architecting Growth Mindset...</>
                             ) : (
                                 <span className="flex items-center gap-2">
                                     <Shrink className="w-5 h-5" />
@@ -221,3 +221,4 @@ export function MindsetBlueprintForm() {
         </motion.div>
     )
 }
+

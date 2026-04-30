@@ -37,7 +37,7 @@ const Dashboard = () => {
     if (isLoading) {
         return (
             <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4">
-                <UflLoaderInline style="flip" />
+                <UflLoaderInline style="pulse-dots" />
                 <p className="text-sm font-medium text-slate-500 animate-pulse">Syncing your life architecture...</p>
             </div>
         );

@@ -139,10 +139,11 @@ export default function TaskForm() {
                         </div>
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? <UflLoaderInline style="flip" compact={true} className="mr-2" /> : "Create Task"}
+                        {loading ? <UflLoaderInline style="pulse-dots" compact={true} className="mr-2" /> : "Create Task"}
                     </Button>
                 </form>
             </CardContent>
         </Card>
     );
 }
+

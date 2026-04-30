@@ -149,7 +149,7 @@ export function AiGoalAssistant({ isOpen, onClose }: { isOpen: boolean; onClose:
                                         exit={{ opacity: 0, scale: 1.1 }}
                                         className="py-12 flex flex-col items-center justify-center text-center"
                                     >
-                                        <UflLoaderInline style="flip" text="Architecting your destiny..." />
+                                        <UflLoaderInline style="pulse-dots" text="Architecting your destiny..." />
                                         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 italic">Architecting your path...</h3>
                                         <p className="text-slate-500 max-w-xs font-medium">Gemini is analyzing your situation and creating the perfect roadmap.</p>
                                     </motion.div>
@@ -190,3 +190,4 @@ export function AiGoalAssistant({ isOpen, onClose }: { isOpen: boolean; onClose:
         </AnimatePresence>
     );
 }
+

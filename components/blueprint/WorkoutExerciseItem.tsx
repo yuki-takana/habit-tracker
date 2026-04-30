@@ -45,7 +45,7 @@ export function WorkoutExerciseItem({ exercise, workoutId }: { exercise: any, wo
                     className="text-primary hover:scale-110 transition-transform"
                 >
                     {isLoading ? (
-                        <UflLoaderInline style="flip" className="py-0 h-6 w-6" />
+                        <UflLoaderInline style="pulse-dots" className="py-0 h-6 w-6" />
                     ) : isCompleted ? (
                         <CheckCircle2 className="w-6 h-6 fill-primary text-primary-foreground" />
                     ) : (
@@ -104,3 +104,4 @@ export function WorkoutExerciseItem({ exercise, workoutId }: { exercise: any, wo
         </div>
     )
 }
+

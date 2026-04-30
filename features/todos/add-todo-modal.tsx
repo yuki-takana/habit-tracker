@@ -311,7 +311,7 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                 disabled={loading}
                 className="w-full py-4 mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading && <UflLoaderInline style="flip" compact={true} className="mr-2" />}
+                {loading && <UflLoaderInline style="pulse-dots" compact={true} className="mr-2" />}
                 {loading ? "Adding..." : "Add to Daily Focus"}
               </button>
             </form>
@@ -321,3 +321,4 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
     </AnimatePresence>
   );
 }
+

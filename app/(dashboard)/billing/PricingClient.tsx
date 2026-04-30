@@ -173,7 +173,7 @@ export default function PricingClient({ config, isPro }: { config: any, isPro: b
                                         disabled={loadingStripe || loadingRazorpay}
                                         className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg transition-all shadow-xl shadow-indigo-500/30 active:scale-[0.98] flex items-center gap-2"
                                     >
-                                        {loadingStripe ? <UflLoaderInline style="flip" compact /> : <CreditCard size={20} />}
+                                        {loadingStripe ? <UflLoaderInline style="pulse-dots" compact /> : <CreditCard size={20} />}
                                         Pay Now
                                     </Button>
                                 )}
@@ -185,7 +185,7 @@ export default function PricingClient({ config, isPro }: { config: any, isPro: b
                                         variant="outline"
                                         className="w-full h-14 rounded-2xl border-slate-200 dark:border-zinc-800 bg-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 text-slate-900 dark:text-white font-bold text-lg transition-all active:scale-[0.98] flex items-center gap-2"
                                     >
-                                        {loadingRazorpay ? <UflLoaderInline style="flip" compact /> : <Wallet size={20} />}
+                                        {loadingRazorpay ? <UflLoaderInline style="pulse-dots" compact /> : <Wallet size={20} />}
                                         Pay Now
                                     </Button>
                                 )}
@@ -202,3 +202,4 @@ export default function PricingClient({ config, isPro }: { config: any, isPro: b
         </div>
     );
 }
+

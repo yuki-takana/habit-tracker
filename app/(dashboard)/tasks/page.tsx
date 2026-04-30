@@ -53,7 +53,7 @@ const TasksPage = () => {
 
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-12">
-                            <UflLoaderInline style="flip" />
+                            <UflLoaderInline style="pulse-dots" />
                             <p className="text-slate-500 font-medium">Loading your journey...</p>
                         </div>
                     ) : tasks.length > 0 ? (
