@@ -34,7 +34,6 @@ export const config = {
     "/coding/:path*",
     "/daily-goals/:path*",
     "/journey/:path*",
-    "/routines/:path*",
-    "/"
+    "/routines/:path*"
   ],
 };

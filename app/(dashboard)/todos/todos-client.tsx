@@ -92,16 +92,24 @@ function getCategoryIconAndColor(category: string) {
 }
 
 // ─── Forest components (unchanged) ───────────────────────────────────────────
-
-function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }: any) {
+function TreeMini({ category, progress, fullTrees, activeTree, setActiveTree }: any) {
     const ref = useRef<HTMLDivElement>(null);
-    const emoji = getTreeEmojiString(category, index);
-    const scale = calculateTreeScale(treeTaskCount);
+
+    const emoji = getTreeEmojiString(category, fullTrees);
+    const scale = 0.6 + (progress / 100) * 0.8; // dynamic growth
 
     const handleOpen = () => {
         if (!ref.current) return;
         const rect = ref.current.getBoundingClientRect();
-        setActiveTree({ category, index, treeTaskCount, emoji, x: rect.left + rect.width / 2, y: rect.top });
+
+        setActiveTree({
+            category,
+            fullTrees,
+            progress,
+            emoji,
+            x: rect.left + rect.width / 2,
+            y: rect.top
+        });
     };
 
     return (
@@ -110,159 +118,156 @@ function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }:
             onMouseEnter={handleOpen}
             onMouseLeave={() => setActiveTree(null)}
             onClick={handleOpen}
-            className="relative flex items-end justify-center cursor-pointer group h-12 w-8 sm:w-10 z-10"
+            className="relative flex items-end justify-center cursor-pointer group h-12 w-10"
         >
-            <div className={cn(
-                "relative flex items-end justify-center transition-all duration-300 origin-bottom",
-                activeTree?.category === category && activeTree?.index === index
-                    ? "scale-150 z-20 drop-shadow-xl"
-                    : "group-hover:scale-125 drop-shadow-sm group-hover:drop-shadow-md"
-            )}>
-                <div className="text-2xl sm:text-3xl leading-none transition-all duration-300"
-                    style={{ transform: `scale(${scale})` }}>
-                    {emoji}
-                </div>
+            <div
+                className="text-3xl transition-all duration-300 origin-bottom"
+                style={{ transform: `scale(${scale})` }}
+            >
+                {emoji}
             </div>
         </div>
     );
 }
 
 function TreeTooltip({ data }: any) {
-    const { category, index, treeTaskCount, emoji, x, y } = data;
-    console.log("========== tree count ============== ",treeTaskCount)
+    const { category, fullTrees, progress, emoji, x, y } = data;
+
     return (
         <div
-            className="fixed z-50 px-4 py-3 rounded-2xl shadow-xl backdrop-blur-xl bg-white/95 dark:bg-zinc-900/95 border border-zinc-200/50 dark:border-zinc-800/50 animate-in fade-in zoom-in-95 pointer-events-none"
+            className="fixed z-50 px-4 py-3 rounded-2xl shadow-xl backdrop-blur-xl bg-background/50 border border-border"
             style={{ left: x, top: y - 10, transform: "translate(-50%, -100%)" }}
         >
-            <p className="text-xs font-black uppercase tracking-widest text-center text-emerald-500">
-                {category} {index > 0 ? `Tree ${index + 1}` : ""}
+            <p className="text-xs font-forground text-center text-emerald-500">
+                {category}
             </p>
-            <p className="text-[10px] text-zinc-500 text-center font-bold mt-0.5 uppercase tracking-wide">
-                {treeTaskCount === 5 ? "Fully Grown" : "Growing"}
+
+            <p className="text-[10px] text-center">
+                🌲 {fullTrees} Fully Grown Trees
             </p>
-            <div className="mt-2.5 text-center">
-                <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 leading-none">
-                    {emoji} {treeTaskCount} / 5
-                </p>
-                <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">tasks completed</p>
+
+            <p className="text-[10px] text-center">
+                🌱 Growth: {Math.round(progress)}%
+            </p>
+
+            <div className="text-center mt-2 text-xl">
+                {emoji}
             </div>
         </div>
     );
 }
-
 function ForestView({ tasks }: { tasks: Task[] }) {
-  const [activeTree, setActiveTree] = useState<any>(null);
+    const [activeTree, setActiveTree] = useState<any>(null);
 
-  const TREE_CAPACITY = 10;
+    const TREE_CAPACITY = 10;
 
-  const categories = useMemo(() => {
-    const map: Record<
-      string,
-      {
-        total: number;
-        completed: number;
-        xp: number;
-        fullTrees: number;
-        progressPct: number;
-        currentTreeProgress: number;
-      }
-    > = {};
+    const categories = useMemo(() => {
+        const map: Record<
+            string,
+            {
+                total: number;
+                completed: number;
+                xp: number;
+                fullTrees: number;
+                progressPct: number;
+                currentTreeProgress: number;
+            }
+        > = {};
 
-    tasks.forEach((t) => {
-      const cat = (t.category || "general").toLowerCase();
+        tasks.forEach((t) => {
+            const cat = (t.category || "general").toLowerCase();
 
-      if (!map[cat]) {
-        map[cat] = {
-          total: 0,
-          completed: 0,
-          xp: 0,
-          fullTrees: 0,
-          progressPct: 0,
-          currentTreeProgress: 0,
-        };
-      }
+            if (!map[cat]) {
+                map[cat] = {
+                    total: 0,
+                    completed: 0,
+                    xp: 0,
+                    fullTrees: 0,
+                    progressPct: 0,
+                    currentTreeProgress: 0,
+                };
+            }
 
-      map[cat].total++;
-      if (t.completed) map[cat].completed++;
-      map[cat].xp += t.earnedXp || 0;
-    });
+            map[cat].total++;
+            if (t.completed) map[cat].completed++;
+            map[cat].xp += t.earnedXp || 0;
+        });
 
-    // 👉 compute tree progression
-    Object.keys(map).forEach((cat) => {
-      const totalCompleted = map[cat].completed;
+        //  compute tree progression
+        Object.keys(map).forEach((cat) => {
+            const totalCompleted = map[cat].completed;
 
-      const fullTrees = Math.floor(totalCompleted / TREE_CAPACITY);
-      const currentTreeProgress = totalCompleted % TREE_CAPACITY;
-      const progressPct =
-        (currentTreeProgress / TREE_CAPACITY) * 100;
+            const fullTrees = Math.floor(totalCompleted / TREE_CAPACITY);
+            const currentTreeProgress = totalCompleted % TREE_CAPACITY;
+            const progressPct =
+                (currentTreeProgress / TREE_CAPACITY) * 100;
 
-      map[cat].fullTrees = fullTrees;
-      map[cat].currentTreeProgress = currentTreeProgress;
-      map[cat].progressPct = progressPct;
-    });
+            map[cat].fullTrees = fullTrees;
+            map[cat].currentTreeProgress = currentTreeProgress;
+            map[cat].progressPct = progressPct;
+        });
 
-    return Object.entries(map);
-  }, [tasks]);
+        return Object.entries(map);
+    }, [tasks]);
 
-  if (!categories.length) return null;
+    if (!categories.length) return null;
 
-  return (
-    <div className="mb-6 relative">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-3 px-1">
-        <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500">
-          Virtual Forest
-        </p>
-        <div className="flex-1 h-px bg-zinc-200/60 dark:bg-zinc-800" />
-      </div>
-
-      {/* Forest Container */}
-      <div className="relative bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 sm:px-6 shadow-sm overflow-hidden">
-        <div className="flex flex-wrap items-end justify-center gap-4 sm:gap-8">
-
-          {categories.map(([cat, data]) => {
-            return (
-              <div
-                key={cat}
-                className="flex flex-col items-center gap-2 relative group/cat"
-              >
-                {/* Hover bg */}
-                <div className="absolute -inset-x-3 -inset-y-2 bg-zinc-100/50 dark:bg-zinc-800/30 rounded-2xl opacity-0 group-hover/cat:opacity-100 transition-opacity pointer-events-none" />
-
-                {/* Tree */}
-                <div className="relative z-10">
-                  <TreeMini
-                    category={cat}
-                    progress={data.progressPct} 
-                    fullTrees={data.fullTrees}
-                    activeTree={activeTree}
-                    setActiveTree={setActiveTree}
-                  />
-
-                  {/* 🌲 Completed Trees Badge */}
-                  {data.fullTrees > 0 && (
-                    <div className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full 
-                      bg-emerald-500 text-white text-[9px] font-bold shadow">
-                      {data.fullTrees}
-                    </div>
-                  )}
-                </div>
-
-                {/* Label */}
-                <p className="text-[8px] sm:text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.15em]">
-                  {cat}
+    return (
+        <div className="mb-6 relative">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-3 px-1">
+                <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500">
+                    Virtual Forest
                 </p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                <div className="flex-1 h-px bg-zinc-200/60 dark:bg-zinc-800" />
+            </div>
 
-      {/* Tooltip */}
-      {activeTree && <TreeTooltip data={activeTree} />}
-    </div>
-  );
+            {/* Forest Container */}
+            <div className="relative bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 sm:px-6 shadow-sm overflow-hidden">
+                <div className="flex flex-wrap items-end justify-center gap-4 sm:gap-8">
+
+                    {categories.map(([cat, data]) => {
+                        return (
+                            <div
+                                key={cat}
+                                className="flex flex-col items-center gap-2 relative group/cat"
+                            >
+                                {/* Hover bg */}
+                                <div className="absolute -inset-x-3 -inset-y-2 bg-zinc-100/50 dark:bg-zinc-800/30 rounded-2xl opacity-0 group-hover/cat:opacity-100 transition-opacity pointer-events-none" />
+
+                                {/* Tree */}
+                                <div className="relative z-10">
+                                    <TreeMini
+                                        category={cat}
+                                        progress={data.progressPct}
+                                        fullTrees={data.fullTrees}
+                                        activeTree={activeTree}
+                                        setActiveTree={setActiveTree}
+                                    />
+
+                                    {/* 🌲 Completed Trees Badge */}
+                                    {data.fullTrees >= 0 && (
+                                        <div className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full 
+                      bg-emerald-500/80 text-white text-[9px] font-bold shadow">
+                                            {data.fullTrees || 0}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Label */}
+                                <p className="text-[8px] sm:text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.15em]">
+                                    {cat}
+                                </p>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Tooltip */}
+            {activeTree && <TreeTooltip data={activeTree} />}
+        </div>
+    );
 }
 function TaskSkeleton() {
     return (
