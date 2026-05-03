@@ -216,7 +216,7 @@ export async function getJourneyStats(filter: FilterType): Promise<JourneyStats>
     // ── DB queries ──────────────────────────────────────────────
     const [
         user,
-        periodTodos,          // only todos relevant to this period
+        periodTodos,
         challenges,
         progressTrees,
         allPlans,

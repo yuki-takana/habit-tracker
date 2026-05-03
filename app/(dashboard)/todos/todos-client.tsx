@@ -129,6 +129,7 @@ function TreeMini({ category, index, treeTaskCount, activeTree, setActiveTree }:
 
 function TreeTooltip({ data }: any) {
     const { category, index, treeTaskCount, emoji, x, y } = data;
+    console.log("========== tree count ============== ",treeTaskCount)
     return (
         <div
             className="fixed z-50 px-4 py-3 rounded-2xl shadow-xl backdrop-blur-xl bg-white/95 dark:bg-zinc-900/95 border border-zinc-200/50 dark:border-zinc-800/50 animate-in fade-in zoom-in-95 pointer-events-none"
@@ -151,61 +152,118 @@ function TreeTooltip({ data }: any) {
 }
 
 function ForestView({ tasks }: { tasks: Task[] }) {
-    const [activeTree, setActiveTree] = useState<any>(null);
+  const [activeTree, setActiveTree] = useState<any>(null);
 
-    const categories = useMemo(() => {
-        const map: Record<string, { total: number; completed: number; xp: number }> = {};
-        tasks.forEach((t) => {
-            const cat = (t.category || "general").toLowerCase();
-            if (!map[cat]) map[cat] = { total: 0, completed: 0, xp: 0 };
-            map[cat].total++;
-            if (t.completed) map[cat].completed++;
-            map[cat].xp += t.earnedXp || 0;
-        });
-        return Object.entries(map);
-    }, [tasks]);
+  const TREE_CAPACITY = 10;
 
-    if (!categories.length) return null;
+  const categories = useMemo(() => {
+    const map: Record<
+      string,
+      {
+        total: number;
+        completed: number;
+        xp: number;
+        fullTrees: number;
+        progressPct: number;
+        currentTreeProgress: number;
+      }
+    > = {};
 
-    return (
-        <div className="mb-6 relative">
-            <div className="flex items-center gap-2 mb-3 px-1">
-                <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500">
-                    Virtual Forest
-                </p>
-                <div className="flex-1 h-px bg-zinc-200/60 dark:bg-zinc-800" />
-            </div>
-            <div className="relative bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 sm:px-6 sm:py-6 shadow-sm overflow-hidden">
-                <div className="flex flex-wrap items-end justify-center gap-6 sm:gap-10 pb-2 sm:pb-0">
-                    {categories.map(([cat, counts]) => {
-                        const numTrees = Math.max(1, Math.ceil(counts.completed / 5));
-                        const elements = [];
-                        for (let i = 0; i < numTrees; i++) {
-                            const treeTaskCount = (i === numTrees - 1 && counts.completed > 0 && counts.completed % 5 !== 0)
-                                ? counts.completed % 5
-                                : counts.completed === 0 ? 0 : 5;
-                            elements.push(
-                                <TreeMini key={`${cat}-${i}`} category={cat} index={i}
-                                    treeTaskCount={treeTaskCount} activeTree={activeTree} setActiveTree={setActiveTree} />
-                            );
-                        }
-                        return (
-                            <div key={cat} className="flex flex-col items-center gap-3 relative group/cat">
-                                <div className="absolute -inset-x-3 -inset-y-2 bg-zinc-100/50 dark:bg-zinc-800/30 rounded-2xl opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
-                                <div className="flex items-end gap-1 sm:gap-1.5 h-12 relative z-10">{elements}</div>
-                                <p className="text-[8px] sm:text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.15em] z-10">
-                                    {cat}
-                                </p>
-                            </div>
-                        );
-                    })}
+    tasks.forEach((t) => {
+      const cat = (t.category || "general").toLowerCase();
+
+      if (!map[cat]) {
+        map[cat] = {
+          total: 0,
+          completed: 0,
+          xp: 0,
+          fullTrees: 0,
+          progressPct: 0,
+          currentTreeProgress: 0,
+        };
+      }
+
+      map[cat].total++;
+      if (t.completed) map[cat].completed++;
+      map[cat].xp += t.earnedXp || 0;
+    });
+
+    // 👉 compute tree progression
+    Object.keys(map).forEach((cat) => {
+      const totalCompleted = map[cat].completed;
+
+      const fullTrees = Math.floor(totalCompleted / TREE_CAPACITY);
+      const currentTreeProgress = totalCompleted % TREE_CAPACITY;
+      const progressPct =
+        (currentTreeProgress / TREE_CAPACITY) * 100;
+
+      map[cat].fullTrees = fullTrees;
+      map[cat].currentTreeProgress = currentTreeProgress;
+      map[cat].progressPct = progressPct;
+    });
+
+    return Object.entries(map);
+  }, [tasks]);
+
+  if (!categories.length) return null;
+
+  return (
+    <div className="mb-6 relative">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <p className="text-[10px] font-extrabold tracking-[.2em] uppercase text-zinc-400 dark:text-zinc-500">
+          Virtual Forest
+        </p>
+        <div className="flex-1 h-px bg-zinc-200/60 dark:bg-zinc-800" />
+      </div>
+
+      {/* Forest Container */}
+      <div className="relative bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 sm:px-6 shadow-sm overflow-hidden">
+        <div className="flex flex-wrap items-end justify-center gap-4 sm:gap-8">
+
+          {categories.map(([cat, data]) => {
+            return (
+              <div
+                key={cat}
+                className="flex flex-col items-center gap-2 relative group/cat"
+              >
+                {/* Hover bg */}
+                <div className="absolute -inset-x-3 -inset-y-2 bg-zinc-100/50 dark:bg-zinc-800/30 rounded-2xl opacity-0 group-hover/cat:opacity-100 transition-opacity pointer-events-none" />
+
+                {/* Tree */}
+                <div className="relative z-10">
+                  <TreeMini
+                    category={cat}
+                    progress={data.progressPct} 
+                    fullTrees={data.fullTrees}
+                    activeTree={activeTree}
+                    setActiveTree={setActiveTree}
+                  />
+
+                  {/* 🌲 Completed Trees Badge */}
+                  {data.fullTrees > 0 && (
+                    <div className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full 
+                      bg-emerald-500 text-white text-[9px] font-bold shadow">
+                      {data.fullTrees}
+                    </div>
+                  )}
                 </div>
-            </div>
-            {activeTree && <TreeTooltip data={activeTree} />}
-        </div>
-    );
-}
 
+                {/* Label */}
+                <p className="text-[8px] sm:text-[9px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.15em]">
+                  {cat}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tooltip */}
+      {activeTree && <TreeTooltip data={activeTree} />}
+    </div>
+  );
+}
 function TaskSkeleton() {
     return (
         <div className="flex gap-4 mb-5">
@@ -223,8 +281,6 @@ function TaskSkeleton() {
         </div>
     );
 }
-
-// ─── Infinite scroll hook ─────────────────────────────────────────────────────
 
 function useInfiniteSection(initialItems: Task[], pageSize = 10) {
     const [items, setItems] = useState<Task[]>(initialItems);

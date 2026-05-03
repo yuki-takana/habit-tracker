@@ -51,7 +51,6 @@ export default async function Page() {
     prisma.todo.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      take: 100,
     }),
     prisma.user.findUnique({
       where: { id: userId },

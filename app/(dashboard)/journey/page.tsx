@@ -7,6 +7,7 @@ import {
   TrendingUp, TrendingDown, Calendar, Star, TreePine,
   Activity, BookOpen, Briefcase,
   Heart, DollarSign, Brain, BarChart2, Users,
+  Loader2,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -29,23 +30,23 @@ import { UflLoaderInline } from '@/components/ui/ufl-loader';
 const DAYS_FULL = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const PLAN_META: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-  Project:      { icon: Briefcase,   color: 'text-indigo-500',  bg: 'bg-indigo-50  dark:bg-indigo-950/40'  },
-  Career:       { icon: TrendingUp,  color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
-  Business:     { icon: BarChart2,   color: 'text-amber-500',   bg: 'bg-amber-50   dark:bg-amber-950/40'   },
-  Learning:     { icon: BookOpen,    color: 'text-sky-500',     bg: 'bg-sky-50     dark:bg-sky-950/40'     },
-  Health:       { icon: Heart,       color: 'text-rose-500',    bg: 'bg-rose-50    dark:bg-rose-950/40'    },
-  Income:       { icon: DollarSign,  color: 'text-green-500',   bg: 'bg-green-50   dark:bg-green-950/40'   },
-  Mindset:      { icon: Brain,       color: 'text-purple-500',  bg: 'bg-purple-50  dark:bg-purple-950/40'  },
-  Productivity: { icon: Activity,    color: 'text-orange-500',  bg: 'bg-orange-50  dark:bg-orange-950/40'  },
-  Relationship: { icon: Users,       color: 'text-pink-500',    bg: 'bg-pink-50    dark:bg-pink-950/40'    },
+  Project: { icon: Briefcase, color: 'text-indigo-500', bg: 'bg-indigo-50  dark:bg-indigo-950/40' },
+  Career: { icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+  Business: { icon: BarChart2, color: 'text-amber-500', bg: 'bg-amber-50   dark:bg-amber-950/40' },
+  Learning: { icon: BookOpen, color: 'text-sky-500', bg: 'bg-sky-50     dark:bg-sky-950/40' },
+  Health: { icon: Heart, color: 'text-rose-500', bg: 'bg-rose-50    dark:bg-rose-950/40' },
+  Income: { icon: DollarSign, color: 'text-green-500', bg: 'bg-green-50   dark:bg-green-950/40' },
+  Mindset: { icon: Brain, color: 'text-purple-500', bg: 'bg-purple-50  dark:bg-purple-950/40' },
+  Productivity: { icon: Activity, color: 'text-orange-500', bg: 'bg-orange-50  dark:bg-orange-950/40' },
+  Relationship: { icon: Users, color: 'text-pink-500', bg: 'bg-pink-50    dark:bg-pink-950/40' },
 };
 
 const EVENT_META = {
-  Flame:       { bg: 'bg-orange-100 dark:bg-orange-950/50',  icon: <Flame       size={14} className="text-orange-500"  /> },
+  Flame: { bg: 'bg-orange-100 dark:bg-orange-950/50', icon: <Flame size={14} className="text-orange-500" /> },
   CheckCircle: { bg: 'bg-emerald-100 dark:bg-emerald-950/50', icon: <CheckCircle size={14} className="text-emerald-500" /> },
-  Target:      { bg: 'bg-indigo-100 dark:bg-indigo-950/50',  icon: <Target      size={14} className="text-indigo-500"  /> },
-  Trophy:      { bg: 'bg-amber-100 dark:bg-amber-950/50',    icon: <Trophy      size={14} className="text-amber-500"   /> },
-  Zap:         { bg: 'bg-violet-100 dark:bg-violet-950/50',  icon: <Zap         size={14} className="text-violet-500"  /> },
+  Target: { bg: 'bg-indigo-100 dark:bg-indigo-950/50', icon: <Target size={14} className="text-indigo-500" /> },
+  Trophy: { bg: 'bg-amber-100 dark:bg-amber-950/50', icon: <Trophy size={14} className="text-amber-500" /> },
+  Zap: { bg: 'bg-violet-100 dark:bg-violet-950/50', icon: <Zap size={14} className="text-violet-500" /> },
 };
 
 const fadeUp = (delay = 0) => ({
@@ -81,7 +82,7 @@ function Card({
       `}
       style={{
         gridColumn: colSpan > 1 ? `span ${colSpan}` : undefined,
-        gridRow:    rowSpan > 1 ? `span ${rowSpan}` : undefined,
+        gridRow: rowSpan > 1 ? `span ${rowSpan}` : undefined,
       }}
     >
       {children}
@@ -101,7 +102,7 @@ function SparkCard({
 }) {
   const chartData = data.map((v, i) => ({ v, i }));
   const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown;
-  const trendCls  = trend === 'up' ? 'text-emerald-500' : 'text-red-400';
+  const trendCls = trend === 'up' ? 'text-emerald-500' : 'text-red-400';
 
   return (
     <motion.div
@@ -137,7 +138,7 @@ function SparkCard({
             <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={`sp-${strokeColor.replace(/[^a-z0-9]/gi, '')}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor={strokeColor} stopOpacity={0.45} />
+                  <stop offset="0%" stopColor={strokeColor} stopOpacity={0.45} />
                   <stop offset="100%" stopColor={strokeColor} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
@@ -158,7 +159,7 @@ function SparkCard({
 // ─── Perf Ring ────────────────────────────────────────────────
 
 function PerfRing({ pct, color }: { pct: number; color: string }) {
-  const r    = 32;
+  const r = 32;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
   return (
@@ -181,9 +182,9 @@ function PerfRing({ pct, color }: { pct: number; color: string }) {
 
 function HabitRow({ habit, delay }: { habit: HabitStats; delay: number }) {
   const healthColor =
-    habit.healthStatus === 'thriving'  ? 'text-emerald-500'
-    : habit.healthStatus === 'at-risk' ? 'text-amber-500'
-    : 'text-red-400';
+    habit.healthStatus === 'thriving' ? 'text-emerald-500'
+      : habit.healthStatus === 'at-risk' ? 'text-amber-500'
+        : 'text-red-400';
 
   return (
     <motion.div {...fadeUp(delay)} className="flex items-center gap-3 py-2.5 group">
@@ -210,9 +211,9 @@ function HabitRow({ habit, delay }: { habit: HabitStats; delay: number }) {
 
 function ChallengeRow({ challenge, delay }: { challenge: ChallengeStats; delay: number }) {
   const statusCls =
-    challenge.status === 'active'    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
-    : challenge.status === 'completed' ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
-    : 'bg-red-50 dark:bg-red-950/50 text-red-500';
+    challenge.status === 'active' ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
+      : challenge.status === 'completed' ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
+        : 'bg-red-50 dark:bg-red-950/50 text-red-500';
 
   const daysLeft = Math.max(
     0,
@@ -391,11 +392,11 @@ function EmptyState() {
 // ─── Page ─────────────────────────────────────────────────────
 
 export default function JourneyPage() {
-  const [filter,      setFilter]      = useState<FilterType>('7D');
-  const [timeline,    setTimeline]    = useState<TimelineEvent[]>([]);
-  const [stats,       setStats]       = useState<JourneyStats | null>(null);
+  const [filter, setFilter] = useState<FilterType>('7D');
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [stats, setStats] = useState<JourneyStats | null>(null);
   const [initialLoad, setInitialLoad] = useState(true);   // full-page spinner only on first open
-  const [fetching,    setFetching]    = useState(false);  // subtle indicator on filter switch
+  const [fetching, setFetching] = useState(false);  // subtle indicator on filter switch
 
   // Cache: keeps every filter result we've already fetched this session
   const statsCache = React.useRef<Partial<Record<FilterType, JourneyStats>>>({});
@@ -421,7 +422,7 @@ export default function JourneyPage() {
         const timelinePromise = timeline.length === 0 ? getJourneyTimeline() : Promise.resolve(null);
 
         const [st, tl] = await Promise.all([statsPromise, timelinePromise]);
-
+        console.log("================================== fetching filtered todos data =======================>", st)
         statsCache.current[filter] = st;
         setStats(st);
         if (tl) setTimeline(tl);
@@ -446,15 +447,15 @@ export default function JourneyPage() {
   if (!stats || (timeline.length === 0 && stats.totalTodos === 0)) return <EmptyState />;
 
   const recentEvents = timeline.slice(0, 8);
-  const perfColor   = stats.completionRate >= 80 ? '#6366f1' : stats.completionRate >= 50 ? '#f59e0b' : '#ef4444';
+  const perfColor = stats.completionRate >= 80 ? '#6366f1' : stats.completionRate >= 50 ? '#f59e0b' : '#ef4444';
   const perfTextCls = stats.completionRate >= 80 ? 'text-indigo-500' : stats.completionRate >= 50 ? 'text-amber-500' : 'text-red-400';
 
   const filterLabel =
-    filter === 'Today'    ? 'today'
-    : filter === '7D'     ? 'this week'
-    : filter === 'Month'  ? 'this month'
-    : filter === 'Year'   ? 'this year'
-    : 'all time';
+    filter === 'Today' ? 'today'
+      : filter === '7D' ? 'this week'
+        : filter === 'Month' ? 'this month'
+          : filter === 'Year' ? 'this year'
+            : 'all time';
 
   // Server already computed the right chart arrays for this filter
   const { chartXp, chartCompleted, chartFailed, chartRate } = stats;
@@ -462,7 +463,17 @@ export default function JourneyPage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-28 px-4 sm:px-6">
+      {fetching && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Blur + dark overlay */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
+          {/* Loader content */}
+          <div className="relative z-10 flex flex-col items-center gap-3">
+            <UflLoaderInline style="pulse-dots" text="Updating your journey..." />
+          </div>
+        </div>
+      )}
       {/* ── Header ─────────────────────────────────────────── */}
       <motion.header {...fadeUp()} className="mb-8">
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -482,21 +493,15 @@ export default function JourneyPage() {
                   key={f}
                   onClick={() => setFilter(f)}
                   disabled={fetching}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                    filter === f
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${filter === f
                       ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm'
                       : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'
-                  }`}
+                    }`}
                 >
                   {f}
                 </button>
               ))}
             </div>
-            {/* Subtle "updating" pill — only shown when fetching a new filter for the first time
-            <div className={`flex items-center gap-1.5 text-[10px] font-medium text-indigo-500 transition-opacity duration-200 ${fetching ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-              Updating…
-            </div> */}
           </div>
         </div>
       </motion.header>
@@ -512,8 +517,8 @@ export default function JourneyPage() {
               <AreaChart data={chartXp.map((v, i) => ({ v, i }))} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="hero-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#fff" stopOpacity={0.7} />
-                    <stop offset="100%" stopColor="#fff" stopOpacity={0}   />
+                    <stop offset="0%" stopColor="#fff" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#fff" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <Area type="monotoneX" dataKey="v" stroke="#fff" strokeWidth={1.5} fill="url(#hero-grad)" dot={false} />
@@ -556,7 +561,7 @@ export default function JourneyPage() {
         {/* Todos Done */}
         <SparkCard
           label="Todos Done"
-          value={stats.completedTodos}
+          value={stats.totalTodos}
           sub={`+${stats.completedTodos} ${filterLabel}`}
           trend="up"
           trendLabel={`${stats.completionRate}%`}
@@ -618,10 +623,10 @@ export default function JourneyPage() {
               <SectionLabel>Activity overview</SectionLabel>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                 {[
-                  { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-100 dark:border-orange-900/50', icon: <Flame size={14} className="text-orange-500" />, val: stats.totalHabits,       label: 'Habits',     cls: 'text-orange-500'  },
-                  { bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-100 dark:border-indigo-900/50', icon: <Target size={14} className="text-indigo-500" />, val: stats.completedTasks,    label: 'Tasks',      cls: 'text-indigo-500'  },
-                  { bg: 'bg-amber-50 dark:bg-amber-950/30',   border: 'border-amber-100 dark:border-amber-900/50',   icon: <Trophy size={14} className="text-amber-500"  />, val: stats.activeChallenges,  label: 'Challenges', cls: 'text-amber-500'   },
-                  { bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900/50', icon: <TreePine size={14} className="text-emerald-500" />, val: stats.aliveTrees, label: 'Trees',      cls: 'text-emerald-500' },
+                  { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-100 dark:border-orange-900/50', icon: <Flame size={14} className="text-orange-500" />, val: stats.totalHabits, label: 'Habits', cls: 'text-orange-500' },
+                  { bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-100 dark:border-indigo-900/50', icon: <Target size={14} className="text-indigo-500" />, val: stats.completedTasks, label: 'Tasks', cls: 'text-indigo-500' },
+                  { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-100 dark:border-amber-900/50', icon: <Trophy size={14} className="text-amber-500" />, val: stats.activeChallenges, label: 'Challenges', cls: 'text-amber-500' },
+                  { bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900/50', icon: <TreePine size={14} className="text-emerald-500" />, val: stats.aliveTrees, label: 'Trees', cls: 'text-emerald-500' },
                 ].map(({ bg, border, icon, val, label, cls }) => (
                   <div key={label} className={`${bg} rounded-xl p-3 text-center flex flex-col items-center justify-center border ${border}`}>
                     {icon}
@@ -686,8 +691,8 @@ export default function JourneyPage() {
           <div className="grid grid-cols-3 gap-2 mt-2">
             {[
               { label: 'Completed', value: stats.completedTodos, cls: 'text-indigo-600 dark:text-indigo-400' },
-              { label: 'Failed',    value: stats.failedTodos,    cls: 'text-red-500 dark:text-red-400'       },
-              { label: 'Pending',   value: stats.pendingTodos,   cls: 'text-amber-600 dark:text-amber-400'   },
+              { label: 'Failed', value: stats.failedTodos, cls: 'text-red-500 dark:text-red-400' },
+              { label: 'Pending', value: stats.pendingTodos, cls: 'text-amber-600 dark:text-amber-400' },
             ].map(({ label, value, cls }) => (
               <div key={label} className="bg-slate-50 dark:bg-zinc-950/80 border border-slate-100 dark:border-zinc-800 rounded-xl p-3">
                 <p className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-zinc-600">{label}</p>
