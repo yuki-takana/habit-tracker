@@ -1,9 +1,16 @@
 {
   "crons": [
-    
     {
       "path": "/api/cron/wakatime-sync",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-snapshots",
+      "schedule": "0 23 * * 0"
+    },
+    {
+      "path": "/api/cron/morning-context-refresh",
+      "schedule": "0 1 * * *"
     }
   ]
 }

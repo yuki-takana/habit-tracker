@@ -123,6 +123,12 @@ model User {
   userRoles         UserRole[]
   pushSubscriptions PushSubscription[]
   notificationLogs  NotificationLog[]
+
+  // ─── Memory Layer relations ────────────────────────────────────
+  userMemories      UserMemory[]
+  progressSnapshots ProgressSnapshot[]
+  agentDecisionLogs AgentDecisionLog[]
+  userContext       UserContext?
 }
 
 model UserRole {
@@ -1080,4 +1086,116 @@ model FcmToken {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// ─── MEMORY LAYER ─────────────────────────────────────────────────────────────
+
+// Typed, domain-aware, confidence-scored facts replacing the flat AgentMemory model
+model UserMemory {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @db.ObjectId
+  domain         String   // "career" | "fitness" | "income" | "project" | "habits" | "global"
+  memoryType     String   // "preference" | "pattern" | "fact" | "summary" | "blocker"
+  key            String   // e.g. "prefers_morning_tasks", "best_platform"
+  value          Json     // string | number | string[] | object
+  confidence     Float    @default(1.0) // 0–1, decays if not reinforced
+  source         String   // "user_stated" | "agent_inferred" | "pattern_detected"
+  lastReinforced DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, domain, key])
+  @@index([userId, domain])
+}
+
+// Auto-generated weekly summary per domain — core memory unit for LLM context
+model ProgressSnapshot {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  domain String // "career" | "fitness" | "income" | "project" | "habits" | "overall"
+
+  weekStart DateTime
+  weekEnd   DateTime
+
+  // Quantitative
+  tasksTotal     Int   @default(0)
+  tasksCompleted Int   @default(0)
+  completionRate Float @default(0) // 0–100
+  xpEarned       Int   @default(0)
+  streakDelta    Int   @default(0) // change in streak this week
+
+  // Qualitative (LLM-generated)
+  summary     String   // "Completed 4/6 career tasks. Missed interview prep twice."
+  wins        String[] // ["Sent 3 Upwork proposals", "Hit gym 5/7 days"]
+  blockers    String[] // ["Kept skipping cold outreach", "Sleep schedule off"]
+  agentAdvice String?  // what the agent recommended for next week
+
+  relatedPlanId   String? @db.ObjectId
+  relatedPlanType String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, domain, weekStart])
+}
+
+// Audit trail of what each agent decided and whether it worked
+model AgentDecisionLog {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String @db.ObjectId
+  agentId    String // "daily_architect" | "career_coach" | "fitness_agent" | "whatsapp_bot"
+  domain     String
+  actionType String // "plan_created" | "task_suggested" | "replan_triggered" |
+  // "milestone_unlocked" | "habit_recommended" | "whatsapp_reply_sent"
+
+  inputContext Json    // snapshot of memory/context at decision time
+  decision     Json    // what was decided: {tasks[], rationale, messageText, etc}
+  outcome      String  @default("pending") // "accepted" | "rejected" | "partial" | "pending"
+  userFeedback String? // if user replied with feedback on WhatsApp or rated in app
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, domain])
+  @@index([agentId])
+}
+
+// Single always-current "brain" document per user — injected into every LLM system prompt
+model UserContext {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @db.ObjectId
+
+  // Persona
+  archetype     String?  // "Ambitious Builder" | "Recovering Procrastinator"
+  coreStrengths String[] // ["Ships fast", "Consistent mornings"]
+  coreWeakness  String[] // ["Avoids outreach", "Overcommits"]
+
+  // Current state (updated weekly or on significant events)
+  activeGoals  Json    // { career: "Land ₹20L job", income: "₹1L/month", ... }
+  currentFocus String? // "income" — top priority domain this week
+
+  // Behavioral patterns
+  bestDayOfWeek     String?
+  bestTimeOfDay     String?
+  avgCompletionRate Float   @default(0)
+
+  // Recent momentum
+  lastWeekSummary String? // 2–3 sentence digest across all domains
+  currentStreak   Int     @default(0)
+  momentumScore   Float   @default(0) // 0–100 composite health score
+
+  // Today's snapshot (refreshed every morning or on-demand for WhatsApp)
+  todayStats Json? // { todosTotal, todosCompleted, xpToday, habitsLogged, activeSession }
+
+  // Prebuilt context string — ready to inject into agent system prompts
+  promptContext String?
+
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
