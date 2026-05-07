@@ -2,7 +2,7 @@
 
 Welcome to the Habit Tracker application. This Next.js (App Router) project follows scalable folder structuring and robust Low-Level Design (LLD) principles, adhering to the SOLID framework.
 
-## 🚀 Setup & Installation
+## 🚀 Setup & Installation 
 
 Follow these steps to get the project up and running locally:
 
